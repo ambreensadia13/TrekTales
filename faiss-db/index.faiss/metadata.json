@@ -1,0 +1,310 @@
+[
+  {
+    "text": "TrekTales — Rawalpindi Activities Knowledge Base\n 12 demo activity records for itinerary planning.\nDEMO DATA — FICTIONAL INFORMATION FOR TREKTALES TESTING ONLY. NOT REAL-WORLD TOURISM\nDATA.\nAC-001 — Cricket Experience Demo\nActivity ID: AC-001\nLocation: Rawalpindi Cricket Stadium\nDuration: 2 hours\nDemo Cost: Rs. 600\nCategory: Sports\n———————————————————————————————————————————————————\n———————————————————\nAC-002 — Family Park Picnic Demo\nActivity ID: AC-002\nLocation: Ayub National Park\nDuration: 3 hours\nDemo Cost: Rs. 300/person\nCategory: Families\n———————————————————————————————————————————————————\n———————————————————\nAC-003 — Museum Discovery Demo\nActivity ID: AC-003\nLocation: Pakistan Army Museum\nDuration: 2 hours\nDemo Cost: Rs. 300\nCategory: History\n———————————————————————————————————————————————————\n———————————————————\nAC-004 — Old City Photography Walk\nActivity ID: AC-004\nLocation: Old",
+    "source": "Pindi_Activities.pdf",
+    "page": 1,
+    "department": "Activities",
+    "record_id": "AC-001"
+  },
+  {
+    "text": ": History\n———————————————————————————————————————————————————\n———————————————————\nAC-004 — Old City Photography Walk\nActivity ID: AC-004\nLocation: Old Rawalpindi\nDuration: 2 hours",
+    "source": "Pindi_Activities.pdf",
+    "page": 1,
+    "department": "Activities",
+    "record_id": "AC-004"
+  },
+  {
+    "text": "Demo Cost: Free demo\nCategory: Photography\n———————————————————————————————————————————————————\n———————————————————\nAC-005 — Raja Bazaar Shopping Walk\nActivity ID: AC-005\nLocation: Raja Bazaar\nDuration: 2.5 hours\nDemo Cost: Free demo\nCategory: Shopping\n———————————————————————————————————————————————————\n———————————————————\nAC-006 — Evening Park Walk\nActivity ID: AC-006\nLocation: Jinnah Park\nDuration: 1.5 hours\nDemo Cost: Rs. 100\nCategory: Relaxation\n———————————————————————————————————————————————————\n———————————————————\nAC-007 — Local Food Tasting Demo\nActivity ID: AC-007\nLocation: Saddar\nDuration: 2 hours\nDemo Cost: Rs. 1,000\nCategory: Food\n———————————————————————————————————————————————————\n———————————————————\nAC-008 — Heritage Gallery Demo Visit\nActivity ID: AC-008\nLocation: Old City\nDuration: 1 hour\nDemo Cost: Rs. 200",
+    "source": "Pindi_Activities.pdf",
+    "page": 2,
+    "department": "Activities",
+    "record_id": "AC-005"
+  },
+  {
+    "text": "Category: Culture\n———————————————————————————————————————————————————\n———————————————————\nAC-009 — Sunset Viewpoint Demo\nActivity ID: AC-009\nLocation: Pindi Hills demo zone\nDuration: 1.5 hours\nDemo Cost: Rs. 100\nCategory: Photography\n———————————————————————————————————————————————————\n———————————————————\nAC-010 — Cycling City Route Demo\nActivity ID: AC-010\nLocation: Central Rawalpindi\nDuration: 2 hours\nDemo Cost: Rs. 500\nCategory: Fitness\n———————————————————————————————————————————————————\n———————————————————\nAC-011 — Family Recreation Demo\nActivity ID: AC-011\nLocation: Satellite Town\nDuration: 2 hours\nDemo Cost: Rs. 250\nCategory: Families\n———————————————————————————————————————————————————\n———————————————————\nAC-012 — Night Food Walk Demo\nActivity ID: AC-012\nLocation: Commercial Area\nDuration: 2 hours\nDemo Cost: Rs. 900\nCategory: Food / Night outing",
+    "source": "Pindi_Activities.pdf",
+    "page": 3,
+    "department": "Activities",
+    "record_id": "AC-009"
+  },
+  {
+    "text": "TrekTales — Rawalpindi Food Knowledge Base\n 12 demo food records for meal planning and budgeting.\nDEMO DATA — FICTIONAL INFORMATION FOR TREKTALES TESTING ONLY. NOT REAL-WORLD TOURISM\nDATA.\nFD-001 — Pindi Breakfast House Demo\nFood ID: FD-001\nArea: Saddar\nMeal Type: Breakfast\nDemo Average Cost: Rs. 450/person\nSample Food: Paratha, eggs, tea\nOpening Hours: 7:00 AM–11:00 AM\n———————————————————————————————————————————————————\n———————————————————\nFD-002 — Raja Bazaar Biryani Demo\nFood ID: FD-002\nArea: Raja Bazaar\nMeal Type: Lunch\nDemo Average Cost: Rs. 650/person\nSample Food: Biryani, raita\nOpening Hours: 12:00 PM–10:00 PM\n———————————————————————————————————————————————————\n———————————————————\nFD-003 — Old City Karahi Demo\nFood ID: FD-003\nArea: Old City\nMeal Type: Dinner\nDemo Average Cost: Rs. 900/person\nSample Food: Chicken karahi, naan\nOpening Hours: 5:00 PM–11:00 PM\n————————————————————————",
+    "source": "Pindi_Food.pdf",
+    "page": 1,
+    "department": "Food",
+    "record_id": "FD-001"
+  },
+  {
+    "text": "ld City\nMeal Type: Dinner\nDemo Average Cost: Rs. 900/person\nSample Food: Chicken karahi, naan\nOpening Hours: 5:00 PM–11:00 PM\n———————————————————————————————————————————————————\n———————————————————\nFD-004 — Metro Café Demo",
+    "source": "Pindi_Food.pdf",
+    "page": 1,
+    "department": "Food",
+    "record_id": "FD-004"
+  },
+  {
+    "text": "Food ID: FD-004\nArea: Murree Road\nMeal Type: Café\nDemo Average Cost: Rs. 700/person\nSample Food: Sandwiches, tea, coffee\nOpening Hours: 10:00 AM–10:00 PM\n———————————————————————————————————————————————————\n———————————————————\nFD-005 — Ayub Family Grill Demo\nFood ID: FD-005\nArea: Ayub Park area\nMeal Type: Family dining\nDemo Average Cost: Rs. 1,000/person\nSample Food: BBQ, rice, drinks\nOpening Hours: 1:00 PM–11:00 PM\n———————————————————————————————————————————————————\n———————————————————\nFD-006 — Saddar Snack Corner Demo\nFood ID: FD-006\nArea: Saddar\nMeal Type: Snacks\nDemo Average Cost: Rs. 300/person\nSample Food: Samosa, rolls, tea\nOpening Hours: 2:00 PM–10:00 PM\n———————————————————————————————————————————————————\n———————————————————\nFD-007 — Satellite Town Food Court Demo\nFood ID: FD-007\nArea: Satellite Town\nMeal Type: Food court\nDemo Average Cost: Rs. 850/person\nSample Food: Mixed local",
+    "source": "Pindi_Food.pdf",
+    "page": 2,
+    "department": "Food",
+    "record_id": "FD-004"
+  },
+  {
+    "text": "Satellite Town Food Court Demo\nFood ID: FD-007\nArea: Satellite Town\nMeal Type: Food court\nDemo Average Cost: Rs. 850/person\nSample Food: Mixed local meals\nOpening Hours: 12:00 PM–11:00 PM",
+    "source": "Pindi_Food.pdf",
+    "page": 2,
+    "department": "Food",
+    "record_id": "FD-007"
+  },
+  {
+    "text": "———————————————————————————————————————————————————\n———————————————————\nFD-008 — Jinnah Park Café Demo\nFood ID: FD-008\nArea: Jinnah Park\nMeal Type: Café\nDemo Average Cost: Rs. 600/person\nSample Food: Tea, burgers, desserts\nOpening Hours: 11:00 AM–10:00 PM\n———————————————————————————————————————————————————\n———————————————————\nFD-009 — Cantonment Dinner Demo\nFood ID: FD-009\nArea: Cantonment\nMeal Type: Dinner\nDemo Average Cost: Rs. 1,200/person\nSample Food: Pakistani cuisine\nOpening Hours: 5:00 PM–11:00 PM\n———————————————————————————————————————————————————\n———————————————————\nFD-010 — Old City Tea House Demo\nFood ID: FD-010\nArea: Old City\nMeal Type: Tea / Snacks\nDemo Average Cost: Rs. 250/person\nSample Food: Tea, biscuits, snacks\nOpening Hours: 4:00 PM–12:00 AM\n———————————————————————————————————————————————————\n———————————————————\nFD-011 — Commercial Market BBQ Demo\nFood ID: FD-011\nArea:",
+    "source": "Pindi_Food.pdf",
+    "page": 3,
+    "department": "Food",
+    "record_id": "FD-008"
+  },
+  {
+    "text": "rs: 4:00 PM–12:00 AM\n———————————————————————————————————————————————————\n———————————————————\nFD-011 — Commercial Market BBQ Demo\nFood ID: FD-011\nArea: Commercial Area\nMeal Type: BBQ",
+    "source": "Pindi_Food.pdf",
+    "page": 3,
+    "department": "Food",
+    "record_id": "FD-011"
+  },
+  {
+    "text": "Demo Average Cost: Rs. 950/person\nSample Food: BBQ platter, naan\nOpening Hours: 6:00 PM–11:30 PM\n———————————————————————————————————————————————————\n———————————————————\nFD-012 — Pindi Dessert Lab Demo\nFood ID: FD-012\nArea: Saddar\nMeal Type: Dessert\nDemo Average Cost: Rs. 400/person\nSample Food: Kheer, custard, drinks\nOpening Hours: 3:00 PM–11:00 PM",
+    "source": "Pindi_Food.pdf",
+    "page": 4,
+    "department": "Food",
+    "record_id": "FD-012"
+  },
+  {
+    "text": "TrekTales — Rawalpindi Hotels Knowledge Base\n 12 demo hotel records for accommodation and budget planning.\nDEMO DATA — FICTIONAL INFORMATION FOR TREKTALES TESTING ONLY. NOT REAL-WORLD TOURISM\nDATA.\nHT-001 — Pindi Grand Demo Hotel\nHotel ID: HT-001\nArea: Saddar\nCategory: Mid-range\nDemo Room Price: Rs. 5,000/night\nDemo Rating: 4.2/5 demo\nFacilities: Wi-Fi, breakfast, parking\nCheck-in: 2:00 PM\nCheck-out: 12:00 PM\nSuitable For: Families, couples, solo travelers\n———————————————————————————————————————————————————\n———————————————————\nHT-002 — City Gate Demo Hotel\nHotel ID: HT-002\nArea: Raja Bazaar\nCategory: Budget\nDemo Room Price: Rs. 3,200/night\nDemo Rating: 3.9/5 demo\nFacilities: Wi-Fi, reception, breakfast\nCheck-in: 2:00 PM\nCheck-out: 12:00 PM\nSuitable For: Budget travelers\n———————————————————————————————————————————————————\n———————————————————\nHT-003 — Cantonment View Demo Hotel\nHotel ID: H",
+    "source": "Pindi_Hotels.pdf",
+    "page": 1,
+    "department": "Hotels",
+    "record_id": "HT-001"
+  },
+  {
+    "text": "Suitable For: Budget travelers\n———————————————————————————————————————————————————\n———————————————————\nHT-003 — Cantonment View Demo Hotel\nHotel ID: HT-003\nArea: Cantonment\nCategory: Upper mid-range\nDemo Room Price: Rs. 6,500/night",
+    "source": "Pindi_Hotels.pdf",
+    "page": 1,
+    "department": "Hotels",
+    "record_id": "HT-003"
+  },
+  {
+    "text": "Demo Rating: 4.4/5 demo\nFacilities: Wi-Fi, parking, restaurant\nCheck-in: 2:00 PM\nCheck-out: 12:00 PM\nSuitable For: Families, business travelers\n———————————————————————————————————————————————————\n———————————————————\nHT-004 — Metro Link Demo Inn\nHotel ID: HT-004\nArea: Murree Road\nCategory: Budget\nDemo Room Price: Rs. 3,800/night\nDemo Rating: 4.0/5 demo\nFacilities: Wi-Fi, breakfast, luggage storage\nCheck-in: 1:00 PM\nCheck-out: 11:00 AM\nSuitable For: Short stays\n———————————————————————————————————————————————————\n———————————————————\nHT-005 — Ayub Park Demo Resort\nHotel ID: HT-005\nArea: Ayub Park area\nCategory: Mid-range\nDemo Room Price: Rs. 5,800/night\nDemo Rating: 4.1/5 demo\nFacilities: Parking, family rooms, breakfast\nCheck-in: 2:00 PM\nCheck-out: 12:00 PM\nSuitable For: Families\n———————————————————————————————————————————————————\n———————————————————\nHT-006 — Saddar Comfort Demo\nHotel ID: H",
+    "source": "Pindi_Hotels.pdf",
+    "page": 2,
+    "department": "Hotels",
+    "record_id": "HT-004"
+  },
+  {
+    "text": "-out: 12:00 PM\nSuitable For: Families\n———————————————————————————————————————————————————\n———————————————————\nHT-006 — Saddar Comfort Demo\nHotel ID: HT-006\nArea: Saddar",
+    "source": "Pindi_Hotels.pdf",
+    "page": 2,
+    "department": "Hotels",
+    "record_id": "HT-006"
+  },
+  {
+    "text": "Category: Budget\nDemo Room Price: Rs. 3,500/night\nDemo Rating: 3.8/5 demo\nFacilities: Wi-Fi, AC, reception\nCheck-in: 2:00 PM\nCheck-out: 12:00 PM\nSuitable For: Solo travelers\n———————————————————————————————————————————————————\n———————————————————\nHT-007 — Old City Heritage Demo Hotel\nHotel ID: HT-007\nArea: Old City\nCategory: Boutique\nDemo Room Price: Rs. 6,000/night\nDemo Rating: 4.3/5 demo\nFacilities: Breakfast, lounge, Wi-Fi\nCheck-in: 2:00 PM\nCheck-out: 12:00 PM\nSuitable For: Culture travelers\n———————————————————————————————————————————————————\n———————————————————\nHT-008 — Satellite Town Stay Demo\nHotel ID: HT-008\nArea: Satellite Town\nCategory: Mid-range\nDemo Room Price: Rs. 4,700/night\nDemo Rating: 4.0/5 demo\nFacilities: Parking, Wi-Fi, family rooms\nCheck-in: 2:00 PM\nCheck-out: 12:00 PM\nSuitable For: Families\n———————————————————————————————————————————————————\n———————————————————\nHT-009",
+    "source": "Pindi_Hotels.pdf",
+    "page": 3,
+    "department": "Hotels",
+    "record_id": "HT-007"
+  },
+  {
+    "text": "mily rooms\nCheck-in: 2:00 PM\nCheck-out: 12:00 PM\nSuitable For: Families\n———————————————————————————————————————————————————\n———————————————————\nHT-009 — Airport Road Demo Lodge",
+    "source": "Pindi_Hotels.pdf",
+    "page": 3,
+    "department": "Hotels",
+    "record_id": "HT-009"
+  },
+  {
+    "text": "Hotel ID: HT-009\nArea: Airport Road\nCategory: Budget\nDemo Room Price: Rs. 3,900/night\nDemo Rating: 3.7/5 demo\nFacilities: Parking, breakfast, Wi-Fi\nCheck-in: 1:00 PM\nCheck-out: 11:00 AM\nSuitable For: Transit travelers\n———————————————————————————————————————————————————\n———————————————————\nHT-010 — Pindi Executive Demo Suites\nHotel ID: HT-010\nArea: Commercial Area\nCategory: Upper mid-range\nDemo Room Price: Rs. 7,200/night\nDemo Rating: 4.5/5 demo\nFacilities: Kitchenette, Wi-Fi, parking\nCheck-in: 2:00 PM\nCheck-out: 12:00 PM\nSuitable For: Longer stays\n———————————————————————————————————————————————————\n———————————————————\nHT-011 — Jinnah Park Demo Hotel\nHotel ID: HT-011\nArea: Jinnah Park area\nCategory: Mid-range\nDemo Room Price: Rs. 5,200/night\nDemo Rating: 4.1/5 demo\nFacilities: Family rooms, breakfast, parking\nCheck-in: 2:00 PM\nCheck-out: 12:00 PM\nSuitable For: Families",
+    "source": "Pindi_Hotels.pdf",
+    "page": 4,
+    "department": "Hotels",
+    "record_id": "HT-009"
+  },
+  {
+    "text": "———————————————————————————————————————————————————\n———————————————————\nHT-012 — Raja Market Demo Guesthouse\nHotel ID: HT-012\nArea: Raja Bazaar\nCategory: Budget\nDemo Room Price: Rs. 2,800/night\nDemo Rating: 3.6/5 demo\nFacilities: Wi-Fi, reception, luggage storage\nCheck-in: 2:00 PM\nCheck-out: 12:00 PM\nSuitable For: Backpackers, budget travelers",
+    "source": "Pindi_Hotels.pdf",
+    "page": 5,
+    "department": "Hotels",
+    "record_id": "HT-012"
+  },
+  {
+    "text": "TrekTales — Rawalpindi Places Knowledge Base\n 15 demo place records for tourism RAG retrieval.\nDEMO DATA — FICTIONAL INFORMATION FOR TREKTALES TESTING ONLY. NOT REAL-WORLD TOURISM\nDATA.\nPL-001 — Rawalpindi Cricket Stadium\nPlace ID: PL-001\nCategory: Sports / Landmark\nLocation: Stadium Road, Rawalpindi\nEstimated Visit Duration: 1.5–2 hours\nSuggested Visit Time: 10:00 AM–6:00 PM\nEntry Fee: Rs. 0–500 depending on event\nBest For: Sports, sightseeing\nDescription: Large cricket venue suitable for sports-themed itineraries.\nNearby: Saddar, Ayub Park\n———————————————————————————————————————————————————\n———————————————————\nPL-002 — Ayub National Park\nPlace ID: PL-002\nCategory: Park / Recreation\nLocation: Grand Trunk Road, Rawalpindi\nEstimated Visit Duration: 2–3 hours\nSuggested Visit Time: 8:00 AM–8:00 PM\nEntry Fee: Rs. 100 demo entry\nBest For: Families, walking, recreation\nDescription: Large green",
+    "source": "Pindi_Places.pdf",
+    "page": 1,
+    "department": "Places",
+    "record_id": "PL-001"
+  },
+  {
+    "text": "ration: 2–3 hours\nSuggested Visit Time: 8:00 AM–8:00 PM\nEntry Fee: Rs. 100 demo entry\nBest For: Families, walking, recreation\nDescription: Large green recreation area with walking and family activities.\nNearby: Rawalpindi Cricket Stadium\n———————————————————————————————————————————————————\n———————————————————\nPL-003 — Pakistan Army Museum\nPlace ID: PL-003\nCategory: Museum\nLocation: Ayub Park area, Rawalpindi\nEstimated Visit Duration: 1.5–2 hours",
+    "source": "Pindi_Places.pdf",
+    "page": 1,
+    "department": "Places",
+    "record_id": "PL-003"
+  },
+  {
+    "text": "Suggested Visit Time: 10:00 AM–4:00 PM\nEntry Fee: Rs. 300 demo entry\nBest For: History, museums\nDescription: Military-history themed museum for educational visits.\nNearby: Ayub National Park\n———————————————————————————————————————————————————\n———————————————————\nPL-004 — Liaquat Bagh\nPlace ID: PL-004\nCategory: Historic Park\nLocation: Murree Road, Rawalpindi\nEstimated Visit Duration: 1–1.5 hours\nSuggested Visit Time: 7:00 AM–7:00 PM\nEntry Fee: Free demo entry\nBest For: History, walking\nDescription: Historic public park suitable for a short city stop.\nNearby: Raja Bazaar\n———————————————————————————————————————————————————\n———————————————————\nPL-005 — Raja Bazaar\nPlace ID: PL-005\nCategory: Market / Shopping\nLocation: Central Rawalpindi\nEstimated Visit Duration: 2–3 hours\nSuggested Visit Time: 10:00 AM–9:00 PM\nEntry Fee: Free entry\nBest For: Shopping, local culture\nDescription: Busy traditio",
+    "source": "Pindi_Places.pdf",
+    "page": 2,
+    "department": "Places",
+    "record_id": "PL-004"
+  },
+  {
+    "text": "ed Visit Duration: 2–3 hours\nSuggested Visit Time: 10:00 AM–9:00 PM\nEntry Fee: Free entry\nBest For: Shopping, local culture\nDescription: Busy traditional market area with shops and street activity.\nNearby: Liaquat Bagh\n———————————————————————————————————————————————————\n———————————————————\nPL-006 — Rawalpindi Old City Walk\nPlace ID: PL-006\nCategory: Cultural Area",
+    "source": "Pindi_Places.pdf",
+    "page": 2,
+    "department": "Places",
+    "record_id": "PL-006"
+  },
+  {
+    "text": "Location: Old Rawalpindi\nEstimated Visit Duration: 2 hours\nSuggested Visit Time: 9:00 AM–6:00 PM\nEntry Fee: Free demo entry\nBest For: Culture, photography\nDescription: Walking route through historic streets and market areas.\nNearby: Raja Bazaar\n———————————————————————————————————————————————————\n———————————————————\nPL-007 — Jinnah Park Rawalpindi\nPlace ID: PL-007\nCategory: Park / Recreation\nLocation: Airport Road, Rawalpindi\nEstimated Visit Duration: 2 hours\nSuggested Visit Time: 8:00 AM–10:00 PM\nEntry Fee: Rs. 100 demo entry\nBest For: Families, recreation\nDescription: Modern recreational park suitable for evening activities.\nNearby: Chaklala\n———————————————————————————————————————————————————\n———————————————————\nPL-008 — Rawalpindi Railway Station\nPlace ID: PL-008\nCategory: Transport Landmark\nLocation: Railway Road, Rawalpindi\nEstimated Visit Duration: 30–60 minutes\nSuggested Visit Time",
+    "source": "Pindi_Places.pdf",
+    "page": 3,
+    "department": "Places",
+    "record_id": "PL-007"
+  },
+  {
+    "text": "Station\nPlace ID: PL-008\nCategory: Transport Landmark\nLocation: Railway Road, Rawalpindi\nEstimated Visit Duration: 30–60 minutes\nSuggested Visit Time: Open according to rail operations\nEntry Fee: Free demo access\nBest For: Architecture, transport\nDescription: Historic transportation point useful as a city landmark.\nNearby: Saddar\n———————————————————————————————————————————————————\n———————————————————\nPL-009 — Saddar Rawalpindi",
+    "source": "Pindi_Places.pdf",
+    "page": 3,
+    "department": "Places",
+    "record_id": "PL-008"
+  },
+  {
+    "text": "Place ID: PL-009\nCategory: Shopping / City Area\nLocation: Saddar, Rawalpindi\nEstimated Visit Duration: 2 hours\nSuggested Visit Time: 10:00 AM–9:00 PM\nEntry Fee: Free entry\nBest For: Shopping, food\nDescription: Central commercial district with shops and restaurants.\nNearby: Railway Station\n———————————————————————————————————————————————————\n———————————————————\nPL-010 — Army Public Library Demo Center\nPlace ID: PL-010\nCategory: Educational / Library\nLocation: Rawalpindi cantonment area\nEstimated Visit Duration: 1 hour\nSuggested Visit Time: 9:00 AM–5:00 PM\nEntry Fee: Free demo access\nBest For: Education, quiet visit\nDescription: Fictional educational stop included for RAG testing.\nNearby: Saddar\n———————————————————————————————————————————————————\n———————————————————\nPL-011 — Rawalpindi Food Street Demo\nPlace ID: PL-011\nCategory: Food / Culture\nLocation: Commercial Area, Rawalpindi\nEstimated",
+    "source": "Pindi_Places.pdf",
+    "page": 4,
+    "department": "Places",
+    "record_id": "PL-009"
+  },
+  {
+    "text": "———\n———————————————————\nPL-011 — Rawalpindi Food Street Demo\nPlace ID: PL-011\nCategory: Food / Culture\nLocation: Commercial Area, Rawalpindi\nEstimated Visit Duration: 1.5–2 hours\nSuggested Visit Time: 5:00 PM–11:00 PM\nEntry Fee: Free entry; food extra\nBest For: Food, evening outing\nDescription: Fictional food-street record for itinerary and budget testing.\nNearby: Saddar",
+    "source": "Pindi_Places.pdf",
+    "page": 4,
+    "department": "Places",
+    "record_id": "PL-011"
+  },
+  {
+    "text": "———————————————————————————————————————————————————\n———————————————————\nPL-012 — Park View Point Demo\nPlace ID: PL-012\nCategory: Viewpoint\nLocation: Margalla-facing demo area\nEstimated Visit Duration: 1 hour\nSuggested Visit Time: 4:00 PM–9:00 PM\nEntry Fee: Free demo entry\nBest For: Photography, sunset\nDescription: Fictional viewpoint used to test time-based itinerary planning.\nNearby: Islamabad Road\n———————————————————————————————————————————————————\n———————————————————\nPL-013 — Rawalpindi Heritage Gallery Demo\nPlace ID: PL-013\nCategory: Museum / Culture\nLocation: Old City, Rawalpindi\nEstimated Visit Duration: 1 hour\nSuggested Visit Time: 11:00 AM–5:00 PM\nEntry Fee: Rs. 200 demo entry\nBest For: History, culture\nDescription: Fictional small gallery for cultural itinerary testing.\nNearby: Old City\n———————————————————————————————————————————————————\n———————————————————\nPL-014 — Family Recre",
+    "source": "Pindi_Places.pdf",
+    "page": 5,
+    "department": "Places",
+    "record_id": "PL-012"
+  },
+  {
+    "text": "gallery for cultural itinerary testing.\nNearby: Old City\n———————————————————————————————————————————————————\n———————————————————\nPL-014 — Family Recreation Center Demo\nPlace ID: PL-014\nCategory: Family / Recreation\nLocation: Satellite Town, Rawalpindi\nEstimated Visit Duration: 2 hours\nSuggested Visit Time: 9:00 AM–9:00 PM\nEntry Fee: Rs. 250 demo entry\nBest For: Families, children",
+    "source": "Pindi_Places.pdf",
+    "page": 5,
+    "department": "Places",
+    "record_id": "PL-014"
+  },
+  {
+    "text": "Description: Fictional recreation venue with indoor family activities.\nNearby: Commercial Market\n———————————————————————————————————————————————————\n———————————————————\nPL-015 — Pindi Sunset Garden Demo\nPlace ID: PL-015\nCategory: Park / Viewpoint\nLocation: Pindi Hills demo zone\nEstimated Visit Duration: 1.5 hours\nSuggested Visit Time: 4:00 PM–8:00 PM\nEntry Fee: Rs. 100 demo entry\nBest For: Sunset, photography\nDescription: Fictional garden designed for testing sunset itinerary recommendations.\nNearby: Old City",
+    "source": "Pindi_Places.pdf",
+    "page": 6,
+    "department": "Places",
+    "record_id": "PL-015"
+  },
+  {
+    "text": "TrekTales — Rawalpindi Safety Knowledge Base\n 15 demo safety guidelines for tourism planning.\nDEMO DATA — FICTIONAL INFORMATION FOR TREKTALES TESTING ONLY. NOT REAL-WORLD TOURISM\nDATA.\nSF-001 — Daylight Planning\nSafety ID: SF-001\nGuideline: Prefer major sightseeing during daylight when possible.\nApplies To: General\nPractical Advice: Plan outdoor visits earlier and keep evening activities near known areas.\n———————————————————————————————————————————————————\n———————————————————\nSF-002 — Transport Check\nSafety ID: SF-002\nGuideline: Confirm the vehicle and destination before starting a ride.\nApplies To: Transport\nPractical Advice: Use the app's estimated route information as planning data only.\n———————————————————————————————————————————————————\n———————————————————\nSF-003 — Emergency Contact\nSafety ID: SF-003\nGuideline: Keep an emergency contact accessible.\nApplies To: General\nPractical Advi",
+    "source": "Pindi_Safety.pdf",
+    "page": 1,
+    "department": "Safety",
+    "record_id": "SF-001"
+  },
+  {
+    "text": "—\n———————————————————\nSF-003 — Emergency Contact\nSafety ID: SF-003\nGuideline: Keep an emergency contact accessible.\nApplies To: General\nPractical Advice: Store important contact information before leaving the hotel.\n———————————————————————————————————————————————————\n———————————————————\nSF-004 — Group Travel\nSafety ID: SF-004\nGuideline: Groups should agree on a meeting point.\nApplies To: Families / Groups\nPractical Advice: Useful for crowded markets and parks.",
+    "source": "Pindi_Safety.pdf",
+    "page": 1,
+    "department": "Safety",
+    "record_id": "SF-003"
+  },
+  {
+    "text": "———————————————————————————————————————————————————\n———————————————————\nSF-005 — Women Travelers\nSafety ID: SF-005\nGuideline: Choose well-lit, populated routes and share your itinerary with a trusted person.\nApplies To: Women travelers\nPractical Advice: Avoid isolated areas when traveling alone, especially late at night.\n———————————————————————————————————————————————————\n———————————————————\nSF-006 — Night Travel\nSafety ID: SF-006\nGuideline: Prefer planned transport for late-evening movement.\nApplies To: General\nPractical Advice: Avoid unfamiliar shortcuts.\n———————————————————————————————————————————————————\n———————————————————\nSF-007 — Cash and Cards\nSafety ID: SF-007\nGuideline: Carry only the amount of cash needed for the outing.\nApplies To: Financial safety\nPractical Advice: Keep payment methods secure.\n———————————————————————————————————————————————————\n———————————————————\nSF-008 — P",
+    "source": "Pindi_Safety.pdf",
+    "page": 2,
+    "department": "Safety",
+    "record_id": "SF-005"
+  },
+  {
+    "text": "To: Financial safety\nPractical Advice: Keep payment methods secure.\n———————————————————————————————————————————————————\n———————————————————\nSF-008 — Personal Belongings\nSafety ID: SF-008\nGuideline: Keep phones, wallets, passports, and bags secure in crowded areas.\nApplies To: Crowds\nPractical Advice: Raja Bazaar and busy markets require extra attention.\n———————————————————————————————————————————————————\n———————————————————\nSF-009 — Weather Check\nSafety ID: SF-009",
+    "source": "Pindi_Safety.pdf",
+    "page": 2,
+    "department": "Safety",
+    "record_id": "SF-008"
+  },
+  {
+    "text": "Guideline: Check weather conditions before outdoor activities.\nApplies To: Outdoor safety\nPractical Advice: Change outdoor plans if conditions become unsafe.\n———————————————————————————————————————————————————\n———————————————————\nSF-010 — Hydration\nSafety ID: SF-010\nGuideline: Carry drinking water during long walks.\nApplies To: Health / Comfort\nPractical Advice: Especially useful during warm weather.\n———————————————————————————————————————————————————\n———————————————————\nSF-011 — Hotel Verification\nSafety ID: SF-011\nGuideline: Confirm hotel booking details before arrival.\nApplies To: Accommodation\nPractical Advice: The hotel records in this dataset are fictional demo records.\n———————————————————————————————————————————————————\n———————————————————\nSF-012 — Food Awareness\nSafety ID: SF-012\nGuideline: Choose hygienic food locations and drink safe water.\nApplies To: Food safety\nPractical Adv",
+    "source": "Pindi_Safety.pdf",
+    "page": 3,
+    "department": "Safety",
+    "record_id": "SF-010"
+  },
+  {
+    "text": "——————\nSF-012 — Food Awareness\nSafety ID: SF-012\nGuideline: Choose hygienic food locations and drink safe water.\nApplies To: Food safety\nPractical Advice: If food appears improperly stored, choose another option.\n———————————————————————————————————————————————————\n———————————————————\nSF-013 — Children\nSafety ID: SF-013\nGuideline: Children should remain with a responsible adult in crowded places.\nApplies To: Families\nPractical Advice: Set a meeting point for groups with children.",
+    "source": "Pindi_Safety.pdf",
+    "page": 3,
+    "department": "Safety",
+    "record_id": "SF-012"
+  },
+  {
+    "text": "———————————————————————————————————————————————————\n———————————————————\nSF-014 — Local Rules\nSafety ID: SF-014\nGuideline: Follow venue instructions and local regulations.\nApplies To: General\nPractical Advice: Do not enter restricted areas.\n———————————————————————————————————————————————————\n———————————————————\nSF-015 — Lost Item Procedure\nSafety ID: SF-015\nGuideline: Contact the venue or transport operator if an item is lost.\nApplies To: General\nPractical Advice: Record the last known location and time.",
+    "source": "Pindi_Safety.pdf",
+    "page": 4,
+    "department": "Safety",
+    "record_id": "SF-014"
+  },
+  {
+    "text": "TrekTales — Rawalpindi Transport Knowledge Base\n 12 demo transport records for route and budget planning.\nDEMO DATA — FICTIONAL INFORMATION FOR TREKTALES TESTING ONLY. NOT REAL-WORLD TOURISM\nDATA.\nTR-001 — Metro Bus\nTransport ID: TR-001\nRoute/Area: Islamabad–Rawalpindi corridor\nDemo Fare: Rs. 50\nOperating Hours: 6:00 AM–10:00 PM\nSuitable For: City travel\nNotes: High-frequency demo route\n———————————————————————————————————————————————————\n———————————————————\nTR-002 — Local Bus\nTransport ID: TR-002\nRoute/Area: Saddar–Raja Bazaar\nDemo Fare: Rs. 40\nOperating Hours: 7:00 AM–9:00 PM\nSuitable For: Budget travel\nNotes: Short city route\n———————————————————————————————————————————————————\n———————————————————\nTR-003 — Ride-Hailing Car\nTransport ID: TR-003\nRoute/Area: Rawalpindi city\nDemo Fare: Rs. 300 base demo fare + distance\nOperating Hours: 24 hours\nSuitable For: Door-to-door travel\nNotes: Estim",
+    "source": "Pindi_Transport.pdf",
+    "page": 1,
+    "department": "Transport",
+    "record_id": "TR-001"
+  },
+  {
+    "text": "-003\nRoute/Area: Rawalpindi city\nDemo Fare: Rs. 300 base demo fare + distance\nOperating Hours: 24 hours\nSuitable For: Door-to-door travel\nNotes: Estimated demo fare\n———————————————————————————————————————————————————\n———————————————————\nTR-004 — Taxi",
+    "source": "Pindi_Transport.pdf",
+    "page": 1,
+    "department": "Transport",
+    "record_id": "TR-004"
+  },
+  {
+    "text": "Transport ID: TR-004\nRoute/Area: Saddar–Ayub Park\nDemo Fare: Rs. 450 estimated\nOperating Hours: 6:00 AM–11:00 PM\nSuitable For: Families, luggage\nNotes: Demo estimate\n———————————————————————————————————————————————————\n———————————————————\nTR-005 — Auto-Rickshaw\nTransport ID: TR-005\nRoute/Area: Old City short trips\nDemo Fare: Rs. 180 estimated\nOperating Hours: 7:00 AM–10:00 PM\nSuitable For: Short distances\nNotes: Demo estimate\n———————————————————————————————————————————————————\n———————————————————\nTR-006 — Rental Car\nTransport ID: TR-006\nRoute/Area: Rawalpindi/Islamabad\nDemo Fare: Rs. 4,500/day\nOperating Hours: 8:00 AM–8:00 PM booking\nSuitable For: Flexible travel\nNotes: Fuel excluded; demo price\n———————————————————————————————————————————————————\n———————————————————\nTR-007 — Tourist Van\nTransport ID: TR-007\nRoute/Area: Rawalpindi group route\nDemo Fare: Rs. 8,000/day\nOperating Hours: 8:00",
+    "source": "Pindi_Transport.pdf",
+    "page": 2,
+    "department": "Transport",
+    "record_id": "TR-004"
+  },
+  {
+    "text": "—————\n———————————————————\nTR-007 — Tourist Van\nTransport ID: TR-007\nRoute/Area: Rawalpindi group route\nDemo Fare: Rs. 8,000/day\nOperating Hours: 8:00 AM–8:00 PM\nSuitable For: Groups\nNotes: Up to 8 demo passengers",
+    "source": "Pindi_Transport.pdf",
+    "page": 2,
+    "department": "Transport",
+    "record_id": "TR-007"
+  },
+  {
+    "text": "———————————————————————————————————————————————————\n———————————————————\nTR-008 — Rail Service\nTransport ID: TR-008\nRoute/Area: Rawalpindi station routes\nDemo Fare: Rs. 500–2,500 demo range\nOperating Hours: Varies by service\nSuitable For: Intercity travel\nNotes: Fare varies by fictional service class\n———————————————————————————————————————————————————\n———————————————————\nTR-009 — Hotel Shuttle\nTransport ID: TR-009\nRoute/Area: Hotel–central city\nDemo Fare: Rs. 250/trip\nOperating Hours: 7:00 AM–9:00 PM\nSuitable For: Hotel guests\nNotes: Demo shuttle fare\n———————————————————————————————————————————————————\n———————————————————\nTR-010 — Bicycle Rental\nTransport ID: TR-010\nRoute/Area: Central Rawalpindi\nDemo Fare: Rs. 500/day\nOperating Hours: 7:00 AM–7:00 PM\nSuitable For: Short sightseeing\nNotes: Helmet included in demo package\n———————————————————————————————————————————————————\n————————————————",
+    "source": "Pindi_Transport.pdf",
+    "page": 3,
+    "department": "Transport",
+    "record_id": "TR-008"
+  },
+  {
+    "text": "AM–7:00 PM\nSuitable For: Short sightseeing\nNotes: Helmet included in demo package\n———————————————————————————————————————————————————\n———————————————————\nTR-011 — Electric Bike Rental\nTransport ID: TR-011\nRoute/Area: Saddar area\nDemo Fare: Rs. 700/day",
+    "source": "Pindi_Transport.pdf",
+    "page": 3,
+    "department": "Transport",
+    "record_id": "TR-011"
+  },
+  {
+    "text": "Operating Hours: 8:00 AM–8:00 PM\nSuitable For: Independent travel\nNotes: Demo rental price\n———————————————————————————————————————————————————\n———————————————————\nTR-012 — Airport Transfer Van\nTransport ID: TR-012\nRoute/Area: Airport–Rawalpindi\nDemo Fare: Rs. 1,800/trip\nOperating Hours: 24 hours by booking\nSuitable For: Airport transfers\nNotes: Demo fixed fare",
+    "source": "Pindi_Transport.pdf",
+    "page": 4,
+    "department": "Transport",
+    "record_id": "TR-012"
+  }
+]
