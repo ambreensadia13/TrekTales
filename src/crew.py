@@ -5,29 +5,11 @@ from .tasks import create_tasks
 
 
 class TrekTalesCrew:
-    """
-    Main TrekTales multi-agent system.
-    """
+    """Main CrewAI workflow for TrekTales."""
 
     def __init__(self):
-
-        # ----------------------------------------------------
-        # CREATE AGENTS
-        # ----------------------------------------------------
-
         self.agents = create_agents()
-
-        # ----------------------------------------------------
-        # CREATE TASKS
-        # ----------------------------------------------------
-
-        self.tasks = create_tasks(
-            self.agents
-        )
-
-        # ----------------------------------------------------
-        # CREATE CREW
-        # ----------------------------------------------------
+        self.tasks = create_tasks(self.agents)
 
         self.crew = Crew(
             agents=list(self.agents.values()),
@@ -36,112 +18,37 @@ class TrekTalesCrew:
             verbose=False,
         )
 
-    # ========================================================
-    # RUN
-    # ========================================================
-
     def run(self, request):
-        """
-        Run the TrekTales crew.
-        """
+        """Run the TrekTales CrewAI workflow."""
 
         if not isinstance(request, dict):
-            raise TypeError(
-                "request must be a dictionary."
-            )
+            raise TypeError("request must be a dictionary")
 
-        interests = request.get(
-            "interests",
-            [],
-        )
-
+        interests = request.get("interests", [])
         if isinstance(interests, list):
+            interests = ", ".join(str(item) for item in interests)
 
-            interests = ", ".join(
-                str(item)
-                for item in interests
-            )
-
-        evidence = request.get(
-            "evidence",
-            [],
-        )
-
+        evidence = request.get("evidence", "")
         if isinstance(evidence, list):
-
-            evidence_text = "\n".join(
-                str(item)
-                for item in evidence
-            )
-
-        else:
-
-            evidence_text = str(
-                evidence
-            )
+            evidence = "\n\n".join(str(item) for item in evidence)
 
         inputs = {
-            "destination": str(
-                request.get(
-                    "destination",
-                    "",
-                )
-            ),
-
-            "starting_location": str(
-                request.get(
-                    "starting_location",
-                    "",
-                )
-            ),
-
-            "duration": request.get(
-                "duration",
-                1,
-            ),
-
-            "travelers": request.get(
-                "travelers",
-                1,
-            ),
-
-            "budget": str(
-                request.get(
-                    "budget",
-                    "Moderate",
-                )
-            ),
-
-            "travel_style": str(
-                request.get(
-                    "travel_style",
-                    "Mixed",
-                )
-            ),
-
-            "language": str(
-                request.get(
-                    "language",
-                    "English",
-                )
-            ),
-
-            "interests": interests,
-
-            "evidence": evidence_text,
+            "request": str(request),
+            "destination": str(request.get("destination", "")),
+            "duration": str(request.get("duration", "")),
+            "traveler_type": str(request.get("traveler_type", "")),
+            "interests": str(interests),
+            "budget": str(request.get("budget", "")),
+            "language": str(request.get("language", "English")),
+            "evidence": str(evidence),
+            "knowledge_output": "",
+            "planner_output": "",
+            "budget_output": "",
+            "safety_output": "",
         }
 
-        return self.crew.kickoff(
-            inputs=inputs
-        )
-
-    # ========================================================
-    # KICKOFF ALIAS
-    # ========================================================
+        return self.crew.kickoff(inputs=inputs)
 
     def kickoff(self, request):
-        """
-        Alias for run().
-        """
-
+        """Compatibility alias for code that calls kickoff()."""
         return self.run(request)
