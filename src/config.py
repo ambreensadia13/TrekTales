@@ -49,6 +49,12 @@ CREAM = "#F4F0BB"
 
 DARK_BROWN = "#43291F"
 
+WHITE = "#FFFFFF"
+
+BLACK = "#111111"
+
+DARK_GREEN = "#174936"
+
 
 # ============================================================
 # PAYMENT / ACCESS SETTINGS
@@ -69,12 +75,15 @@ EXPECTED_PAYMENT_STATUS = "sent"
 # GROQ API CONFIGURATION
 # ============================================================
 
+GROQ_BASE_URL = "https://api.groq.com/openai/v1"
+
+
 def get_secret(name: str, default: str = "") -> str:
     """
     Safely read a value from Streamlit Secrets.
 
-    If Streamlit Secrets are unavailable, the function
-    falls back to an environment variable.
+    Falls back to an environment variable if the
+    Streamlit secret is unavailable.
     """
 
     try:
@@ -88,26 +97,20 @@ def get_secret(name: str, default: str = "") -> str:
     return os.getenv(name, default).strip()
 
 
-# ------------------------------------------------------------
+# ============================================================
 # GROQ API KEY
-# ------------------------------------------------------------
+# ============================================================
 
 GROQ_API_KEY = get_secret("GROQ_API_KEY")
 
 
-# ------------------------------------------------------------
+# ============================================================
 # GROQ MODEL
-# ------------------------------------------------------------
-
-# You can override this in Streamlit Secrets with:
-#
-# GROQ_MODEL = "your-model-name"
-#
-# The default below is the model used by your TrekTales setup.
+# ============================================================
 
 GROQ_MODEL = get_secret(
     "GROQ_MODEL",
-    "openai/gpt-oss-120b"
+    "openai/gpt-oss-120b",
 )
 
 
@@ -140,9 +143,9 @@ TOP_K_BM25 = 8
 TOP_K_FINAL = 6
 
 
-# ------------------------------------------------------------
+# ============================================================
 # OPTIONAL RERANKER
-# ------------------------------------------------------------
+# ============================================================
 
 RERANKER_MODEL = (
     "cross-encoder/ms-marco-MiniLM-L-6-v2"
@@ -212,23 +215,19 @@ AGENT_NAMES = [
 
 def validate_configuration() -> list[str]:
     """
-    Check whether the important TrekTales configuration
-    and application directories are available.
+    Check important TrekTales configuration and files.
 
-    Returns:
-        A list of configuration problems.
-
-        An empty list means no configuration problems
-        were detected.
+    Returns an empty list when no problems are detected.
     """
 
     problems: list[str] = []
 
     # --------------------------------------------------------
-    # API KEY
+    # GROQ API KEY
     # --------------------------------------------------------
 
     if not GROQ_API_KEY:
+
         problems.append(
             "GROQ_API_KEY is missing from Streamlit Secrets."
         )
@@ -238,6 +237,7 @@ def validate_configuration() -> list[str]:
     # --------------------------------------------------------
 
     if not KNOWLEDGE_BASE_DIR.exists():
+
         problems.append(
             "The tourism_knowledge_base directory was not found."
         )
@@ -247,6 +247,7 @@ def validate_configuration() -> list[str]:
     # --------------------------------------------------------
 
     if not FAISS_DIR.exists():
+
         problems.append(
             "The data/faiss_index directory was not found."
         )
@@ -256,6 +257,7 @@ def validate_configuration() -> list[str]:
     # --------------------------------------------------------
 
     if not FAISS_INDEX_PATH.exists():
+
         problems.append(
             "FAISS index file is missing: "
             "data/faiss_index/index.faiss"
@@ -266,6 +268,7 @@ def validate_configuration() -> list[str]:
     # --------------------------------------------------------
 
     if not METADATA_PATH.exists():
+
         problems.append(
             "FAISS metadata file is missing: "
             "data/faiss_index/metadata.json"
@@ -275,15 +278,14 @@ def validate_configuration() -> list[str]:
 
 
 # ============================================================
-# CREATE REQUIRED LOCAL DIRECTORIES
+# CREATE REQUIRED DIRECTORIES
 # ============================================================
 
 def ensure_directories() -> None:
     """
-    Create local application directories when they do not exist.
+    Create required local directories.
 
-    This does not create the actual knowledge base or FAISS
-    files; those must be supplied/generated separately.
+    This does not generate the knowledge base or FAISS files.
     """
 
     DATA_DIR.mkdir(
@@ -303,12 +305,13 @@ def ensure_directories() -> None:
 
 
 # ============================================================
-# EXPORTABLE CONFIG SUMMARY
+# CONFIGURATION SUMMARY
 # ============================================================
 
 CONFIG = {
     "app_name": APP_NAME,
     "app_version": APP_VERSION,
+    "groq_base_url": GROQ_BASE_URL,
     "groq_model": GROQ_MODEL,
     "free_days": FREE_DAYS,
     "paid_days": PAID_DAYS,
