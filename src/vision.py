@@ -1,245 +1,228 @@
 import base64
 import json
-import re
-from typing import Any
+from pathlib import Path
+from typing import Any, Dict
 
-import requests
+from groq import Groq
 
-from .config import XAI_API_KEY, XAI_BASE_URL, VISION_MODEL
+from .config import (
+    GROQ_API_KEY,
+    GROQ_MODEL,
+    EXPECTED_PAYMENT_RECIPIENT,
+    UNLOCK_PRICE,
+)
 
 
-def _extract_json(text: str) -> dict[str, Any]:
-    """
-    Extract a JSON object from Grok's response.
-    """
+def _get_client() -> Groq:
+    """Create the Groq client."""
+
+    if not GROQ_API_KEY:
+        raise RuntimeError(
+            "GROQ_API_KEY is missing. Add GROQ_API_KEY "
+            "to Streamlit Secrets."
+        )
+
+    return Groq(api_key=GROQ_API_KEY)
+
+
+def _encode_image(image_path: str) -> str:
+    """Convert an image file to base64."""
+
+    path = Path(image_path)
+
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Payment screenshot not found: {image_path}"
+        )
+
+    with path.open("rb") as image_file:
+        return base64.b64encode(
+            image_file.read()
+        ).decode("utf-8")
+
+
+def _image_mime_type(image_path: str) -> str:
+    """Return the MIME type for a supported image."""
+
+    suffix = Path(image_path).suffix.lower()
+
+    mime_types = {
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".webp": "image/webp",
+    }
+
+    return mime_types.get(
+        suffix,
+        "image/png",
+    )
+
+
+def _clean_json_response(text: str) -> Dict[str, Any]:
+    """Safely convert the model response into a dictionary."""
+
     if not text:
         return {
             "recipient": "",
-            "amount": None,
+            "amount": 0,
             "status": "",
             "confidence": 0,
         }
 
-    cleaned = text.strip()
+    text = text.strip()
 
-    cleaned = re.sub(
-        r"^```(?:json)?\s*",
-        "",
-        cleaned,
-        flags=re.IGNORECASE,
-    )
-
-    cleaned = re.sub(
-        r"\s*```$",
-        "",
-        cleaned,
-        flags=re.IGNORECASE,
-    )
+    # Remove markdown code fences if the model returns them.
+    if text.startswith("```"):
+        text = text.replace("```json", "", 1)
+        text = text.replace("```", "")
+        text = text.strip()
 
     try:
-        data = json.loads(cleaned)
+        result = json.loads(text)
 
-        if isinstance(data, dict):
-            return data
+        if isinstance(result, dict):
+            return result
 
     except json.JSONDecodeError:
         pass
 
-    start = cleaned.find("{")
-    end = cleaned.rfind("}")
-
-    if start != -1 and end != -1:
-        try:
-            data = json.loads(
-                cleaned[start:end + 1]
-            )
-
-            if isinstance(data, dict):
-                return data
-
-        except json.JSONDecodeError:
-            pass
-
     return {
         "recipient": "",
-        "amount": None,
+        "amount": 0,
         "status": "",
         "confidence": 0,
     }
 
 
 def analyze_payment_screenshot(
-    image_bytes: bytes,
-    mime_type: str = "image/png",
-) -> dict[str, Any]:
+    image_path: str,
+) -> Dict[str, Any]:
     """
-    Ask Grok Vision to extract payment-screen information.
+    Analyze a JazzCash payment screenshot using Groq.
 
-    IMPORTANT:
-    This does NOT prove that a real payment occurred.
-    It only extracts information visible in the screenshot.
+    This function only extracts information visible in the screenshot.
+    It does NOT independently verify that a real payment occurred.
     """
 
-    if not XAI_API_KEY:
-        raise RuntimeError(
-            "XAI_API_KEY is missing."
-        )
+    encoded_image = _encode_image(image_path)
+    mime_type = _image_mime_type(image_path)
 
-    if not image_bytes:
-        raise ValueError(
-            "The uploaded image is empty."
-        )
+    client = _get_client()
 
-    encoded = base64.b64encode(
-        image_bytes
-    ).decode("utf-8")
+    prompt = f"""
+Analyze this payment screenshot.
 
-    data_url = (
-        f"data:{mime_type};base64,{encoded}"
-    )
+Extract ONLY information that is visibly present.
 
-    prompt = """
-Analyze this payment screenshot ONLY for visible text.
+Return ONLY valid JSON in exactly this structure:
 
-Return ONLY valid JSON using exactly these keys:
-
-{
+{{
   "recipient": "",
-  "amount": null,
+  "amount": 0,
   "status": "",
   "confidence": 0
-}
+}}
 
 Rules:
-- recipient = the visible recipient/payee name.
-- amount = numeric transaction amount if clearly visible.
-- status = visible transaction status such as Sent, Successful,
-  Completed, Pending, Failed, or Unknown.
-- confidence = your confidence from 0 to 100.
+
+1. recipient:
+   Extract the visible payment recipient/name.
+   Do not guess.
+
+2. amount:
+   Extract the visible payment amount as a number.
+   If it cannot be read, use 0.
+
+3. status:
+   Extract the visible payment status.
+   Examples may include:
+   sent
+   successful
+   completed
+   pending
+   failed
+
+4. confidence:
+   A number from 0 to 1 representing confidence
+   in the extraction.
+
+Important:
+- Do not claim that the payment is genuine.
+- Do not claim that the payment was actually received.
 - Do not invent missing information.
-- If a field is not readable, use an empty string, null, or Unknown.
-- Do not claim that the screenshot proves a real bank/payment transaction.
+- Do not use the expected recipient or expected amount
+  to fill missing screenshot information.
 """
 
-    payload = {
-        "model": VISION_MODEL,
-        "input": [
+    response = client.chat.completions.create(
+        model=GROQ_MODEL,
+        messages=[
             {
                 "role": "user",
                 "content": [
                     {
-                        "type": "input_image",
-                        "image_url": data_url,
-                        "detail": "high",
+                        "type": "text",
+                        "text": prompt,
                     },
                     {
-                        "type": "input_text",
-                        "text": prompt,
+                        "type": "image_url",
+                        "image_url": {
+                            "url": (
+                                f"data:{mime_type};base64,"
+                                f"{encoded_image}"
+                            )
+                        },
                     },
                 ],
             }
         ],
-    }
-
-    response = requests.post(
-        f"{XAI_BASE_URL}/responses",
-        headers={
-            "Authorization": f"Bearer {XAI_API_KEY}",
-            "Content-Type": "application/json",
-        },
-        json=payload,
-        timeout=120,
+        temperature=0,
+        max_tokens=500,
     )
 
-    response.raise_for_status()
+    content = response.choices[0].message.content or ""
 
-    data = response.json()
-
-    text = extract_response_text(data)
-
-    result = _extract_json(text)
-
-    return normalize_vision_result(result)
-
-
-def extract_response_text(data: dict[str, Any]) -> str:
-    """
-    Extract text from the xAI Responses API response.
-    """
-    output = data.get("output", [])
-
-    texts = []
-
-    for item in output:
-        content = item.get("content", [])
-
-        for content_item in content:
-            if content_item.get("type") in {
-                "output_text",
-                "text",
-            }:
-                value = content_item.get("text")
-
-                if value:
-                    texts.append(str(value))
-
-    if texts:
-        return "\n".join(texts)
-
-    # Defensive fallback for different response shapes.
-    if isinstance(data.get("output_text"), str):
-        return data["output_text"]
-
-    return ""
-
-
-def normalize_vision_result(
-    result: dict[str, Any]
-) -> dict[str, Any]:
-    """
-    Normalize extracted fields.
-    """
-    recipient = str(
-        result.get("recipient", "")
-    ).strip()
-
-    status = str(
-        result.get("status", "")
-    ).strip()
-
-    amount = result.get("amount")
-
-    try:
-        if amount is not None:
-            amount = int(
-                float(
-                    str(amount)
-                    .replace(",", "")
-                    .replace("Rs.", "")
-                    .replace("PKR", "")
-                    .strip()
-                )
-            )
-    except (TypeError, ValueError):
-        amount = None
-
-    try:
-        confidence = int(
-            float(
-                result.get("confidence", 0)
-            )
-        )
-    except (TypeError, ValueError):
-        confidence = 0
-
-    confidence = max(
-        0,
-        min(100, confidence),
-    )
+    result = _clean_json_response(content)
 
     return {
-        "recipient": recipient,
-        "amount": amount,
-        "status": status,
-        "confidence": confidence,
+        "recipient": result.get(
+            "recipient",
+            "",
+        ),
+        "amount": result.get(
+            "amount",
+            0,
+        ),
+        "status": result.get(
+            "status",
+            "",
+        ),
+        "confidence": result.get(
+            "confidence",
+            0,
+        ),
+        "verification_label": (
+            "AI Screenshot Verification — Demo"
+        ),
     }
+
+
+def analyze_payment_image(
+    image_path: str,
+) -> Dict[str, Any]:
+    """Compatibility alias."""
+
+    return analyze_payment_screenshot(
+        image_path
+    )
+
+
+def extract_payment_details(
+    image_path: str,
+) -> Dict[str, Any]:
+    """Compatibility alias."""
+
+    return analyze_payment_screenshot(
+        image_path
+    )
