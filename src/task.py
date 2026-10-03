@@ -1,155 +1,178 @@
 from crewai import Task
 
 
-def create_tasks(
-    knowledge_agent,
-    planner_agent,
-    budget_agent,
-    safety_agent,
-    summarizer_agent,
-    user_query: str,
-    evidence_text: str,
-    trip_days: int,
-) -> list[Task]:
+def create_tasks(agents):
+    """
+    Create all TrekTales tasks.
 
-    grounding = """
-IMPORTANT:
+    Args:
+        agents: Dictionary returned by create_agents().
 
-Use ONLY the evidence supplied in this task.
+    Returns:
+        List of CrewAI Task objects.
+    """
 
-If information is missing:
-"Information not found in the tourism knowledge base."
+    # ========================================================
+    # TASK 1 — MASTER ORCHESTRATION
+    # ========================================================
 
-Never invent facts, prices, names, addresses, schedules,
-transport fares, safety statistics or contact information.
-"""
+    master_task = Task(
+        description=(
+            "Coordinate the complete TrekTales travel-planning "
+            "workflow for the following request:\n\n"
+            "Destination: {destination}\n"
+            "Starting location: {starting_location}\n"
+            "Duration: {duration} days\n"
+            "Travelers: {travelers}\n"
+            "Budget: {budget}\n"
+            "Travel style: {travel_style}\n"
+            "Interests: {interests}\n"
+            "Language: {language}\n\n"
+            "Retrieved tourism evidence:\n"
+            "{evidence}\n\n"
+            "Ensure the final travel plan is practical, coherent, "
+            "and based on the supplied evidence where possible."
+        ),
+        expected_output=(
+            "A coordinated travel-planning result containing "
+            "destination information, itinerary planning, "
+            "budget considerations, safety information and "
+            "a final summary."
+        ),
+        agent=agents["master_orchestrator"],
+    )
+
+    # ========================================================
+    # TASK 2 — KNOWLEDGE
+    # ========================================================
 
     knowledge_task = Task(
-        description=f"""
-User request:
-{user_query}
-
-Tourism knowledge-base evidence:
-{evidence_text}
-
-Identify the factual tourism information directly relevant
-to the user's request.
-
-{grounding}
-
-Return:
-- relevant facts
-- source
-- page
-- department
-""",
-        expected_output=(
-            "A grounded evidence summary with source and page references."
+        description=(
+            "Analyze the supplied tourism knowledge for the "
+            "requested trip.\n\n"
+            "Destination: {destination}\n"
+            "Starting location: {starting_location}\n"
+            "Interests: {interests}\n\n"
+            "Use the retrieved evidence below:\n"
+            "{evidence}\n\n"
+            "Identify useful destination information, places, "
+            "activities, food, transport and other relevant "
+            "tourism information. Do not invent unsupported "
+            "facts."
         ),
-        agent=knowledge_agent,
+        expected_output=(
+            "A concise set of evidence-grounded tourism findings "
+            "relevant to the requested trip."
+        ),
+        agent=agents["knowledge"],
     )
+
+    # ========================================================
+    # TASK 3 — PLANNER
+    # ========================================================
 
     planner_task = Task(
-        description=f"""
-Create a {trip_days}-day travel itinerary for:
-
-{user_query}
-
-Use only the supplied tourism evidence.
-
-{evidence_text}
-
-{grounding}
-
-The itinerary must clearly distinguish:
-- confirmed evidence-based items
-- user-provided preferences
-- unavailable information
-
-Do not invent missing attractions or schedules.
-""",
-        expected_output=(
-            "A practical day-by-day itinerary grounded in the evidence."
+        description=(
+            "Create a practical day-by-day itinerary.\n\n"
+            "Destination: {destination}\n"
+            "Starting location: {starting_location}\n"
+            "Duration: {duration} days\n"
+            "Travelers: {travelers}\n"
+            "Travel style: {travel_style}\n"
+            "Interests: {interests}\n"
+            "Language: {language}\n\n"
+            "Use the tourism information and previous agent "
+            "findings available in the task context."
         ),
-        agent=planner_agent,
+        expected_output=(
+            "A structured day-by-day itinerary with activities, "
+            "logical sequencing and practical travel suggestions."
+        ),
+        agent=agents["planner"],
+        context=[
+            knowledge_task,
+        ],
     )
+
+    # ========================================================
+    # TASK 4 — BUDGET
+    # ========================================================
 
     budget_task = Task(
-        description=f"""
-Prepare the travel budget for:
-
-{user_query}
-
-Use the supplied evidence:
-
-{evidence_text}
-
-{grounding}
-
-If a price is not available in the evidence,
-write "Price not available in knowledge base."
-
-Do not create current market prices.
-Do not guess hotel rates.
-Do not guess transport fares.
-""",
-        expected_output=(
-            "A transparent budget breakdown with unavailable prices explicitly marked."
+        description=(
+            "Prepare a practical budget estimate for the trip.\n\n"
+            "Destination: {destination}\n"
+            "Duration: {duration} days\n"
+            "Travelers: {travelers}\n"
+            "Budget level: {budget}\n"
+            "Starting location: {starting_location}\n\n"
+            "Consider likely categories such as transport, "
+            "accommodation, food and activities. Clearly label "
+            "estimates as estimates rather than guaranteed prices."
         ),
-        agent=budget_agent,
+        expected_output=(
+            "A categorized travel budget with estimated costs "
+            "and a reasonable total range."
+        ),
+        agent=agents["budget"],
+        context=[
+            knowledge_task,
+            planner_task,
+        ],
     )
+
+    # ========================================================
+    # TASK 5 — SAFETY
+    # ========================================================
 
     safety_task = Task(
-        description=f"""
-Prepare safety guidance for:
-
-{user_query}
-
-Use only this evidence:
-
-{evidence_text}
-
-{grounding}
-
-Do not invent emergency numbers,
-crime statistics, road conditions,
-or safety policies.
-""",
-        expected_output=(
-            "Evidence-grounded travel safety guidance with citations."
+        description=(
+            "Prepare practical safety guidance for the trip.\n\n"
+            "Destination: {destination}\n"
+            "Duration: {duration} days\n"
+            "Travelers: {travelers}\n"
+            "Travel style: {travel_style}\n\n"
+            "Focus on practical considerations such as weather, "
+            "transport, local conditions, emergency preparation "
+            "and responsible travel."
         ),
-        agent=safety_agent,
+        expected_output=(
+            "A concise list of relevant travel safety "
+            "considerations and precautions."
+        ),
+        agent=agents["safety"],
+        context=[
+            knowledge_task,
+            planner_task,
+        ],
     )
 
-    summarizer_task = Task(
-        description=f"""
-Create the final TrekTales answer for:
+    # ========================================================
+    # TASK 6 — SUMMARY
+    # ========================================================
 
-{user_query}
-
-Trip length:
-{trip_days} days
-
-The final answer must combine:
-1. knowledge findings
-2. itinerary
-3. budget
-4. safety
-
-Rules:
-- Never invent missing facts.
-- Preserve source names and page numbers.
-- Mention unavailable information honestly.
-- Use clear headings.
-- Keep the response practical.
-- Do not claim real-time verification.
-- Do not claim payment verification.
-""",
-        expected_output=(
-            "A polished grounded tourism answer with itinerary, budget, "
-            "safety notes and source citations."
+    summary_task = Task(
+        description=(
+            "Create the final TrekTales travel plan.\n\n"
+            "Destination: {destination}\n"
+            "Starting location: {starting_location}\n"
+            "Duration: {duration} days\n"
+            "Travelers: {travelers}\n"
+            "Budget: {budget}\n"
+            "Travel style: {travel_style}\n"
+            "Interests: {interests}\n"
+            "Language: {language}\n\n"
+            "Combine the available findings from the knowledge, "
+            "planning, budget and safety agents.\n\n"
+            "Write the final response in the requested language. "
+            "Keep it structured and easy to follow."
         ),
-        agent=summarizer_agent,
+        expected_output=(
+            "A complete personalized TrekTales travel plan "
+            "including itinerary, budget guidance, safety "
+            "information and useful travel notes."
+        ),
+        agent=agents["summarizer"],
         context=[
             knowledge_task,
             planner_task,
@@ -158,10 +181,48 @@ Rules:
         ],
     )
 
+    # ========================================================
+    # TASK 7 — PAYMENT
+    # ========================================================
+
+    payment_task = Task(
+        description=(
+            "Explain the TrekTales demo payment workflow when "
+            "payment information is provided. Do not claim that "
+            "an AI screenshot analysis is proof of a real "
+            "financial transaction."
+        ),
+        expected_output=(
+            "A clear explanation of the demo payment verification "
+            "result."
+        ),
+        agent=agents["payment"],
+    )
+
+    # ========================================================
+    # TASK 8 — VISION
+    # ========================================================
+
+    vision_task = Task(
+        description=(
+            "Support payment screenshot analysis by identifying "
+            "visible payment information such as recipient, "
+            "amount and transaction status when such information "
+            "is supplied."
+        ),
+        expected_output=(
+            "Structured payment screenshot observations."
+        ),
+        agent=agents["vision"],
+    )
+
     return [
+        master_task,
         knowledge_task,
         planner_task,
         budget_task,
         safety_task,
-        summarizer_task,
+        summary_task,
+        payment_task,
+        vision_task,
     ]
