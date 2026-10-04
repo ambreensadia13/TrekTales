@@ -1,18 +1,21 @@
 # Python
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
+*$py.class
 
 # Virtual environments
 .venv/
 venv/
 env/
+ENV/
+
+# Streamlit
+.streamlit/
+.streamlit/secrets.toml
 
 # Environment files
 .env
 .env.*
-.streamlit/secrets.toml
 
 # IDE
 .vscode/
@@ -22,16 +25,19 @@ env/
 .DS_Store
 Thumbs.db
 
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Jupyter
+.ipynb_checkpoints/
+
 # Python cache
 .pytest_cache/
 .mypy_cache/
 
-# Local FAISS temporary files
-*.tmp
-
-# Uploaded payment screenshots
-uploads/
-payment_uploads/
-
-# Logs
-*.log
+# Do NOT commit private credentials
+secrets.toml
