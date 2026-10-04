@@ -1,131 +1,195 @@
-from typing import Any, Dict
+from decimal import Decimal, InvalidOperation
 
-from .config import (
+from src.config import (
     EXPECTED_PAYMENT_RECIPIENT,
     UNLOCK_PRICE,
 )
 
 
-def normalize_text(value: Any) -> str:
-    """Normalize text for safe comparison."""
+SUCCESS_STATUSES = {
+    "successful",
+    "success",
+    "completed",
+    "complete",
+    "paid",
+    "sent",
+}
+
+
+def _normalize_text(value):
     if value is None:
         return ""
 
-    return " ".join(str(value).strip().lower().split())
+    return (
+        str(value)
+        .strip()
+        .lower()
+    )
 
 
-def normalize_amount(value: Any) -> float:
-    """Convert common amount formats into a numeric value."""
+def _normalize_amount(value):
+
     if value is None:
-        return 0.0
+        return None
 
-    text = str(value).strip().lower()
-
-    # Remove common currency labels and separators.
-    for token in ["rs.", "rs", "pkr", "₨", "₨.", ","]:
-        text = text.replace(token, "")
-
-    text = text.strip()
+    if isinstance(
+        value,
+        bool,
+    ):
+        return None
 
     try:
-        return float(text)
-    except (TypeError, ValueError):
-        return 0.0
+
+        text = str(value)
+
+        text = (
+            text
+            .replace(
+                "rs.",
+                "",
+            )
+            .replace(
+                "rs",
+                "",
+            )
+            .replace(
+                "pkr",
+                "",
+            )
+            .replace(
+                ",",
+                "",
+            )
+            .strip()
+        )
+
+        return Decimal(text)
+
+    except (
+        InvalidOperation,
+        ValueError,
+        TypeError,
+    ):
+
+        return None
 
 
-def verify_payment(
-    recipient: Any,
-    amount: Any,
-    status: Any,
-) -> Dict[str, Any]:
+def verify_payment(payment_data):
     """
-    Deterministically verify the extracted payment information.
+    Deterministic demo payment validation.
 
-    This is DEMO verification only.
-    It does not contact JazzCash or any real payment provider.
+    Vision AI may extract the fields, but it does NOT
+    decide whether payment is valid.
+
+    The application checks:
+    recipient
+    amount
+    status
     """
 
-    expected_recipient = normalize_text(
-        EXPECTED_PAYMENT_RECIPIENT
+    if not isinstance(
+        payment_data,
+        dict,
+    ):
+
+        return {
+            "verified": False,
+            "reason": "Invalid payment data.",
+        }
+
+
+    recipient = _normalize_text(
+        payment_data.get(
+            "recipient",
+            "",
+        )
     )
 
-    actual_recipient = normalize_text(recipient)
-
-    expected_amount = float(UNLOCK_PRICE)
-    actual_amount = normalize_amount(amount)
-
-    actual_status = normalize_text(status)
-
-    valid_statuses = {
-        "sent",
-        "successful",
-        "completed",
-    }
-
-    recipient_match = (
-        actual_recipient == expected_recipient
+    status = _normalize_text(
+        payment_data.get(
+            "status",
+            "",
+        )
     )
 
-    amount_match = (
-        actual_amount == expected_amount
+    amount = _normalize_amount(
+        payment_data.get(
+            "amount",
+            None,
+        )
     )
 
-    status_match = (
-        actual_status in valid_statuses
+    expected_recipient = (
+        _normalize_text(
+            EXPECTED_PAYMENT_RECIPIENT
+        )
     )
+
+    expected_amount = Decimal(
+        str(UNLOCK_PRICE)
+    )
+
+
+    recipient_ok = (
+        bool(recipient)
+        and bool(expected_recipient)
+        and (
+            recipient
+            == expected_recipient
+            or expected_recipient
+            in recipient
+        )
+    )
+
+
+    amount_ok = (
+        amount is not None
+        and amount == expected_amount
+    )
+
+
+    status_ok = (
+        status in SUCCESS_STATUSES
+    )
+
 
     verified = (
-        recipient_match
-        and amount_match
-        and status_match
+        recipient_ok
+        and amount_ok
+        and status_ok
     )
+
+
+    reasons = []
+
+    if not recipient_ok:
+        reasons.append(
+            "Recipient does not match the expected demo recipient."
+        )
+
+    if not amount_ok:
+        reasons.append(
+            f"Amount must be Rs. {UNLOCK_PRICE}."
+        )
+
+    if not status_ok:
+        reasons.append(
+            "Payment status was not recognized as successful."
+        )
+
 
     return {
         "verified": verified,
-        "recipient": recipient,
-        "amount": amount,
-        "status": status,
-        "expected_recipient": EXPECTED_PAYMENT_RECIPIENT,
-        "expected_amount": expected_amount,
-        "recipient_match": recipient_match,
-        "amount_match": amount_match,
-        "status_match": status_match,
-        "verification_type": "AI Screenshot Verification — Demo",
+        "recipient_ok": recipient_ok,
+        "amount_ok": amount_ok,
+        "status_ok": status_ok,
+        "expected_recipient": (
+            EXPECTED_PAYMENT_RECIPIENT
+        ),
+        "expected_amount": UNLOCK_PRICE,
+        "reason": (
+            "Payment passed all deterministic checks."
+            if verified
+            else " ".join(reasons)
+        ),
     }
-
-
-def verify_payment_data(
-    payment_data: Dict[str, Any],
-) -> Dict[str, Any]:
-    """
-    Convenience wrapper for dictionaries returned by the Vision Agent.
-    """
-
-    if not isinstance(payment_data, dict):
-        return verify_payment(
-            recipient="",
-            amount=0,
-            status="",
-        )
-
-    return verify_payment(
-        recipient=payment_data.get("recipient", ""),
-        amount=payment_data.get("amount", 0),
-        status=payment_data.get("status", ""),
-    )
-
-
-def payment_is_verified(
-    recipient: Any,
-    amount: Any,
-    status: Any,
-) -> bool:
-    """Return only the final verification result."""
-
-    result = verify_payment(
-        recipient=recipient,
-        amount=amount,
-        status=status,
-    )
-
-    return bool(result["verified"])
