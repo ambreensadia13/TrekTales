@@ -455,89 +455,51 @@ div[data-baseweb="select"] * {{
     color: {BLACK} !important;
 }}
 
- /* =========================================================
-    LANGUAGE SELECTOR - FORCE SELECTED TEXT BLACK
-    ========================================================= */
-
-div[data-baseweb="select"] {{
-    background: #FFFFFF !important;
-    color: #111111 !important;
-}}
-
-div[data-baseweb="select"] > div {{
-    background: #FFFFFF !important;
-    color: #111111 !important;
-}}
-
-/* Selected language text */
-div[data-baseweb="select"] [role="button"] {{
-    color: #111111 !important;
-    background: #FFFFFF !important;
-}}
-
-div[data-baseweb="select"] [role="button"] * {{
-    color: #111111 !important;
-    -webkit-text-fill-color: #111111 !important;
-}}
-
-/* BaseWeb selected value */
-div[data-baseweb="select"] [class*="singleValue"] {{
-    color: #111111 !important;
-    -webkit-text-fill-color: #111111 !important;
-}}
-
-/* All text inside selector */
-div[data-baseweb="select"] span {{
-    color: #111111 !important;
-    -webkit-text-fill-color: #111111 !important;
-}}
-
-div[data-baseweb="select"] input {{
-    color: #111111 !important;
-    -webkit-text-fill-color: #111111 !important;
-}}
-
-/* Dropdown options */
-div[data-baseweb="popover"] {{
-    background: #FFFFFF !important;
-}}
-
-div[data-baseweb="popover"] * {{
-    color: #111111 !important;
-    -webkit-text-fill-color: #111111 !important;
-}}
-
-/* Dropdown arrow */
-div[data-baseweb="select"] svg {{
-    color: #111111 !important;
-    fill: #111111 !important;
-}}
-
 /* =========================================================
-   RESPONSE LANGUAGE - FORCE BLACK TEXT
+   LANGUAGE SELECTOR - BLACK TEXT
    ========================================================= */
 
-section[data-testid="stSidebar"] div[data-baseweb="select"],
-section[data-testid="stSidebar"] div[data-baseweb="select"] > div,
-section[data-testid="stSidebar"] div[data-baseweb="select"] span,
-section[data-testid="stSidebar"] div[data-baseweb="select"] input {{
-    color: #111111 !important;
-    -webkit-text-fill-color: #111111 !important;
+section[data-testid="stSidebar"] div[data-baseweb="select"] {{
+    background: {WHITE} !important;
+    color: {BLACK} !important;
 }}
 
 section[data-testid="stSidebar"] div[data-baseweb="select"] > div {{
-    background: #FFFFFF !important;
+    background: {WHITE} !important;
+    color: {BLACK} !important;
 }}
 
 section[data-testid="stSidebar"] div[data-baseweb="select"] * {{
-    color: #111111 !important;
-    -webkit-text-fill-color: #111111 !important;
+    color: {BLACK} !important;
+    -webkit-text-fill-color: {BLACK} !important;
 }}
 
-=========================================================
+section[data-testid="stSidebar"] div[data-baseweb="select"] span {{
+    color: {BLACK} !important;
+    -webkit-text-fill-color: {BLACK} !important;
+}}
+
+section[data-testid="stSidebar"] div[data-baseweb="select"] input {{
+    color: {BLACK} !important;
+    -webkit-text-fill-color: {BLACK} !important;
+}}
+
+section[data-testid="stSidebar"] div[data-baseweb="select"] svg {{
+    color: {BLACK} !important;
+    fill: {BLACK} !important;
+}}
+
+div[data-baseweb="popover"] {{
+    background: {WHITE} !important;
+}}
+
+div[data-baseweb="popover"] * {{
+    color: {BLACK} !important;
+    -webkit-text-fill-color: {BLACK} !important;
+}}
+/* =========================================================
    FILE UPLOADER - LIGHT GREEN TEXT
    ========================================================= */
-
 section[data-testid="stFileUploaderDropzone"] {{
     background: {WHITE} !important;
     border: 1px dashed {GREEN} !important;
@@ -565,19 +527,22 @@ div[data-testid="stFileUploaderDropzoneInstructions"] * {{
 }}
 
 /* =========================================================
-   PREPARING TREKTALES STATUS - WHITE TEXT
+   PREPARING TREKTALES STATUS - BLACK TEXT
    ========================================================= */
 
 div[data-testid="stStatusWidget"] {{
-    color: {WHITE} !important;
+    color: {BLACK} !important;
+    background: {WHITE} !important;
 }}
 
 div[data-testid="stStatusWidget"] * {{
-    color: {WHITE} !important;
+    color: {BLACK} !important;
+    -webkit-text-fill-color: {BLACK} !important;
 }}
 
 div[data-testid="stStatusWidget"] svg {{
-    color: {WHITE} !important;
+    color: {BLACK} !important;
+    fill: {BLACK} !important;
 }}
 
 /* =========================================================
