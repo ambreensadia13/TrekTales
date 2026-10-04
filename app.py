@@ -1305,11 +1305,15 @@ with input_col1:
 
     destination = "Rawalpindi"
 
-    st.text_input(
-        "📍 Destination",
-        value="Rawalpindi",
-        disabled=True,
-    )
+st.markdown(
+    """
+    <div class="destination-box">
+        <div class="destination-label">📍 Destination</div>
+        <div class="destination-value">RAWALPINDI</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
     # --------------------------------------------------------
     # STARTING LOCATION
