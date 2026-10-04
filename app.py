@@ -460,30 +460,41 @@ div[data-baseweb="select"] * {{
    ========================================================= */
 
 div[data-baseweb="select"] {{
-    color: {BLACK} !important;
+    color: #111111 !important;
 }}
 
 div[data-baseweb="select"] > div {{
-    color: {BLACK} !important;
+    background: #FFFFFF !important;
+    color: #111111 !important;
+}}
+
+div[data-baseweb="select"] > div * {{
+    color: #111111 !important;
 }}
 
 div[data-baseweb="select"] span {{
-    color: {BLACK} !important;
+    color: #111111 !important;
 }}
 
 div[data-baseweb="select"] input {{
-    color: {BLACK} !important;
+    color: #111111 !important;
+    -webkit-text-fill-color: #111111 !important;
+}}
+
+div[data-baseweb="select"] svg {{
+    color: #111111 !important;
+    fill: #111111 !important;
 }}
 
 div[data-baseweb="popover"] {{
-    color: {BLACK} !important;
+    background: #FFFFFF !important;
 }}
 
 div[data-baseweb="popover"] * {{
-    color: {BLACK} !important;
-}}
+    color: #111111 !important;
+}}/*
 
-/* =========================================================
+=========================================================
    FILE UPLOADER - LIGHT GREEN TEXT
    ========================================================= */
 
