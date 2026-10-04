@@ -456,47 +456,58 @@ div[data-baseweb="select"] * {{
 }}
 
 /* =========================================================
-   LANGUAGE SELECTOR - BLACK TEXT
+   LANGUAGE SELECTOR - FORCE SELECTED TEXT BLACK
    ========================================================= */
 
-section[data-testid="stSidebar"] div[data-baseweb="select"] {{
-    background: {WHITE} !important;
-    color: {BLACK} !important;
-}}
+section[data-testid="stSidebar"] div[data-testid="stSelectbox"] div[data-baseweb="select"] {
+    background-color: #FFFFFF !important;
+}
 
-section[data-testid="stSidebar"] div[data-baseweb="select"] > div {{
-    background: {WHITE} !important;
-    color: {BLACK} !important;
-}}
+section[data-testid="stSidebar"] div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+    background-color: #FFFFFF !important;
+}
 
-section[data-testid="stSidebar"] div[data-baseweb="select"] * {{
-    color: {BLACK} !important;
-    -webkit-text-fill-color: {BLACK} !important;
-}}
+/* Selected language text */
+section[data-testid="stSidebar"] div[data-testid="stSelectbox"] div[data-baseweb="select"] span {
+    color: #111111 !important;
+    -webkit-text-fill-color: #111111 !important;
+}
 
-section[data-testid="stSidebar"] div[data-baseweb="select"] span {{
-    color: {BLACK} !important;
-    -webkit-text-fill-color: {BLACK} !important;
-}}
+/* Selected language text and nested elements */
+section[data-testid="stSidebar"] div[data-testid="stSelectbox"] div[data-baseweb="select"] span * {
+    color: #111111 !important;
+    -webkit-text-fill-color: #111111 !important;
+}
 
-section[data-testid="stSidebar"] div[data-baseweb="select"] input {{
-    color: {BLACK} !important;
-    -webkit-text-fill-color: {BLACK} !important;
-}}
+/* Input used internally by BaseWeb */
+section[data-testid="stSidebar"] div[data-testid="stSelectbox"] input {
+    color: #111111 !important;
+    -webkit-text-fill-color: #111111 !important;
+    caret-color: #111111 !important;
+}
 
-section[data-testid="stSidebar"] div[data-baseweb="select"] svg {{
-    color: {BLACK} !important;
-    fill: {BLACK} !important;
-}}
+/* Dropdown arrow */
+section[data-testid="stSidebar"] div[data-testid="stSelectbox"] svg {
+    color: #111111 !important;
+    fill: #111111 !important;
+}
 
-div[data-baseweb="popover"] {{
-    background: {WHITE} !important;
-}}
+/* Dropdown menu */
+div[data-baseweb="popover"] {
+    background-color: #FFFFFF !important;
+}
 
-div[data-baseweb="popover"] * {{
-    color: {BLACK} !important;
-    -webkit-text-fill-color: {BLACK} !important;
-}}
+div[data-baseweb="popover"] [role="option"] {
+    color: #111111 !important;
+    -webkit-text-fill-color: #111111 !important;
+    background-color: #FFFFFF !important;
+}
+
+div[data-baseweb="popover"] [role="option"] * {
+    color: #111111 !important;
+    -webkit-text-fill-color: #111111 !important;
+}
+
 /* =========================================================
    FILE UPLOADER - LIGHT GREEN TEXT
    ========================================================= */
@@ -530,20 +541,41 @@ div[data-testid="stFileUploaderDropzoneInstructions"] * {{
    PREPARING TREKTALES STATUS - BLACK TEXT
    ========================================================= */
 
-div[data-testid="stStatusWidget"] {{
-    color: {BLACK} !important;
-    background: {WHITE} !important;
-}}
+div[data-testid="stStatusWidget"] {
+    background-color: #FFFFFF !important;
+    color: #111111 !important;
+}
 
-div[data-testid="stStatusWidget"] * {{
-    color: {BLACK} !important;
-    -webkit-text-fill-color: {BLACK} !important;
-}}
+/* Status title */
+div[data-testid="stStatusWidget"] > div {
+    color: #111111 !important;
+    -webkit-text-fill-color: #111111 !important;
+}
 
-div[data-testid="stStatusWidget"] svg {{
-    color: {BLACK} !important;
-    fill: {BLACK} !important;
-}}
+/* All status text */
+div[data-testid="stStatusWidget"] p,
+div[data-testid="stStatusWidget"] span,
+div[data-testid="stStatusWidget"] div,
+div[data-testid="stStatusWidget"] label {
+    color: #111111 !important;
+    -webkit-text-fill-color: #111111 !important;
+}
+
+/* Nested elements */
+div[data-testid="stStatusWidget"] p *,
+div[data-testid="stStatusWidget"] span *,
+div[data-testid="stStatusWidget"] div *,
+div[data-testid="stStatusWidget"] label * {
+    color: #111111 !important;
+    -webkit-text-fill-color: #111111 !important;
+}
+
+/* Status icon */
+div[data-testid="stStatusWidget"] svg {
+    color: #111111 !important;
+    fill: #111111 !important;
+    stroke: #111111 !important;
+}
 
 /* =========================================================
    METRICS
