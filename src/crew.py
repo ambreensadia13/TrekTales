@@ -65,7 +65,7 @@ class TrekTalesCrew:
                     },
                 ],
                 temperature=0.1,
-                max_tokens=7000,
+                max_tokens=3000,
             )
         )
 
