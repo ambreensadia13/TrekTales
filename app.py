@@ -1,6 +1,5 @@
 from pathlib import Path
 import base64
-import html
 import json
 import re
 
@@ -20,7 +19,7 @@ st.set_page_config(
 
 
 # ============================================================
-# PROJECT PATHS
+# PATHS
 # ============================================================
 
 ROOT_DIR = Path(__file__).resolve().parent
@@ -43,13 +42,8 @@ MAX_TRIP_DAYS = 10
 UNLOCK_PRICE = 199
 
 DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-
 DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b"
-
-DEFAULT_GROQ_VISION_MODEL = (
-    "meta-llama/llama-4-scout-17b-16e-instruct"
-)
-
+DEFAULT_GROQ_VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 DEFAULT_GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 
 TOP_K = 6
@@ -79,13 +73,7 @@ st.markdown(
     f"""
 <style>
 
-* {{
-    box-sizing: border-box;
-}}
-
-html,
-body,
-[data-testid="stAppViewContainer"] {{
+html, body, [class*="css"] {{
     font-family: Arial, Helvetica, sans-serif;
 }}
 
@@ -94,7 +82,7 @@ body,
         linear-gradient(
             135deg,
             {SOFT_WHITE} 0%,
-            {CREAM} 48%,
+            {CREAM} 45%,
             #ffffff 100%
         );
     color: {BLACK};
@@ -102,20 +90,20 @@ body,
 
 .main .block-container {{
     max-width: 1250px;
-    padding-top: 1rem;
+    padding-top: 1.2rem;
     padding-bottom: 3rem;
 }}
 
 
-/* ============================================================
+/* ==========================================================
    SIDEBAR
-   ============================================================ */
+   ========================================================== */
 
 [data-testid="stSidebar"] {{
     background: {GREEN} !important;
 }}
 
-[data-testid="stSidebar"] > div {{
+[data-testid="stSidebar"] > div:first-child {{
     background: {GREEN} !important;
 }}
 
@@ -123,28 +111,15 @@ body,
     color: {WHITE} !important;
 }}
 
-[data-testid="stSidebar"] label {{
-    color: {WHITE} !important;
-}}
-
-[data-testid="stSidebar"] div[data-baseweb="select"] > div {{
-    background: rgba(255, 255, 255, 0.12) !important;
-    border: 1px solid rgba(255, 255, 255, 0.25) !important;
-}}
-
-[data-testid="stSidebar"] div[data-baseweb="select"] span {{
-    color: {WHITE} !important;
-}}
-
 .sidebar-brand {{
     text-align: center;
-    padding: 10px 5px 22px;
+    padding: 10px 5px 20px 5px;
 }}
 
 .sidebar-brand-title {{
-    color: {CREAM} !important;
     font-size: 28px;
     font-weight: 900;
+    color: {CREAM} !important;
 }}
 
 .sidebar-brand-subtitle {{
@@ -154,41 +129,41 @@ body,
 }}
 
 .sidebar-card {{
-    background: rgba(255, 255, 255, 0.10);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 14px;
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 15px;
     padding: 14px;
     margin: 10px 0;
 }}
 
 .sidebar-card-title {{
-    color: {CREAM} !important;
     font-size: 13px;
     font-weight: 800;
-    margin-bottom: 7px;
+    color: {CREAM} !important;
+    margin-bottom: 5px;
 }}
 
 .sidebar-card-text {{
-    color: {WHITE} !important;
     font-size: 12px;
-    line-height: 1.55;
+    color: {WHITE} !important;
+    line-height: 1.5;
 }}
 
 
-/* ============================================================
+/* ==========================================================
    BRAND
-   ============================================================ */
+   ========================================================== */
 
 .brand-wrapper {{
     text-align: center;
-    padding: 5px 0 20px;
+    padding: 5px 0 20px 0;
 }}
 
 .brand-title {{
-    color: {GREEN};
     font-size: clamp(2rem, 5vw, 3.5rem);
     font-weight: 900;
     letter-spacing: -2px;
+    color: {GREEN};
     margin: 0;
 }}
 
@@ -198,14 +173,14 @@ body,
 
 .brand-subtitle {{
     color: {BROWN};
-    font-size: clamp(0.85rem, 2vw, 1.05rem);
-    margin-top: 6px;
+    font-size: clamp(0.9rem, 2vw, 1.1rem);
+    margin-top: 5px;
 }}
 
 
-/* ============================================================
+/* ==========================================================
    HERO
-   ============================================================ */
+   ========================================================== */
 
 .hero-card {{
     background:
@@ -214,39 +189,40 @@ body,
             {GREEN},
             {DARK_GREEN}
         );
-    border-radius: 24px;
+    border-radius: 25px;
     padding: clamp(25px, 5vw, 50px);
     color: {WHITE};
-    box-shadow: 0 15px 45px rgba(34, 111, 84, 0.22);
+    box-shadow: 0 15px 45px rgba(34,111,84,0.25);
     margin-bottom: 25px;
+    overflow: hidden;
 }}
 
 .hero-card h1 {{
     color: {WHITE} !important;
     font-size: clamp(2rem, 5vw, 3.4rem);
     line-height: 1.1;
-    font-weight: 900;
     margin-bottom: 15px;
+    font-weight: 900;
 }}
 
 .hero-card p {{
     color: {WHITE} !important;
-    font-size: clamp(0.9rem, 2vw, 1.1rem);
+    font-size: clamp(0.95rem, 2vw, 1.15rem);
     line-height: 1.7;
-    max-width: 850px;
+    max-width: 800px;
 }}
 
 
-/* ============================================================
+/* ==========================================================
    SECTION HEADINGS
-   ============================================================ */
+   ========================================================== */
 
 .section-title {{
     color: {BROWN};
     font-size: 1.65rem;
     font-weight: 900;
     margin-top: 30px;
-    margin-bottom: 8px;
+    margin-bottom: 15px;
 }}
 
 .section-subtitle {{
@@ -256,22 +232,22 @@ body,
 }}
 
 
-/* ============================================================
+/* ==========================================================
    FEATURE CARDS
-   ============================================================ */
+   ========================================================== */
 
 .feature-card {{
     background: {WHITE};
-    border: 1px solid rgba(67, 41, 31, 0.12);
+    border: 1px solid rgba(67,41,31,0.12);
     border-radius: 18px;
     padding: 22px;
     min-height: 170px;
-    box-shadow: 0 7px 22px rgba(67, 41, 31, 0.08);
+    box-shadow: 0 7px 22px rgba(67,41,31,0.08);
 }}
 
 .feature-icon {{
-    font-size: 29px;
-    margin-bottom: 7px;
+    font-size: 30px;
+    margin-bottom: 8px;
 }}
 
 .feature-card h3 {{
@@ -287,9 +263,9 @@ body,
 }}
 
 
-/* ============================================================
-   FORM INPUTS
-   ============================================================ */
+/* ==========================================================
+   INPUTS
+   ========================================================== */
 
 label {{
     color: {BROWN} !important;
@@ -301,7 +277,7 @@ label {{
 .stNumberInput input {{
     background: {WHITE} !important;
     color: {BLACK} !important;
-    border: 2px solid rgba(34, 111, 84, 0.25) !important;
+    border: 2px solid rgba(34,111,84,0.25) !important;
     border-radius: 11px !important;
 }}
 
@@ -309,18 +285,16 @@ label {{
 .stTextArea textarea:focus,
 .stNumberInput input:focus {{
     border-color: {GREEN} !important;
-    box-shadow: 0 0 0 2px rgba(135, 195, 143, 0.25) !important;
+    box-shadow: 0 0 0 2px rgba(135,195,143,0.25) !important;
 }}
 
 
-/* ============================================================
-   SELECT BOXES
-   ============================================================ */
+/* Select boxes */
 
 div[data-baseweb="select"] > div {{
     background: {WHITE} !important;
     color: {BLACK} !important;
-    border: 2px solid rgba(34, 111, 84, 0.25) !important;
+    border: 2px solid rgba(34,111,84,0.25) !important;
     border-radius: 11px !important;
 }}
 
@@ -342,22 +316,9 @@ li[role="option"]:hover {{
 }}
 
 
-/* ============================================================
-   MULTISELECT
-   ============================================================ */
-
-div[data-baseweb="tag"] {{
-    background: {LIGHT_GREEN} !important;
-}}
-
-div[data-baseweb="tag"] span {{
-    color: {BLACK} !important;
-}}
-
-
-/* ============================================================
+/* ==========================================================
    BUTTONS
-   ============================================================ */
+   ========================================================== */
 
 .stButton > button {{
     background: {RED} !important;
@@ -367,17 +328,19 @@ div[data-baseweb="tag"] span {{
     min-height: 48px !important;
     font-weight: 800 !important;
     font-size: 15px !important;
+    transition: 0.2s ease;
 }}
 
 .stButton > button:hover {{
     background: {BROWN} !important;
     color: {WHITE} !important;
+    transform: translateY(-1px);
 }}
 
 
-/* ============================================================
-   AI RESPONSE
-   ============================================================ */
+/* ==========================================================
+   RESPONSE CARD
+   ========================================================== */
 
 .response-card {{
     background: {WHITE};
@@ -385,15 +348,15 @@ div[data-baseweb="tag"] span {{
     border-radius: 18px;
     padding: 25px;
     margin: 15px 0;
-    box-shadow: 0 8px 25px rgba(67, 41, 31, 0.10);
+    box-shadow: 0 8px 25px rgba(67,41,31,0.10);
     overflow-wrap: anywhere;
 }}
 
 .response-card,
+.response-card *,
 .response-card p,
 .response-card li,
-.response-card span,
-.response-card strong {{
+.response-card span {{
     color: {BLACK} !important;
 }}
 
@@ -404,10 +367,14 @@ div[data-baseweb="tag"] span {{
     color: {BROWN} !important;
 }}
 
+.response-card strong {{
+    color: {BROWN} !important;
+}}
 
-/* ============================================================
+
+/* ==========================================================
    SOURCE CARDS
-   ============================================================ */
+   ========================================================== */
 
 .source-card {{
     background: {CREAM};
@@ -426,53 +393,20 @@ div[data-baseweb="tag"] span {{
 .source-card-text {{
     color: {BLACK} !important;
     font-size: 12px;
-}}
-
-
-/* ============================================================
-   AGENT CARDS
-   ============================================================ */
-
-.agent-card {{
-    background: {WHITE};
-    border: 1px solid rgba(67, 41, 31, 0.10);
-    border-radius: 15px;
-    padding: 15px;
-    min-height: 135px;
-    box-shadow: 0 5px 18px rgba(67, 41, 31, 0.06);
-}}
-
-.agent-number {{
-    color: {RED};
-    font-weight: 900;
-    font-size: 12px;
-}}
-
-.agent-name {{
-    color: {BROWN} !important;
-    font-weight: 900;
-    font-size: 15px;
-    margin-top: 4px;
-}}
-
-.agent-role {{
-    color: {BLACK} !important;
-    font-size: 12px;
     line-height: 1.5;
-    margin-top: 7px;
 }}
 
 
-/* ============================================================
+/* ==========================================================
    STATUS
-   ============================================================ */
+   ========================================================== */
 
 .status-card {{
     background: {WHITE};
     border-radius: 15px;
     padding: 15px;
-    border: 1px solid rgba(67, 41, 31, 0.10);
-    box-shadow: 0 5px 18px rgba(67, 41, 31, 0.06);
+    border: 1px solid rgba(67,41,31,0.10);
+    box-shadow: 0 5px 18px rgba(67,41,31,0.06);
 }}
 
 .status-ready {{
@@ -486,16 +420,16 @@ div[data-baseweb="tag"] span {{
 }}
 
 
-/* ============================================================
-   PAYMENT CARD
-   ============================================================ */
+/* ==========================================================
+   PAYMENT
+   ========================================================== */
 
 .payment-card {{
     background: {WHITE};
     border: 2px solid {LIGHT_GREEN};
     border-radius: 20px;
     padding: 25px;
-    box-shadow: 0 8px 25px rgba(34, 111, 84, 0.10);
+    box-shadow: 0 8px 25px rgba(34,111,84,0.10);
 }}
 
 .payment-title {{
@@ -511,9 +445,9 @@ div[data-baseweb="tag"] span {{
 }}
 
 
-/* ============================================================
-   FILE UPLOADER
-   ============================================================ */
+/* ==========================================================
+   FILE UPLOADER — LIGHT GREEN
+   ========================================================== */
 
 .stFileUploader {{
     background: {LIGHT_GREEN} !important;
@@ -550,9 +484,18 @@ div[data-baseweb="tag"] span {{
 }}
 
 
-/* ============================================================
+/* ==========================================================
+   ALERTS
+   ========================================================== */
+
+div[data-testid="stAlert"] {{
+    border-radius: 12px !important;
+}}
+
+
+/* ==========================================================
    FOOTER
-   ============================================================ */
+   ========================================================== */
 
 .footer {{
     text-align: center;
@@ -563,20 +506,28 @@ div[data-baseweb="tag"] span {{
 }}
 
 
-/* ============================================================
-   MOBILE
-   ============================================================ */
+/* ==========================================================
+   MOBILE RESPONSIVE
+   ========================================================== */
 
 @media screen and (max-width: 768px) {{
 
     .main .block-container {{
-        padding: 0.8rem 0.7rem 2rem !important;
+        padding: 0.8rem 0.75rem 2rem !important;
         max-width: 100% !important;
+    }}
+
+    .brand-wrapper {{
+        padding-bottom: 15px;
     }}
 
     .brand-title {{
         font-size: 2.25rem !important;
         letter-spacing: -1px;
+    }}
+
+    .brand-subtitle {{
+        font-size: 0.85rem !important;
     }}
 
     .hero-card {{
@@ -594,13 +545,12 @@ div[data-baseweb="tag"] span {{
 
     .feature-card {{
         min-height: auto !important;
-        margin-bottom: 12px;
         padding: 18px !important;
+        margin-bottom: 12px !important;
     }}
 
-    .agent-card {{
-        min-height: auto !important;
-        margin-bottom: 12px;
+    .section-title {{
+        font-size: 1.35rem !important;
     }}
 
     .response-card {{
@@ -624,8 +574,8 @@ div[data-baseweb="tag"] span {{
     }}
 
     .stButton > button {{
-        width: 100% !important;
         min-height: 48px !important;
+        width: 100% !important;
     }}
 
     .stFileUploader,
@@ -640,9 +590,26 @@ div[data-baseweb="tag"] span {{
         border-color: {GREEN} !important;
     }}
 
+    .stTextInput input,
+    .stTextArea textarea,
+    .stNumberInput input {{
+        min-height: 44px !important;
+    }}
+
+    [data-testid="stSidebar"] {{
+        background: {GREEN} !important;
+    }}
+
     img {{
         max-width: 100% !important;
         height: auto !important;
+    }}
+
+    .response-card,
+    .source-card,
+    .payment-card {{
+        overflow-wrap: anywhere !important;
+        word-break: normal !important;
     }}
 
     .main,
@@ -661,10 +628,11 @@ div[data-baseweb="tag"] span {{
 
 
 # ============================================================
-# SAFE HELPERS
+# HELPER FUNCTIONS
 # ============================================================
 
 def get_secret(name, default=""):
+    """Safely read a Streamlit secret."""
     try:
         value = st.secrets.get(name, default)
     except Exception:
@@ -677,49 +645,26 @@ def get_secret(name, default=""):
 
 
 def clean_text(value):
-    """
-    Removes accidental HTML from model/UI text.
-    Markdown remains available.
-    """
+    """Clean text without destroying useful Markdown."""
     if value is None:
         return ""
 
-    text = str(value)
-    text = text.replace("\x00", "")
+    value = str(value)
 
-    # Decode HTML entities first so encoded HTML is also removed.
-    text = html.unescape(text)
+    value = value.replace("\x00", "")
+    value = value.replace("<script", "")
+    value = value.replace("</script>", "")
 
-    # Remove script/style blocks.
-    text = re.sub(
-        r"<(?:script|style)\b[^>]*>.*?</(?:script|style)>",
-        "",
-        text,
-        flags=re.IGNORECASE | re.DOTALL,
-    )
-
-    # Remove remaining HTML/XML-like tags.
-    text = re.sub(
-        r"<[^>]*>",
-        "",
-        text,
-    )
-
-    return text.strip()
+    return value.strip()
 
 
 def normalize_metadata(raw):
+    """Convert different metadata JSON structures into a list."""
     if isinstance(raw, list):
         return raw
 
     if isinstance(raw, dict):
-        for key in [
-            "records",
-            "metadata",
-            "chunks",
-            "documents",
-            "data",
-        ]:
+        for key in ["records", "metadata", "chunks", "documents", "data"]:
             value = raw.get(key)
 
             if isinstance(value, list):
@@ -728,7 +673,8 @@ def normalize_metadata(raw):
     return []
 
 
-def get_record_text(record):
+def record_text(record):
+    """Extract text from a metadata record."""
     if not isinstance(record, dict):
         return ""
 
@@ -742,12 +688,13 @@ def get_record_text(record):
         value = record.get(key)
 
         if value:
-            return str(value).strip()
+            return clean_text(value)
 
     return ""
 
 
-def get_record_source(record):
+def record_source(record):
+    """Extract source filename."""
     if not isinstance(record, dict):
         return "Unknown source"
 
@@ -761,20 +708,20 @@ def get_record_source(record):
         value = record.get(key)
 
         if value:
-            return Path(str(value)).name
+            value = str(value)
+
+            # Only show filename rather than full path.
+            return Path(value).name
 
     return "Unknown source"
 
 
-def get_record_page(record):
+def record_page(record):
+    """Extract page if available."""
     if not isinstance(record, dict):
         return ""
 
-    for key in [
-        "page",
-        "page_number",
-        "page_num",
-    ]:
+    for key in ["page", "page_number", "page_num"]:
         value = record.get(key)
 
         if value not in [None, ""]:
@@ -783,22 +730,14 @@ def get_record_page(record):
     return ""
 
 
-# ============================================================
-# LOAD METADATA
-# ============================================================
-
 @st.cache_data(show_spinner=False)
 def load_metadata():
-
+    """Load FAISS metadata."""
     if not METADATA_PATH.exists():
         return []
 
     try:
-        with open(
-            METADATA_PATH,
-            "r",
-            encoding="utf-8",
-        ) as file:
+        with open(METADATA_PATH, "r", encoding="utf-8") as file:
             raw = json.load(file)
 
         return normalize_metadata(raw)
@@ -807,128 +746,101 @@ def load_metadata():
         return []
 
 
-# ============================================================
-# LOAD FAISS
-# ============================================================
-
 @st.cache_resource(show_spinner=False)
 def load_faiss_resources():
+    """
+    Load FAISS and SentenceTransformer lazily.
+
+    Heavy dependencies are imported only when the user
+    generates a trip, preventing startup failures.
+    """
 
     import faiss
     from sentence_transformers import SentenceTransformer
 
     if not FAISS_INDEX_PATH.exists():
         raise FileNotFoundError(
-            "FAISS index not found. Expected: faiss_db/index.faiss"
+            f"FAISS index not found: {FAISS_INDEX_PATH}"
         )
 
     if not METADATA_PATH.exists():
         raise FileNotFoundError(
-            "FAISS metadata not found. Expected: faiss_db/metadata.json"
+            f"Metadata file not found: {METADATA_PATH}"
         )
 
-    index = faiss.read_index(
-        str(FAISS_INDEX_PATH)
-    )
+    index = faiss.read_index(str(FAISS_INDEX_PATH))
 
     metadata = load_metadata()
 
     if index.ntotal == 0:
-        raise RuntimeError(
-            "The FAISS index is empty."
-        )
+        raise RuntimeError("The FAISS index is empty.")
 
     if len(metadata) == 0:
-        raise RuntimeError(
-            "The metadata file contains no records."
-        )
+        raise RuntimeError("The metadata file contains no records.")
 
     if index.ntotal != len(metadata):
         raise RuntimeError(
-            "FAISS and metadata record counts do not match. "
-            f"FAISS records: {index.ntotal}, "
-            f"metadata records: {len(metadata)}."
+            f"FAISS/metadata mismatch: "
+            f"index contains {index.ntotal} vectors but "
+            f"metadata contains {len(metadata)} records."
         )
 
-    model = SentenceTransformer(
-        DEFAULT_EMBEDDING_MODEL
-    )
+    model = SentenceTransformer(DEFAULT_EMBEDDING_MODEL)
 
     return index, metadata, model
 
 
-# ============================================================
-# KEYWORD SCORE
-# ============================================================
-
 def keyword_score(query, text):
-
+    """Small keyword score used to improve retrieval."""
     query_words = set(
-        re.findall(
-            r"\b[a-zA-Z0-9]{3,}\b",
-            query.lower(),
-        )
-    )
-
-    text_words = set(
-        re.findall(
-            r"\b[a-zA-Z0-9]{3,}\b",
-            text.lower(),
-        )
+        re.findall(r"\b[a-zA-Z0-9]{3,}\b", query.lower())
     )
 
     if not query_words:
         return 0.0
 
-    overlap = query_words.intersection(
-        text_words
+    text_words = set(
+        re.findall(r"\b[a-zA-Z0-9]{3,}\b", text.lower())
     )
 
-    return len(overlap) / len(query_words)
+    if not text_words:
+        return 0.0
+
+    overlap = query_words.intersection(text_words)
+
+    return len(overlap) / max(len(query_words), 1)
 
 
-# ============================================================
-# RETRIEVAL
-# ============================================================
+def retrieve_context(query, top_k=TOP_K):
+    """Retrieve relevant knowledge-base chunks."""
 
-def retrieve_context(
-    query,
-    top_k=TOP_K,
-):
-
-    index, metadata, model = (
-        load_faiss_resources()
-    )
+    index, metadata, model = load_faiss_resources()
 
     import numpy as np
 
-    query_embedding = model.encode(
+    embedding = model.encode(
         [query],
         normalize_embeddings=True,
     )
 
-    query_embedding = np.asarray(
-        query_embedding,
+    embedding = np.asarray(
+        embedding,
         dtype="float32",
     )
 
-    k = min(
-        top_k,
-        index.ntotal,
-    )
+    k = min(top_k, index.ntotal)
 
     scores, indices = index.search(
-        query_embedding,
+        embedding,
         k,
     )
 
-    results = []
+    candidates = []
 
-    for score, index_id in zip(
+    for semantic_score, index_id in zip(
         scores[0],
         indices[0],
     ):
-
         if index_id < 0:
             continue
 
@@ -937,15 +849,15 @@ def retrieve_context(
 
         record = metadata[index_id]
 
-        text = get_record_text(record)
+        text = record_text(record)
 
         if not text:
             continue
 
-        source = get_record_source(record)
-        page = get_record_page(record)
+        source = record_source(record)
+        page = record_page(record)
 
-        semantic = float(score)
+        semantic = float(semantic_score)
 
         keyword = keyword_score(
             query,
@@ -957,82 +869,69 @@ def retrieve_context(
             + 0.25 * keyword
         )
 
-        results.append(
+        candidates.append(
             {
                 "text": text,
                 "source": source,
                 "page": page,
+                "semantic_score": semantic,
+                "keyword_score": keyword,
                 "score": combined,
             }
         )
 
-    results.sort(
+    candidates.sort(
         key=lambda item: item["score"],
         reverse=True,
     )
 
-    return results[:top_k]
+    return candidates[:top_k]
 
 
 def build_context(results):
+    """Build a compact context for the LLM."""
 
-    pieces = []
+    context_parts = []
 
-    for number, item in enumerate(
-        results,
-        start=1,
-    ):
+    for number, result in enumerate(results, start=1):
+        source = result["source"]
+        page = result["page"]
 
-        location = clean_text(
-            item["source"]
+        location = source
+
+        if page:
+            location += f" | Page {page}"
+
+        context_parts.append(
+            f"""
+SOURCE {number}
+{location}
+
+{result["text"]}
+""".strip()
         )
 
-        if item["page"]:
-            location += (
-                f" | Page {clean_text(item['page'])}"
-            )
+    return "\n\n------------------------------\n\n".join(
+        context_parts
+    )
 
-        pieces.append(
-            (
-                f"SOURCE {number}\n"
-                f"{location}\n\n"
-                f"{clean_text(item['text'])}"
-            )
-        )
-
-    return (
-        "\n\n"
-        "--------------------------------"
-        "\n\n"
-    ).join(pieces)
-
-
-# ============================================================
-# GROQ CLIENT
-# ============================================================
 
 def get_groq_client():
+    """Create a Groq-compatible client."""
 
-    api_key = get_secret(
-        "GROQ_API_KEY",
-        "",
-    ).strip()
+    api_key = get_secret("GROQ_API_KEY", "")
 
     if not api_key:
         raise RuntimeError(
-            "GROQ_API_KEY is missing."
+            "GROQ_API_KEY is missing from Streamlit Secrets."
         )
 
     base_url = get_secret(
         "GROQ_BASE_URL",
         DEFAULT_GROQ_BASE_URL,
-    ).strip()
+    )
 
-    # Protect against accidentally saving a Markdown link
-    # as the secret value.
-    if not base_url.startswith("http"):
-        base_url = DEFAULT_GROQ_BASE_URL
-
+    # Groq Python package if available.
     try:
         from groq import Groq
 
@@ -1042,7 +941,10 @@ def get_groq_client():
         )
 
     except ImportError:
+        pass
 
+    # OpenAI-compatible fallback.
+    try:
         from openai import OpenAI
 
         return OpenAI(
@@ -1050,58 +952,11 @@ def get_groq_client():
             base_url=base_url,
         )
 
+    except ImportError as exc:
+        raise RuntimeError(
+            "Neither the Groq nor OpenAI Python client is available."
+        ) from exc
 
-# ============================================================
-# 8-AGENT ARCHITECTURE
-# ============================================================
-
-AGENTS = [
-    (
-        "01",
-        "🎯 Master Orchestrator",
-        "Coordinates the complete TrekTales workflow and controls the agent sequence.",
-    ),
-    (
-        "02",
-        "🔎 Knowledge Agent",
-        "Retrieves tourism evidence from the FAISS knowledge base.",
-    ),
-    (
-        "03",
-        "🗺️ Planner Agent",
-        "Builds the day-by-day itinerary from retrieved evidence.",
-    ),
-    (
-        "04",
-        "💰 Budget Agent",
-        "Handles budget-level planning and supported cost information.",
-    ),
-    (
-        "05",
-        "🛡️ Safety Agent",
-        "Adds travel and safety information supported by the knowledge base.",
-    ),
-    (
-        "06",
-        "📝 Summarizer Agent",
-        "Organizes the final response and source information.",
-    ),
-    (
-        "07",
-        "💳 Payment Agent",
-        "Controls premium access and payment verification state.",
-    ),
-    (
-        "08",
-        "👁️ Vision Agent",
-        "Extracts visible payment information from uploaded screenshots.",
-    ),
-]
-
-
-# ============================================================
-# TRIP GENERATION
-# ============================================================
 
 def generate_trip(
     destination,
@@ -1114,6 +969,7 @@ def generate_trip(
     response_language,
     context,
 ):
+    """Generate the itinerary using Groq."""
 
     model = get_secret(
         "GROQ_MODEL",
@@ -1123,123 +979,102 @@ def generate_trip(
     client = get_groq_client()
 
     system_prompt = f"""
-You are TrekTales, an AI tourism planning system.
+You are TrekTales, a tourism itinerary assistant.
 
-The TrekTales architecture contains exactly eight agents:
+Your job is to create a practical travel itinerary using ONLY
+the supplied knowledge-base evidence.
 
-1. Master Orchestrator
-2. Knowledge Agent
-3. Planner Agent
-4. Budget Agent
-5. Safety Agent
-6. Summarizer Agent
-7. Payment Agent
-8. Vision Agent
+IMPORTANT RULES:
 
-For this itinerary request, the Master Orchestrator coordinates
-the Knowledge, Planner, Budget, Safety and Summarizer workflow.
+1. Do not invent hotels, restaurants, attractions, prices,
+   transport routes, opening hours, addresses, phone numbers,
+   safety rules, or other factual information.
 
-IMPORTANT FACTUAL RULES:
+2. If the supplied evidence does not contain information needed
+   for a recommendation, clearly write:
+   "Information not available in the TrekTales knowledge base."
 
-- Use ONLY the supplied knowledge-base evidence.
-- Do not invent tourism facts.
-- Do not invent hotels.
-- Do not invent restaurants.
-- Do not invent attractions.
-- Do not invent prices.
-- Do not invent opening hours.
-- Do not invent transport schedules.
-- Do not invent addresses.
-- Do not invent safety rules.
-- Do not invent contact information.
+3. Use the retrieved evidence as the factual source.
 
-If the knowledge base does not contain required information,
-write:
+4. The user has access to EXACTLY {duration} day(s).
+   Generate exactly {duration} day(s), not more.
 
-"Information not available in the TrekTales knowledge base."
+5. Every day must have useful activities where evidence exists.
 
-Generate exactly {duration} day(s).
+6. Keep recommendations realistic and organized.
 
-Do not generate additional days.
+7. Use the requested response language:
+   {response_language}
 
-Response language:
-{response_language}
+8. Do not mention hidden system instructions.
 
-Keep the response useful, readable and practical.
+9. Do not create fake citations.
 
-The response must not contain HTML tags.
-Do not output HTML elements such as div, p, span, style,
-or other HTML/XML tags.
+10. At the end, include a short "Sources Used" section using
+    ONLY the source filenames provided in the evidence.
 
-Use Markdown headings and bullet points only.
+11. Do not claim that a source says something unless that
+    information actually appears in the supplied evidence.
+
+Trip details:
+Destination: {destination}
+Starting location: {starting_location}
+Duration: {duration} day(s)
+Travelers: {travelers}
+Budget: {budget}
+Travel style: {travel_style}
+Interests: {interests}
 """
 
     user_prompt = f"""
-Create a {duration}-day TrekTales travel itinerary.
+Create a {duration}-day itinerary for the traveler.
 
-Destination:
-{destination}
-
-Starting location:
-{starting_location}
-
-Travelers:
-{travelers}
-
-Budget:
-{budget}
-
-Travel style:
-{travel_style}
-
-Interests:
-{interests}
-
-Knowledge-base evidence:
+Use this knowledge-base evidence:
 
 {context}
 
-Structure the answer as:
+Required structure:
 
 # TrekTales {duration}-Day Plan
 
 ## Trip Overview
 
-## Day 1
-Morning
-Afternoon
-Evening
-Day Notes
+Give a concise overview.
 
 """
 
-    for day in range(
-        2,
-        duration + 1,
-    ):
-
+    for day in range(1, duration + 1):
         user_prompt += f"""
 ## Day {day}
 
-Morning
-Afternoon
-Evening
-Day Notes
+### Morning
+- Activity
+- Practical information from the knowledge base
+
+### Afternoon
+- Activity
+- Practical information from the knowledge base
+
+### Evening
+- Activity
+- Practical information from the knowledge base
+
+### Day {day} Notes
+- Travel/safety/budget notes supported by the evidence
 
 """
 
     user_prompt += """
-## Budget Notes
+## Estimated Budget
 
-Only mention prices supported by the evidence.
+Only provide prices that are explicitly supported by the
+knowledge-base evidence.
 
-## Safety Notes
-
-Only mention safety information supported by the evidence.
+If exact prices are unavailable, say so.
 
 ## Sources Used
 
-List only the source filenames present in the supplied evidence.
+List only the source filenames appearing in the supplied evidence.
 """
 
     response = client.chat.completions.create(
@@ -1254,7 +1089,7 @@ List only the source filenames present in the supplied evidence.
                 "content": user_prompt,
             },
         ],
-        max_tokens=6000,
+        max_tokens=5000,
     )
 
     content = response.choices[0].message.content
@@ -1267,42 +1102,34 @@ List only the source filenames present in the supplied evidence.
     return clean_text(content)
 
 
-# ============================================================
-# PAYMENT VISION
-# ============================================================
-
-def image_to_data_url(
-    uploaded_file,
-):
+def image_to_data_url(uploaded_file):
+    """Convert uploaded image to a data URL."""
 
     data = uploaded_file.getvalue()
 
     mime = uploaded_file.type or "image/jpeg"
 
-    encoded = base64.b64encode(
-        data
-    ).decode("utf-8")
+    encoded = base64.b64encode(data).decode("utf-8")
 
-    return (
-        f"data:{mime};base64,{encoded}"
-    )
+    return f"data:{mime};base64,{encoded}"
 
 
-def analyze_payment_image(
-    uploaded_file,
-):
+def analyze_payment_image(uploaded_file):
+    """
+    Optional Groq vision analysis.
 
-    api_key = get_secret(
-        "GROQ_API_KEY",
-        "",
-    ).strip()
+    This only extracts visible payment information.
+    It does NOT approve payment.
+    """
+
+    api_key = get_secret("GROQ_API_KEY", "")
 
     if not api_key:
         raise RuntimeError(
             "GROQ_API_KEY is missing."
         )
 
-    model = get_secret(
+    vision_model = get_secret(
         "GROQ_VISION_MODEL",
         DEFAULT_GROQ_VISION_MODEL,
     )
@@ -1310,13 +1137,9 @@ def analyze_payment_image(
     base_url = get_secret(
         "GROQ_BASE_URL",
         DEFAULT_GROQ_BASE_URL,
-    ).strip()
-
-    if not base_url.startswith("http"):
-        base_url = DEFAULT_GROQ_BASE_URL
+    )
 
     try:
-
         from groq import Groq
 
         client = Groq(
@@ -1325,27 +1148,32 @@ def analyze_payment_image(
         )
 
     except ImportError:
+        try:
+            from openai import OpenAI
 
-        from openai import OpenAI
+            client = OpenAI(
+                api_key=api_key,
+                base_url=base_url,
+            )
 
-        client = OpenAI(
-            api_key=api_key,
-            base_url=base_url,
-        )
+        except ImportError as exc:
+            raise RuntimeError(
+                "No compatible Groq/OpenAI client is installed."
+            ) from exc
 
     image_url = image_to_data_url(
         uploaded_file
     )
 
     response = client.chat.completions.create(
-        model=model,
+        model=vision_model,
         messages=[
             {
                 "role": "system",
                 "content": (
-                    "Extract visible payment information "
-                    "from the screenshot. "
-                    "Never invent missing information. "
+                    "You analyze payment screenshots. "
+                    "Extract only information visibly shown. "
+                    "Never assume missing information. "
                     "Return JSON only."
                 ),
             },
@@ -1355,7 +1183,7 @@ def analyze_payment_image(
                     {
                         "type": "text",
                         "text": """
-Extract:
+Extract these visible fields:
 
 {
   "recipient": "",
@@ -1365,8 +1193,8 @@ Extract:
   "confidence": ""
 }
 
-Only report information visibly present.
-Do not approve the payment.
+Do not approve or verify the payment.
+Only report what is visibly present.
 """,
                     },
                     {
@@ -1381,34 +1209,30 @@ Do not approve the payment.
         max_tokens=800,
     )
 
-    content = (
-        response.choices[0]
-        .message
-        .content
-    )
+    content = response.choices[0].message.content
 
     if not content:
         return {}
 
+    # Try JSON extraction.
     try:
-
         cleaned = content.strip()
 
         cleaned = re.sub(
-            r"^```json\s*",
+            r"^```json",
             "",
             cleaned,
             flags=re.IGNORECASE,
         )
 
         cleaned = re.sub(
-            r"^```\s*",
+            r"^```",
             "",
             cleaned,
         )
 
         cleaned = re.sub(
-            r"\s*```$",
+            r"```$",
             "",
             cleaned,
         )
@@ -1418,29 +1242,20 @@ Do not approve the payment.
         )
 
     except Exception:
-
         return {
-            "raw_analysis": clean_text(content)
+            "raw_analysis": content
         }
 
 
-# ============================================================
-# DETERMINISTIC PAYMENT VERIFICATION
-# ============================================================
+def verify_payment_data(payment_data):
+    """
+    Deterministic payment verification.
 
-def verify_payment_data(
-    payment_data,
-):
+    Vision never decides whether payment is valid.
+    """
 
-    if not isinstance(
-        payment_data,
-        dict,
-    ):
-
-        return (
-            False,
-            "Payment information could not be read.",
-        )
+    if not isinstance(payment_data, dict):
+        return False, "Payment information could not be read."
 
     expected_recipient = get_secret(
         "EXPECTED_PAYMENT_RECIPIENT",
@@ -1468,6 +1283,7 @@ def verify_payment_data(
         )
     ).strip().lower()
 
+    # Extract numeric amount.
     numbers = re.findall(
         r"\d+(?:\.\d+)?",
         amount_raw,
@@ -1476,11 +1292,8 @@ def verify_payment_data(
     amount = None
 
     if numbers:
-
         try:
-            amount = float(
-                numbers[0]
-            )
+            amount = float(numbers[0])
         except Exception:
             amount = None
 
@@ -1494,52 +1307,35 @@ def verify_payment_data(
     }
 
     if amount is None:
-
-        return (
-            False,
-            "Payment amount could not be read.",
-        )
+        return False, "Payment amount could not be verified."
 
     if amount < UNLOCK_PRICE:
-
         return (
             False,
             f"Payment amount must be at least Rs. {UNLOCK_PRICE}.",
         )
 
     if status not in valid_statuses:
-
         return (
             False,
-            "Payment status is not shown as successful.",
+            "Payment status was not shown as successful.",
         )
 
     if expected_recipient:
-
-        if (
-            recipient.lower()
-            != expected_recipient.lower()
-        ):
-
+        if recipient.lower() != expected_recipient.lower():
             return (
                 False,
                 "Payment recipient does not match the configured recipient.",
             )
 
-    return (
-        True,
-        "Payment passed the verification checks.",
-    )
+    return True, "Payment passed the deterministic checks."
 
 
-# ============================================================
-# ACCESS CONTROL
-# ============================================================
-
-def accessible_days(
+def calculate_accessible_days(
     requested_days,
     payment_verified,
 ):
+    """Enforce the free/premium day limit."""
 
     requested_days = max(
         1,
@@ -1549,41 +1345,31 @@ def accessible_days(
         ),
     )
 
-    if requested_days == 1:
-        return 1
+    if requested_days <= FREE_DAYS:
+        return requested_days
 
     if payment_verified:
         return requested_days
 
-    return 1
+    return FREE_DAYS
 
 
-# ============================================================
-# SOURCE DISPLAY
-# ============================================================
-
-def show_sources(
-    results,
-):
+def show_sources(results):
+    """Display deterministic sources."""
 
     if not results:
         return
 
     st.markdown(
-        "## 📚 Knowledge Sources"
+        '<div class="section-title">📚 Knowledge Sources</div>',
+        unsafe_allow_html=True,
     )
 
     seen = set()
 
-    for item in results:
-
-        source = clean_text(
-            item["source"]
-        )
-
-        page = clean_text(
-            item["page"]
-        )
+    for result in results:
+        source = result["source"]
+        page = result["page"]
 
         key = (
             source,
@@ -1598,15 +1384,21 @@ def show_sources(
         location = source
 
         if page:
-            location += (
-                f" — Page {page}"
-            )
+            location += f" — Page {page}"
 
-        with st.container(border=True):
-            st.markdown(
-                f"**📄 {source}**"
-            )
-            st.caption(location)
+        st.markdown(
+            f"""
+            <div class="source-card">
+                <div class="source-card-title">
+                    📄 {source}
+                </div>
+                <div class="source-card-text">
+                    {location}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 # ============================================================
@@ -1636,26 +1428,31 @@ if "generated_days" not in st.session_state:
 with st.sidebar:
 
     st.markdown(
-        "### 🌿 TrekTales"
+        """
+        <div class="sidebar-brand">
+            <div class="sidebar-brand-title">🌿 TrekTales</div>
+            <div class="sidebar-brand-subtitle">
+                AI Travel Planner
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
-    st.caption(
-        "AI Travel Planner"
+    st.markdown(
+        """
+        <div class="sidebar-card">
+            <div class="sidebar-card-title">
+                🔓 ACCESS MODEL
+            </div>
+            <div class="sidebar-card-text">
+                Day 1 is free.<br>
+                Days 2–10 require a one-time unlock.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
-
-    with st.container(border=True):
-
-        st.markdown(
-            "**🔓 ACCESS MODEL**"
-        )
-
-        st.write(
-            "Day 1 is free."
-        )
-
-        st.write(
-            "Days 2–10 require premium unlock."
-        )
 
     response_language = st.selectbox(
         "Response Language",
@@ -1664,39 +1461,44 @@ with st.sidebar:
             "Urdu",
             "Roman Urdu",
         ],
+        index=0,
     )
 
-    with st.container(border=True):
-
-        st.markdown(
-            "**🤖 8 AI AGENTS**"
-        )
-
-        st.write(
-            "🎯 Master Orchestrator\n\n"
-            "🔎 Knowledge Agent\n\n"
-            "🗺️ Planner Agent\n\n"
-            "💰 Budget Agent\n\n"
-            "🛡️ Safety Agent\n\n"
-            "📝 Summarizer Agent\n\n"
-            "💳 Payment Agent\n\n"
-            "👁️ Vision Agent"
-        )
+    st.markdown(
+        """
+        <div class="sidebar-card">
+            <div class="sidebar-card-title">
+                🤖 AI AGENTS
+            </div>
+            <div class="sidebar-card-text">
+                🧭 Itinerary Planner<br>
+                🔎 Knowledge Retriever<br>
+                🛡️ Safety Assistant<br>
+                💳 Payment Vision
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     model_name = get_secret(
         "GROQ_MODEL",
         DEFAULT_GROQ_MODEL,
     )
 
-    with st.container(border=True):
-
-        st.markdown(
-            "**⚡ GROQ MODEL**"
-        )
-
-        st.caption(
-            model_name
-        )
+    st.markdown(
+        f"""
+        <div class="sidebar-card">
+            <div class="sidebar-card-title">
+                ⚡ AI MODEL
+            </div>
+            <div class="sidebar-card-text">
+                {model_name}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 # ============================================================
@@ -1704,11 +1506,17 @@ with st.sidebar:
 # ============================================================
 
 st.markdown(
-    "# TrekTales 🌿"
-)
-
-st.markdown(
-    "### AI-powered tourism planning grounded in your knowledge base"
+    """
+    <div class="brand-wrapper">
+        <div class="brand-title">
+            Trek<span>Tales</span> 🌿
+        </div>
+        <div class="brand-subtitle">
+            AI-powered travel planning grounded in your knowledge base
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
 
@@ -1716,113 +1524,73 @@ st.markdown(
 # HERO
 # ============================================================
 
-with st.container(border=True):
-
-    st.markdown(
-        "# Plan your journey."
-    )
-
-    st.markdown(
-        "# Explore with confidence."
-    )
-
-    st.write(
-        "TrekTales creates personalized travel itineraries "
-        "using your tourism knowledge base and Groq-powered "
-        "AI agents."
-    )
+st.markdown(
+    """
+    <div class="hero-card">
+        <h1>Plan your journey.<br>Explore with confidence.</h1>
+        <p>
+            TrekTales creates personalized travel itineraries using
+            your tourism knowledge base and Groq-powered AI.
+            Recommendations are grounded in retrieved evidence
+            rather than invented travel information.
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 
 # ============================================================
 # FEATURES
 # ============================================================
 
-feature1, feature2, feature3 = st.columns(3)
+feature_col1, feature_col2, feature_col3 = st.columns(3)
 
-with feature1:
+with feature_col1:
+    st.markdown(
+        """
+        <div class="feature-card">
+            <div class="feature-icon">🧠</div>
+            <h3>Knowledge-Grounded AI</h3>
+            <p>
+                TrekTales retrieves relevant information from
+                the tourism knowledge base before generating
+                your itinerary.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    with st.container(border=True):
+with feature_col2:
+    st.markdown(
+        """
+        <div class="feature-card">
+            <div class="feature-icon">🗺️</div>
+            <h3>Personalized Trips</h3>
+            <p>
+                Choose your destination, duration, travelers,
+                budget and interests to build a customized plan.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-        st.markdown(
-            "### 🧠 Knowledge-Grounded AI"
-        )
-
-        st.write(
-            "Tourism recommendations are generated from "
-            "retrieved knowledge-base evidence."
-        )
-
-
-with feature2:
-
-    with st.container(border=True):
-
-        st.markdown(
-            "### 🗺️ Personalized Planning"
-        )
-
-        st.write(
-            "Build trips based on duration, travelers, "
-            "budget, travel style and interests."
-        )
-
-
-with feature3:
-
-    with st.container(border=True):
-
-        st.markdown(
-            "### 🛡️ Evidence First"
-        )
-
-        st.write(
-            "TrekTales avoids inventing facts when the "
-            "knowledge base does not contain the answer."
-        )
-
-
-# ============================================================
-# 8 AGENTS
-# ============================================================
-
-st.markdown(
-    "## 🤖 TrekTales 8-Agent System"
-)
-
-st.caption(
-    "Eight specialized agents work together in the TrekTales architecture."
-)
-
-for row_start in range(
-    0,
-    len(AGENTS),
-    4,
-):
-
-    columns = st.columns(4)
-
-    for column, agent in zip(
-        columns,
-        AGENTS[row_start:row_start + 4],
-    ):
-
-        number, name, role = agent
-
-        with column:
-
-            with st.container(border=True):
-
-                st.caption(
-                    f"AGENT {number}"
-                )
-
-                st.markdown(
-                    f"**{name}**"
-                )
-
-                st.write(
-                    role
-                )
+with feature_col3:
+    st.markdown(
+        """
+        <div class="feature-card">
+            <div class="feature-icon">🛡️</div>
+            <h3>Evidence First</h3>
+            <p>
+                TrekTales avoids inventing tourism facts when
+                the required information is not available.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 # ============================================================
@@ -1830,11 +1598,13 @@ for row_start in range(
 # ============================================================
 
 st.markdown(
-    "## 🧭 Build Your Trip"
+    '<div class="section-title">🧭 Build Your Trip</div>',
+    unsafe_allow_html=True,
 )
 
-st.caption(
-    "Tell TrekTales what kind of journey you want."
+st.markdown(
+    '<div class="section-subtitle">Tell TrekTales what kind of journey you want.</div>',
+    unsafe_allow_html=True,
 )
 
 col1, col2 = st.columns(2)
@@ -1861,16 +1631,15 @@ with col3:
     duration = st.number_input(
         "Trip Duration",
         min_value=1,
-        max_value=10,
+        max_value=MAX_TRIP_DAYS,
         value=1,
         step=1,
         help="Choose between 1 and 10 days.",
     )
 
     st.caption(
-        f"{int(duration)} day"
-        f"{'s' if int(duration) != 1 else ''}"
-        " selected"
+        f"🗓️ {int(duration)} day"
+        f"{'s' if int(duration) != 1 else ''} selected"
     )
 
 with col4:
@@ -1913,70 +1682,14 @@ travel_style = st.selectbox(
 )
 
 
-# ============================================================
-# INTEREST OPTIONS
-# ============================================================
-
-st.markdown(
-    "### ❤️ Choose your interests"
+interests = st.text_area(
+    "Interests",
+    placeholder=(
+        "e.g. historical places, food, nature, "
+        "photography, hiking, family activities"
+    ),
+    height=100,
 )
-
-interest_options = [
-    "🏛️ History & Heritage",
-    "🌲 Nature",
-    "🥾 Hiking & Trekking",
-    "🍴 Food & Local Cuisine",
-    "📸 Photography",
-    "🕌 Culture & Architecture",
-    "👨‍👩‍👧 Family Activities",
-    "🎨 Arts & Creativity",
-    "🛍️ Shopping",
-    "🏏 Sports",
-    "🌅 Scenic Views",
-    "🧘 Relaxation",
-    "🐦 Wildlife",
-    "🏕️ Camping",
-    "🎉 Local Events",
-    "🚗 Road Trips",
-]
-
-selected_interests = st.multiselect(
-    "Select one or more interests",
-    options=interest_options,
-    default=[],
-    help="Choose the activities and experiences you want included.",
-)
-
-
-other_interests = st.text_input(
-    "Other interests",
-    placeholder="e.g. local markets, architecture, hidden places",
-)
-
-
-# Build final interest text.
-
-interest_parts = list(
-    selected_interests
-)
-
-if other_interests.strip():
-
-    interest_parts.append(
-        other_interests.strip()
-    )
-
-if interest_parts:
-
-    interests = ", ".join(
-        interest_parts
-    )
-
-else:
-
-    interests = (
-        "General sightseeing and exploration"
-    )
 
 
 # ============================================================
@@ -1984,43 +1697,42 @@ else:
 # ============================================================
 
 st.markdown(
-    "## ⚙️ System Status"
+    '<div class="section-title">⚙️ System Status</div>',
+    unsafe_allow_html=True,
 )
 
 status1, status2, status3 = st.columns(3)
 
-groq_ready = bool(
-    get_secret(
-        "GROQ_API_KEY",
-        "",
-    ).strip()
+groq_key_exists = bool(
+    get_secret("GROQ_API_KEY", "").strip()
 )
-
 
 with status1:
 
-    with st.container(border=True):
-
-        if groq_ready:
-
-            st.success(
-                "🟢 Groq API Ready"
-            )
-
-            st.caption(
-                "GroqCloud key configured."
-            )
-
-        else:
-
-            st.error(
-                "🔴 Groq API Missing"
-            )
-
-            st.caption(
-                "Add GROQ_API_KEY to Secrets."
-            )
-
+    if groq_key_exists:
+        st.markdown(
+            f"""
+            <div class="status-card">
+                <div class="status-ready">
+                    🟢 Groq API Key Ready
+                </div>
+                <small>GroqCloud connection configured.</small>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            f"""
+            <div class="status-card">
+                <div class="status-warning">
+                    🔴 Groq API Key Missing
+                </div>
+                <small>Add GROQ_API_KEY to Streamlit Secrets.</small>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 with status2:
 
@@ -2029,72 +1741,79 @@ with status2:
         and METADATA_PATH.exists()
     )
 
-    with st.container(border=True):
-
-        if faiss_ready:
-
-            st.success(
-                "🟢 FAISS Ready"
-            )
-
-            st.caption(
-                "Knowledge base detected."
-            )
-
-        else:
-
-            st.error(
-                "🔴 FAISS Missing"
-            )
-
-            st.caption(
-                "Check faiss_db."
-            )
-
+    if faiss_ready:
+        st.markdown(
+            """
+            <div class="status-card">
+                <div class="status-ready">
+                    🟢 FAISS Ready
+                </div>
+                <small>Knowledge base index detected.</small>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            """
+            <div class="status-card">
+                <div class="status-warning">
+                    🔴 FAISS Missing
+                </div>
+                <small>
+                    Check the faiss_db folder.
+                </small>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 with status3:
 
-    with st.container(border=True):
-
-        st.success(
-            "🟢 8-Agent System"
-        )
-
-        st.caption(
-            "All eight TrekTales roles configured."
-        )
+    st.markdown(
+        """
+        <div class="status-card">
+            <div class="status-ready">
+                🟢 Agent System
+            </div>
+            <small>Planner + RAG + payment workflow.</small>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 # ============================================================
-# ACCESS MESSAGE
+# PAYMENT STATE MESSAGE
 # ============================================================
 
 requested_days = int(duration)
 
-if requested_days > 1:
+if requested_days > FREE_DAYS:
 
     if st.session_state.payment_verified:
 
         st.success(
-            f"🔓 Premium access active. "
-            f"Your {requested_days}-day trip is unlocked."
+            f"🔓 Premium unlocked — your {requested_days}-day "
+            "trip can now be generated."
         )
 
     else:
 
         st.info(
-            f"🔒 Day 1 is free. "
-            f"Days 2–{requested_days} require the "
-            f"Rs. {UNLOCK_PRICE} premium unlock."
+            f"🔒 You selected {requested_days} days. "
+            f"Day 1 is free. Days 2–{requested_days} require "
+            f"the Rs. {UNLOCK_PRICE} unlock."
         )
 
 
 # ============================================================
-# GENERATE BUTTON
+# GENERATE TRIP
 # ============================================================
 
 st.markdown(
-    "## ✨ Generate Your Journey"
+    '<div class="section-title">✨ Generate Your Journey</div>',
+    unsafe_allow_html=True,
 )
 
 generate_button = st.button(
@@ -2117,18 +1836,24 @@ if generate_button:
             "Please enter your starting location."
         )
 
-    elif not groq_ready:
+    elif not interests.strip():
+
+        st.warning(
+            "Please enter at least one interest."
+        )
+
+    elif not groq_key_exists:
 
         st.error(
-            "GROQ_API_KEY is missing from Streamlit Secrets."
+            "GROQ_API_KEY is missing. "
+            "Add your GroqCloud API key in Streamlit Secrets."
         )
 
     elif not faiss_ready:
 
         st.error(
-            "FAISS files are missing. "
-            "Expected faiss_db/index.faiss and "
-            "faiss_db/metadata.json."
+            "FAISS knowledge base files are missing. "
+            "Expected faiss_db/index.faiss and faiss_db/metadata.json."
         )
 
     else:
@@ -2137,36 +1862,44 @@ if generate_button:
             st.session_state.payment_verified
         )
 
-        days_to_generate = accessible_days(
+        accessible_days = calculate_accessible_days(
             requested_days,
             payment_verified,
         )
 
+        # ----------------------------------------------------
+        # IMPORTANT:
+        # The AI receives accessible_days, not requested_days.
+        # Therefore it cannot generate hidden premium days.
+        # ----------------------------------------------------
+
         with st.spinner(
-            "🔎 Knowledge Agent is retrieving evidence..."
+            f"🔎 Searching the TrekTales knowledge base "
+            f"for your {accessible_days}-day trip..."
         ):
 
             try:
 
                 retrieval_query = f"""
-Destination: {destination}
-Starting location: {starting_location}
-Duration: {days_to_generate} days
-Travelers: {travelers}
-Budget: {budget}
-Travel style: {travel_style}
-Interests: {interests}
-"""
+                Destination: {destination}
+                Starting location: {starting_location}
+                Duration: {accessible_days} days
+                Travelers: {travelers}
+                Budget: {budget}
+                Travel style: {travel_style}
+                Interests: {interests}
+                """
 
                 results = retrieve_context(
-                    retrieval_query
+                    retrieval_query,
+                    top_k=TOP_K,
                 )
 
                 if not results:
 
                     st.error(
-                        "No relevant evidence was found "
-                        "in the TrekTales knowledge base."
+                        "No relevant information was found in "
+                        "the TrekTales knowledge base."
                     )
 
                 else:
@@ -2176,14 +1909,13 @@ Interests: {interests}
                     )
 
                     with st.spinner(
-                        "🎯 Master Orchestrator is coordinating "
-                        "the TrekTales agents..."
+                        "🤖 Groq is creating your itinerary..."
                     ):
 
-                        trip_result = generate_trip(
+                        trip = generate_trip(
                             destination=destination,
                             starting_location=starting_location,
-                            duration=days_to_generate,
+                            duration=accessible_days,
                             travelers=travelers,
                             budget=budget,
                             travel_style=travel_style,
@@ -2192,34 +1924,26 @@ Interests: {interests}
                             context=context,
                         )
 
-                    st.session_state.trip_result = (
-                        trip_result
-                    )
-
-                    st.session_state.trip_sources = (
-                        results
-                    )
-
-                    st.session_state.generated_days = (
-                        days_to_generate
-                    )
+                    st.session_state.trip_result = trip
+                    st.session_state.trip_sources = results
+                    st.session_state.generated_days = accessible_days
 
                     if (
-                        requested_days > 1
+                        requested_days > FREE_DAYS
                         and not payment_verified
                     ):
 
                         st.success(
-                            "Day 1 has been generated. "
-                            "Unlock premium access to generate "
-                            f"Days 2–{requested_days}."
+                            f"Day 1 generated successfully. "
+                            f"Unlock the remaining days for "
+                            f"Rs. {UNLOCK_PRICE}."
                         )
 
                     else:
 
                         st.success(
-                            f"Your {days_to_generate}-day "
-                            "TrekTales itinerary is ready."
+                            f"Your complete {accessible_days}-day "
+                            "TrekTales itinerary is ready!"
                         )
 
             except Exception as exc:
@@ -2235,27 +1959,31 @@ Interests: {interests}
 
 
 # ============================================================
-# TRIP RESULT
+# DISPLAY TRIP RESULT
 # ============================================================
 
 if st.session_state.trip_result:
 
     st.markdown(
-        "## 🗺️ Your TrekTales Journey"
+        '<div class="section-title">🗺️ Your TrekTales Journey</div>',
+        unsafe_allow_html=True,
     )
 
-    # AI output is cleaned before display.
-    # HTML tags generated by the model are removed.
+    st.markdown(
+        f"""
+        <div class="response-card">
+        """,
+        unsafe_allow_html=True,
+    )
 
-    cleaned_result = clean_text(
+    st.markdown(
         st.session_state.trip_result
     )
 
-    with st.container(border=True):
-
-        st.markdown(
-            cleaned_result
-        )
+    st.markdown(
+        "</div>",
+        unsafe_allow_html=True,
+    )
 
     show_sources(
         st.session_state.trip_sources
@@ -2263,24 +1991,40 @@ if st.session_state.trip_result:
 
 
 # ============================================================
-# PAYMENT / PREMIUM SECTION
+# PREMIUM PAYMENT
 # ============================================================
 
 if requested_days >= 2:
 
     st.markdown(
-        "## 🔓 Premium Access"
+        '<div class="section-title">🔓 Unlock Premium Days</div>',
+        unsafe_allow_html=True,
     )
 
     if st.session_state.payment_verified:
 
-        st.success(
-            "✅ Premium access is active."
-        )
+        st.markdown(
+            f"""
+            <div class="payment-card">
+                <div class="payment-title">
+                    ✅ Premium Access Active
+                </div>
 
-        st.write(
-            f"Your selected {requested_days}-day trip "
-            "is unlocked."
+                <p style="color:{BLACK};">
+                    Payment has passed the deterministic
+                    verification checks.
+                </p>
+
+                <div class="payment-price">
+                    Rs. {UNLOCK_PRICE}
+                </div>
+
+                <p style="color:{BLACK};">
+                    You can now generate all requested days.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
     else:
@@ -2291,23 +2035,28 @@ if requested_days >= 2:
 
         with payment_left:
 
-            with st.container(border=True):
+            st.markdown(
+                f"""
+                <div class="payment-card">
+                    <div class="payment-title">
+                        🌿 TrekTales Premium
+                    </div>
 
-                st.markdown(
-                    "### 🌿 TrekTales Premium"
-                )
+                    <p style="color:{BLACK};">
+                        Unlock Days 2–10 for:
+                    </p>
 
-                st.write(
-                    f"Unlock Days 2–{requested_days}."
-                )
+                    <div class="payment-price">
+                        Rs. {UNLOCK_PRICE}
+                    </div>
 
-                st.markdown(
-                    f"## Rs. {UNLOCK_PRICE}"
-                )
-
-                st.write(
-                    "One-time premium unlock."
-                )
+                    <p style="color:{BLACK};">
+                        One-time unlock for your selected trip.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
             if QR_PATH.exists():
 
@@ -2320,23 +2069,30 @@ if requested_days >= 2:
             else:
 
                 st.warning(
-                    "Payment QR image not found."
+                    "Payment QR image was not found at "
+                    "assets/jazzcash_qr.jpg"
                 )
 
         with payment_right:
 
-            with st.container(border=True):
+            st.markdown(
+                f"""
+                <div class="payment-card">
+                    <div class="payment-title">
+                        📤 Upload Payment Screenshot
+                    </div>
 
-                st.markdown(
-                    "### 📤 Upload Payment Screenshot"
-                )
-
-                st.write(
-                    f"Upload proof of your Rs. {UNLOCK_PRICE} payment."
-                )
+                    <p style="color:{BLACK};">
+                        Pay Rs. {UNLOCK_PRICE} and upload the
+                        payment screenshot below.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
             payment_file = st.file_uploader(
-                "Choose payment screenshot",
+                "Upload payment screenshot",
                 type=[
                     "jpg",
                     "jpeg",
@@ -2349,32 +2105,40 @@ if requested_days >= 2:
             if payment_file is not None:
 
                 analyze_button = st.button(
-                    "🔍 Analyze Payment",
+                    "🔍 Analyze Payment Screenshot",
                     use_container_width=True,
                 )
 
                 if analyze_button:
 
                     with st.spinner(
-                        "👁️ Vision Agent is reading the screenshot..."
+                        "🔎 Reading payment screenshot..."
                     ):
 
                         try:
 
-                            analysis = (
-                                analyze_payment_image(
-                                    payment_file
-                                )
+                            analysis = analyze_payment_image(
+                                payment_file
                             )
 
-                            st.session_state.payment_analysis = (
-                                analysis
-                            )
+                            st.session_state.payment_analysis = analysis
 
                             if analysis:
 
-                                st.write(
-                                    "Payment information detected:"
+                                st.markdown(
+                                    f"""
+                                    <div class="response-card">
+                                        <h3>
+                                            Payment Screenshot Analysis
+                                        </h3>
+                                        <p>
+                                            The AI has extracted
+                                            the visible payment
+                                            information.
+                                        </p>
+                                    </div>
+                                    """,
+                                    unsafe_allow_html=True,
                                 )
 
                                 st.json(
@@ -2389,12 +2153,11 @@ if requested_days >= 2:
 
                                 if verified:
 
-                                    st.session_state.payment_verified = (
-                                        True
-                                    )
+                                    st.session_state.payment_verified = True
 
                                     st.success(
-                                        "✅ Payment verified."
+                                        "✅ Payment passed the "
+                                        "deterministic verification checks."
                                     )
 
                                     st.rerun()
@@ -2402,21 +2165,27 @@ if requested_days >= 2:
                                 else:
 
                                     st.error(
-                                        f"❌ Payment not verified: "
+                                        f"❌ Payment was not verified: "
                                         f"{message}"
+                                    )
+
+                                    st.info(
+                                        "The AI screenshot analysis "
+                                        "does not automatically approve "
+                                        "payment."
                                     )
 
                             else:
 
                                 st.error(
-                                    "No payment information "
-                                    "could be extracted."
+                                    "No payment information could "
+                                    "be extracted."
                                 )
 
                         except Exception as exc:
 
                             st.error(
-                                "Payment analysis failed."
+                                "Payment screenshot analysis failed."
                             )
 
                             st.code(
@@ -2426,18 +2195,33 @@ if requested_days >= 2:
 
 
 # ============================================================
-# PREMIUM LOCK NOTICE
+# PREMIUM NOTICE
 # ============================================================
 
 if (
-    requested_days > 1
+    requested_days > FREE_DAYS
     and not st.session_state.payment_verified
 ):
 
-    st.warning(
-        f"🔒 Days 2–{requested_days} are locked. "
-        f"Complete the Rs. {UNLOCK_PRICE} premium verification "
-        "to unlock them."
+    st.markdown(
+        f"""
+        <div class="payment-card" style="margin-top:20px;">
+            <div class="payment-title">
+                🔒 Premium Days Locked
+            </div>
+
+            <p style="color:{BLACK};">
+                You requested <strong>{requested_days} days</strong>.
+                TrekTales currently gives you Day 1 for free.
+            </p>
+
+            <p style="color:{BLACK};">
+                Complete the Rs. {UNLOCK_PRICE} payment verification
+                to generate Days 2–{requested_days}.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
 
@@ -2446,14 +2230,33 @@ if (
 # ============================================================
 
 st.markdown(
-    "## ⚠️ Information Notice"
-)
+    f"""
+    <div style="
+        background:{CREAM};
+        border-left:5px solid {RED};
+        border-radius:12px;
+        padding:15px;
+        margin-top:30px;
+    ">
+        <strong style="color:{BROWN};">
+            ⚠️ TrekTales Information Notice
+        </strong>
 
-st.info(
-    "TrekTales generates travel suggestions from its available "
-    "knowledge base. Information can change over time. "
-    "Confirm important prices, availability, transport schedules, "
-    "weather and local safety conditions before travelling."
+        <p style="
+            color:{BLACK};
+            margin-bottom:0;
+            font-size:13px;
+            line-height:1.6;
+        ">
+            TrekTales generates travel suggestions from its
+            available knowledge base. Information may be incomplete
+            or change over time. Always independently confirm
+            important prices, availability, safety conditions,
+            transport schedules and local requirements before travel.
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
 
@@ -2462,13 +2265,12 @@ st.info(
 # ============================================================
 
 st.markdown(
-    "---"
-)
-
-st.caption(
-    "🌿 TrekTales — AI-Powered Tourism Planner"
-)
-
-st.caption(
-    "FAISS • Sentence Transformers • Groq • 8-Agent Architecture"
+    """
+    <div class="footer">
+        🌿 TrekTales — AI-Powered Tourism Planner
+        <br>
+        Built with Streamlit • FAISS • Sentence Transformers • Groq
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
