@@ -877,18 +877,116 @@ def run_crew(
     starting_location,
     evidence,
 ):
-    return crew.run(
-        destination=destination,
-        starting_location=starting_location,
-        days=duration,
-        budget=budget,
-        travelers=travelers,
-        travel_style=travel_style,
-        language=language,
-        interests=interests,
-        evidence=evidence,
-    )
+    """
+    Run TrekTalesCrew using its supported interface.
+    """
 
+    request = {
+        "destination": destination,
+        "starting_location": starting_location,
+        "days": duration,
+        "duration": duration,
+        "budget": budget,
+        "travelers": travelers,
+        "travel_style": travel_style,
+        "language": language,
+        "interests": interests,
+        "evidence": evidence,
+    }
+
+    # --------------------------------------------------------
+    # Preferred TrekTalesCrew.run() interface
+    # --------------------------------------------------------
+
+    if hasattr(crew, "run"):
+
+        try:
+
+            return crew.run(
+                destination=destination,
+                starting_location=starting_location,
+                days=duration,
+                budget=budget,
+                travelers=travelers,
+                travel_style=travel_style,
+                language=language,
+                interests=interests,
+                evidence=evidence,
+            )
+
+        except TypeError:
+
+            try:
+                return crew.run(request)
+
+            except TypeError:
+                pass
+
+    # --------------------------------------------------------
+    # kickoff()
+    # --------------------------------------------------------
+
+    if hasattr(crew, "kickoff"):
+
+        try:
+            return crew.kickoff(request)
+
+        except TypeError:
+            pass
+
+    # --------------------------------------------------------
+    # plan()
+    # --------------------------------------------------------
+
+    if hasattr(crew, "plan"):
+
+        try:
+
+            return crew.plan(
+                destination=destination,
+                starting_location=starting_location,
+                duration=duration,
+                days=duration,
+                budget=budget,
+                travelers=travelers,
+                travel_style=travel_style,
+                language=language,
+                interests=interests,
+                evidence=evidence,
+            )
+
+        except TypeError:
+            pass
+
+    # --------------------------------------------------------
+    # generate()
+    # --------------------------------------------------------
+
+    if hasattr(crew, "generate"):
+
+        try:
+
+            return crew.generate(
+                destination=destination,
+                starting_location=starting_location,
+                duration=duration,
+                days=duration,
+                budget=budget,
+                travelers=travelers,
+                travel_style=travel_style,
+                language=language,
+                interests=interests,
+                evidence=evidence,
+            )
+
+        except TypeError:
+            pass
+
+    raise RuntimeError(
+        "TrekTalesCrew was loaded, but it does not provide "
+        "a compatible run(), kickoff(), plan(), or generate() method."
+    )
+    
     """
     Try common TrekTalesCrew interfaces without
     hardcoding one incompatible signature.
