@@ -1,3 +1,4 @@
+````python
 from pathlib import Path
 import re
 import json
@@ -46,6 +47,7 @@ FAISS_METADATA_PATH = FAISS_DIR / "metadata.json"
 FAISS_CONFIG_PATH = FAISS_DIR / "config.json"
 
 ASSETS_DIR = ROOT_DIR / "assets"
+
 QR_PATH = ASSETS_DIR / "jazzcash_qr.jpg"
 
 KNOWLEDGE_BASE_DIR = ROOT_DIR / "tourism_knowledge_base"
@@ -72,10 +74,7 @@ DEFAULT_VISION_MODEL = (
 
 def get_secret(name, default=""):
     try:
-        value = st.secrets.get(
-            name,
-            default,
-        )
+        value = st.secrets.get(name, default)
 
         if value is None:
             return default
@@ -140,16 +139,12 @@ try:
     if CONFIG_PAYMENT_RECIPIENT:
         EXPECTED_PAYMENT_RECIPIENT = str(
             CONFIG_PAYMENT_RECIPIENT
-        ).strip()
+        )
 
     if CONFIG_GROQ_MODEL:
-        GROQ_MODEL = str(
-            CONFIG_GROQ_MODEL
-        ).strip()
+        GROQ_MODEL = str(CONFIG_GROQ_MODEL)
 
 except Exception:
-    # Keep the application usable if config.py
-    # cannot be imported.
     pass
 
 
@@ -182,473 +177,52 @@ if "last_error" not in st.session_state:
 
 st.markdown(
     f"""
-<style>
-
-.stApp {{
-    background:
-        linear-gradient(
-            135deg,
-            {SOFT_WHITE} 0%,
-            {CREAM} 100%
-        );
-    color: {BLACK};
-}}
-
-.main .block-container {{
-    max-width: 1250px;
-    padding-top: 1.2rem;
-    padding-bottom: 2rem;
-}}
-
-h1, h2, h3, h4, h5, h6 {{
-    color: {BLACK} !important;
-}}
-
-p, li, label {{
-    color: {BLACK};
-}}
-
-
-/* =========================================================
-   BRAND
-   ========================================================= */
-
-div[class*="st-key-top_brand"] {{
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    text-align: center;
-    padding: 0.2rem 0 0.5rem 0;
-}}
-
-div[class*="st-key-top_brand"] h1 {{
-    color: {BROWN} !important;
-    font-size: 3.2rem !important;
-    font-weight: 900 !important;
-    letter-spacing: -1px;
-    margin: 0 !important;
-}}
-
-div[class*="st-key-top_brand"] p {{
-    color: {GREEN} !important;
-    font-size: 1rem;
-    font-weight: 600;
-    margin-top: 0 !important;
-}}
-
-
-/* =========================================================
-   SIDEBAR
-   ========================================================= */
-
-section[data-testid="stSidebar"] {{
-    background:
-        linear-gradient(
-            180deg,
-            {DARK_GREEN} 0%,
-            {GREEN} 100%
-        );
-}}
-
-section[data-testid="stSidebar"] * {{
-    color: {WHITE} !important;
-}}
-
-div[class*="st-key-sidebar_access"] {{
-    background: rgba(255,255,255,0.10) !important;
-    border: 1px solid rgba(255,255,255,0.25) !important;
-    border-radius: 16px !important;
-    padding: 1rem !important;
-}}
-
-div[class*="st-key-agent_"] {{
-    background: rgba(255,255,255,0.09) !important;
-    border: 1px solid rgba(255,255,255,0.18) !important;
-    border-left: 4px solid {LIGHT_GREEN} !important;
-    border-radius: 12px !important;
-    padding: 0.7rem !important;
-    margin-bottom: 0.55rem !important;
-}}
-
-
-/* =========================================================
-   HERO
-   ========================================================= */
-
-div[class*="st-key-hero"] {{
-    background:
-        linear-gradient(
-            135deg,
-            {DARK_GREEN} 0%,
-            {GREEN} 60%,
-            #2F7D60 100%
-        ) !important;
-    border: none !important;
-    border-radius: 26px !important;
-    padding: 2rem !important;
-    box-shadow: 0 15px 35px rgba(34,111,84,0.20);
-}}
-
-div[class*="st-key-hero"] * {{
-    color: {WHITE} !important;
-}}
-
-
-/* =========================================================
-   FEATURE CARDS
-   ========================================================= */
-
-div[class*="st-key-feature_"] {{
-    background: {WHITE} !important;
-    border: 1px solid rgba(34,111,84,0.18) !important;
-    border-radius: 18px !important;
-    padding: 1.1rem !important;
-    min-height: 175px;
-    box-shadow: 0 7px 20px rgba(67,41,31,0.08);
-}}
-
-div[class*="st-key-feature_"] * {{
-    color: {BLACK} !important;
-}}
-
-
-/* =========================================================
-   CONTENT CARD
-   ========================================================= */
-
-div[class*="st-key-light_card"] {{
-    background: {WHITE} !important;
-    border: 1px solid rgba(34,111,84,0.18) !important;
-    border-radius: 18px !important;
-    padding: 1.2rem !important;
-    box-shadow: 0 7px 20px rgba(67,41,31,0.07);
-}}
-
-div[class*="st-key-light_card"] * {{
-    color: {BLACK} !important;
-}}
-
-
-/* =========================================================
-   ANSWER CARD
-   ========================================================= */
-
-div[class*="st-key-answer_card"] {{
-    background: {WHITE} !important;
-    border: 2px solid {LIGHT_GREEN} !important;
-    border-radius: 20px !important;
-    padding: 1.4rem !important;
-    box-shadow: 0 8px 25px rgba(34,111,84,0.10);
-}}
-
-div[class*="st-key-answer_card"] * {{
-    color: {BLACK} !important;
-}}
-
-
-/* =========================================================
-   LOCKED CARD
-   ========================================================= */
-
-div[class*="st-key-locked_card"] {{
-    background:
-        linear-gradient(
-            135deg,
-            {DARK_GREEN},
-            {GREEN}
-        ) !important;
-    border: none !important;
-    border-radius: 20px !important;
-    padding: 1.4rem !important;
-}}
-
-div[class*="st-key-locked_card"] * {{
-    color: {WHITE} !important;
-}}
-
-
-/* =========================================================
-   PAYMENT CARD
-   ========================================================= */
-
-div[class*="st-key-payment_card"] {{
-    background: {WHITE} !important;
-    border: 2px solid {RED} !important;
-    border-radius: 20px !important;
-    padding: 1.4rem !important;
-    box-shadow: 0 8px 25px rgba(218,44,56,0.12);
-}}
-
-div[class*="st-key-payment_card"] * {{
-    color: {BLACK} !important;
-}}
-
-
-/* =========================================================
-   DISCLAIMER
-   ========================================================= */
-
-div[class*="st-key-disclaimer_card"] {{
-    background: {WHITE} !important;
-    border: 1px solid {LIGHT_GREEN} !important;
-    border-left: 5px solid {GREEN} !important;
-    border-radius: 14px !important;
-    padding: 1rem !important;
-}}
-
-div[class*="st-key-disclaimer_card"] * {{
-    color: {BLACK} !important;
-}}
-
-
-/* =========================================================
-   STATUS
-   ========================================================= */
-
-div[class*="st-key-status_"] {{
-    background: {WHITE} !important;
-    border: 1px solid rgba(34,111,84,0.20) !important;
-    border-radius: 14px !important;
-    padding: 0.8rem !important;
-}}
-
-div[class*="st-key-status_"] * {{
-    color: {BLACK} !important;
-}}
-
-
-/* =========================================================
-   SOURCES
-   ========================================================= */
-
-div[class*="st-key-source_"] {{
-    background: {LIGHT_GREY} !important;
-    border: 1px solid #DDDDDD !important;
-    border-radius: 12px !important;
-    padding: 0.8rem !important;
-}}
-
-div[class*="st-key-source_"] * {{
-    color: {BLACK} !important;
-}}
-
-
-/* =========================================================
-   BUTTONS
-   ========================================================= */
-
-.stButton > button {{
-    background: {RED} !important;
-    color: {WHITE} !important;
-    border: none !important;
-    border-radius: 12px !important;
-    font-weight: 700 !important;
-    min-height: 2.7rem;
-}}
-
-.stButton > button:hover {{
-    background: {GREEN} !important;
-    color: {WHITE} !important;
-}}
-
-.stButton > button p {{
-    color: {WHITE} !important;
-}}
-
-
-/* =========================================================
-   INPUTS
-   ========================================================= */
-
-input,
-textarea {{
-    color: {BLACK} !important;
-    background: {WHITE} !important;
-}}
-
-div[data-baseweb="select"] > div {{
-    background: {WHITE} !important;
-    color: {BLACK} !important;
-}}
-
-div[data-baseweb="select"] * {{
-    color: {BLACK} !important;
-}}
-
-
-/* =========================================================
-   LANGUAGE SELECTOR
-   ========================================================= */
-
-section[data-testid="stSidebar"]
-div[data-testid="stSelectbox"]
-div[data-baseweb="select"] {{
-    background-color: #FFFFFF !important;
-}}
-
-section[data-testid="stSidebar"]
-div[data-testid="stSelectbox"]
-div[data-baseweb="select"] > div {{
-    background-color: #FFFFFF !important;
-}}
-
-section[data-testid="stSidebar"]
-div[data-testid="stSelectbox"]
-div[data-baseweb="select"] span {{
-    color: #111111 !important;
-    -webkit-text-fill-color: #111111 !important;
-}}
-
-section[data-testid="stSidebar"]
-div[data-testid="stSelectbox"]
-div[data-baseweb="select"] span * {{
-    color: #111111 !important;
-    -webkit-text-fill-color: #111111 !important;
-}}
-
-section[data-testid="stSidebar"]
-div[data-testid="stSelectbox"] input {{
-    color: #111111 !important;
-    -webkit-text-fill-color: #111111 !important;
-    caret-color: #111111 !important;
-}}
-
-section[data-testid="stSidebar"]
-div[data-testid="stSelectbox"] svg {{
-    color: #111111 !important;
-    fill: #111111 !important;
-}}
-
-div[data-baseweb="popover"] {{
-    background-color: #FFFFFF !important;
-}}
-
-div[data-baseweb="popover"] [role="option"] {{
-    color: #111111 !important;
-    -webkit-text-fill-color: #111111 !important;
-    background-color: #FFFFFF !important;
-}}
-
-div[data-baseweb="popover"] [role="option"] * {{
-    color: #111111 !important;
-    -webkit-text-fill-color: #111111 !important;
-}}
-
-
-/* =========================================================
-   FILE UPLOADER
-   ========================================================= */
-
-section[data-testid="stFileUploaderDropzone"] {{
-    background: {WHITE} !important;
-    border: 1px dashed {GREEN} !important;
-    border-radius: 14px !important;
-}}
-
-section[data-testid="stFileUploaderDropzone"] * {{
-    color: {LIGHT_GREEN} !important;
-}}
-
-div[data-testid="stFileUploader"] label {{
-    color: {LIGHT_GREEN} !important;
-}}
-
-div[data-testid="stFileUploader"] label * {{
-    color: {LIGHT_GREEN} !important;
-}}
-
-div[data-testid="stFileUploaderDropzoneInstructions"] {{
-    color: {LIGHT_GREEN} !important;
-}}
-
-div[data-testid="stFileUploaderDropzoneInstructions"] * {{
-    color: {LIGHT_GREEN} !important;
-}}
-
-
-/* =========================================================
-   STATUS WIDGET
-   ========================================================= */
-
-div[data-testid="stStatusWidget"] {{
-    background-color: #FFFFFF !important;
-    color: #111111 !important;
-}}
-
-div[data-testid="stStatusWidget"] > div {{
-    color: #111111 !important;
-    -webkit-text-fill-color: #111111 !important;
-}}
-
-div[data-testid="stStatusWidget"] p,
-div[data-testid="stStatusWidget"] span,
-div[data-testid="stStatusWidget"] div,
-div[data-testid="stStatusWidget"] label {{
-    color: #111111 !important;
-    -webkit-text-fill-color: #111111 !important;
-}}
-
-div[data-testid="stStatusWidget"] p *,
-div[data-testid="stStatusWidget"] span *,
-div[data-testid="stStatusWidget"] div *,
-div[data-testid="stStatusWidget"] label * {{
-    color: #111111 !important;
-    -webkit-text-fill-color: #111111 !important;
-}}
-
-div[data-testid="stStatusWidget"] svg {{
-    color: #111111 !important;
-    fill: #111111 !important;
-    stroke: #111111 !important;
-}}
-
-
-/* =========================================================
-   METRICS
-   ========================================================= */
-
-div[data-testid="stMetric"] {{
-    background: {WHITE};
-    border: 1px solid rgba(34,111,84,0.18);
-    border-radius: 14px;
-    padding: 0.8rem;
-}}
-
-div[data-testid="stMetric"] * {{
-    color: {BLACK} !important;
-}}
-
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
-
-@media (max-width: 768px) {{
-
-    .main .block-container {{
-        padding-left: 0.8rem;
-        padding-right: 0.8rem;
-        padding-top: 0.8rem;
+    <style>
+
+    .stApp {{
+        background:
+            linear-gradient(
+                135deg,
+                {SOFT_WHITE} 0%,
+                {CREAM} 100%
+            );
+        color: {BLACK};
     }}
 
-    div[class*="st-key-top_brand"] h1 {{
-        font-size: 2.4rem !important;
+    .destination-box {{
+        background:
+            linear-gradient(
+                135deg,
+                {GREEN},
+                {DARK_GREEN}
+            );
+        border-radius: 16px;
+        padding: 18px;
+        margin-bottom: 16px;
+        color: {WHITE};
+        box-shadow:
+            0 8px 20px rgba(34, 111, 84, 0.18);
     }}
 
-    div[class*="st-key-hero"] {{
-        padding: 1.2rem !important;
-        border-radius: 20px !important;
+    .destination-label {{
+        font-size: 14px;
+        opacity: 0.9;
+        margin-bottom: 5px;
     }}
 
-    div[class*="st-key-feature_"] {{
-        min-height: auto;
-        padding: 1rem !important;
+    .destination-value {{
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: 1px;
     }}
 
-}}
+    .stButton > button {{
+        border-radius: 12px;
+        font-weight: 700;
+    }}
 
-</style>
-""",
+    </style>
+    """,
     unsafe_allow_html=True,
 )
 
@@ -658,7 +232,12 @@ div[data-testid="stMetric"] * {{
 # ============================================================
 
 def clean_text(text):
-    """Remove accidental HTML/code fences from model output."""
+    """
+    Remove accidental HTML and code fences from model output.
+
+    Markdown is intentionally preserved so the enhanced
+    itinerary can render headings, lists and emphasis.
+    """
 
     if text is None:
         return ""
@@ -685,58 +264,43 @@ def clean_text(text):
         text,
     )
 
-    text = text.replace(
-        "```html",
-        "",
-    )
-
-    text = text.replace(
-        "```HTML",
-        "",
-    )
-
-    text = text.replace(
-        "```",
-        "",
-    )
+    text = text.replace("```html", "")
+    text = text.replace("```HTML", "")
+    text = text.replace("```markdown", "")
+    text = text.replace("```Markdown", "")
+    text = text.replace("```", "")
 
     return text.strip()
 
 
 def safe_import_retriever():
-    """Load the project's retriever only when required."""
-
     from src.retriever import HybridRetriever
 
     return HybridRetriever
 
 
 def safe_import_crew():
-    """Load the project's TrekTales crew only when required."""
-
     from src.crew import TrekTalesCrew
 
     return TrekTalesCrew
 
 
 def safe_import_payment():
-    """Load the project's deterministic payment verifier."""
-
     from src.payment import verify_payment
 
     return verify_payment
 
 
 def safe_import_vision():
-    """Load the project's payment screenshot vision function."""
-
     from src.vision import analyze_payment_screenshot
 
     return analyze_payment_screenshot
 
 
 def extract_text_from_result(result):
-    """Safely extract text from supported Crew result formats."""
+    """
+    Safely extract output from different result formats.
+    """
 
     if result is None:
         return ""
@@ -755,10 +319,9 @@ def extract_text_from_result(result):
             "response",
             "content",
         ):
-            value = result.get(key)
 
-            if value:
-                return str(value)
+            if key in result and result[key]:
+                return str(result[key])
 
         return json.dumps(
             result,
@@ -774,7 +337,6 @@ def extract_text_from_result(result):
     ):
 
         try:
-
             value = getattr(
                 result,
                 attribute,
@@ -785,13 +347,17 @@ def extract_text_from_result(result):
                 return str(value)
 
         except Exception:
-            continue
+            pass
 
     return str(result)
 
 
 def extract_sources(evidence):
-    """Extract source filenames from retrieved evidence only."""
+    """
+    Extract source filenames from retrieved evidence.
+
+    No sources are invented.
+    """
 
     sources = []
 
@@ -814,6 +380,10 @@ def extract_sources(evidence):
         source = (
             metadata.get("source")
             or item.get("source")
+            or metadata.get("document")
+            or item.get("document")
+            or metadata.get("filename")
+            or item.get("filename")
             or ""
         )
 
@@ -831,10 +401,8 @@ def extract_sources(evidence):
             "/",
         )
 
-        # Show filename only.
         source = source.split("/")[-1]
 
-        # Remove accidental HTML extension.
         source = source.replace(
             ".html",
             "",
@@ -858,17 +426,24 @@ def extract_sources(evidence):
         )
 
         if key not in seen:
-
             seen.add(key)
             unique.append(source)
 
     return unique
 
 
-def retrieve_with_retriever(retriever, query):
-    """Support the retriever APIs used by the project."""
+def retrieve_with_retriever(
+    retriever,
+    query,
+):
+    """
+    Support common retriever APIs.
+    """
 
-    if hasattr(retriever, "search"):
+    if hasattr(
+        retriever,
+        "search",
+    ):
 
         try:
             return retriever.search(
@@ -879,7 +454,10 @@ def retrieve_with_retriever(retriever, query):
         except TypeError:
             return retriever.search(query)
 
-    if hasattr(retriever, "retrieve"):
+    if hasattr(
+        retriever,
+        "retrieve",
+    ):
 
         try:
             return retriever.retrieve(
@@ -909,10 +487,7 @@ def run_crew(
     evidence,
 ):
     """
-    Run TrekTalesCrew using the supported project interface.
-
-    The function tries the project's available public methods
-    without creating a fake response or fallback itinerary.
+    Run TrekTalesCrew using its supported interface.
     """
 
     request = {
@@ -929,13 +504,15 @@ def run_crew(
     }
 
     # --------------------------------------------------------
-    # run()
+    # Preferred TrekTalesCrew.run() interface
     # --------------------------------------------------------
 
-    if hasattr(crew, "run"):
+    if hasattr(
+        crew,
+        "run",
+    ):
 
         try:
-
             return crew.run(
                 destination=destination,
                 starting_location=starting_location,
@@ -960,7 +537,10 @@ def run_crew(
     # kickoff()
     # --------------------------------------------------------
 
-    if hasattr(crew, "kickoff"):
+    if hasattr(
+        crew,
+        "kickoff",
+    ):
 
         try:
             return crew.kickoff(request)
@@ -972,10 +552,12 @@ def run_crew(
     # plan()
     # --------------------------------------------------------
 
-    if hasattr(crew, "plan"):
+    if hasattr(
+        crew,
+        "plan",
+    ):
 
         try:
-
             return crew.plan(
                 destination=destination,
                 starting_location=starting_location,
@@ -996,10 +578,12 @@ def run_crew(
     # generate()
     # --------------------------------------------------------
 
-    if hasattr(crew, "generate"):
+    if hasattr(
+        crew,
+        "generate",
+    ):
 
         try:
-
             return crew.generate(
                 destination=destination,
                 starting_location=starting_location,
@@ -1024,26 +608,53 @@ def run_crew(
 
 def verify_payment_safely(payment_data):
     """
-    Call the deterministic payment verifier from payment.py.
+    Call the project's deterministic payment verifier.
 
-    payment.py accepts one dictionary argument, so this function
-    intentionally uses that exact interface.
+    This payment logic intentionally remains separate from
+    itinerary generation.
     """
 
     verify_payment = safe_import_payment()
 
+    try:
+        return verify_payment(
+            payment_data,
+        )
+
+    except TypeError:
+        pass
+
     return verify_payment(
-        payment_data
+        recipient=payment_data.get(
+            "recipient",
+            "",
+        ),
+        amount=payment_data.get(
+            "amount",
+            0,
+        ),
+        status=payment_data.get(
+            "status",
+            "",
+        ),
     )
 
 
 def is_payment_verified(result):
-    """Normalize payment verifier output."""
+    """
+    Normalize verifier output.
+    """
 
-    if isinstance(result, bool):
+    if isinstance(
+        result,
+        bool,
+    ):
         return result
 
-    if isinstance(result, dict):
+    if isinstance(
+        result,
+        dict,
+    ):
 
         return bool(
             result.get(
@@ -1059,8 +670,6 @@ def is_payment_verified(result):
 
 
 def validate_requested_days(days):
-    """Keep requested trip duration within the configured limit."""
-
     try:
         days = int(days)
 
@@ -1071,7 +680,7 @@ def validate_requested_days(days):
         1,
         min(
             days,
-            3,
+            PAID_DAYS,
         ),
     )
 
@@ -1084,7 +693,9 @@ with st.container(
     key="top_brand",
 ):
 
-    st.markdown("# TrekTales")
+    st.markdown(
+        "# TrekTales"
+    )
 
     st.markdown(
         "AI Multi-Agent Travel Planner"
@@ -1097,7 +708,9 @@ with st.container(
 
 with st.sidebar:
 
-    st.markdown("## 🌿 TrekTales")
+    st.markdown(
+        "## 🌿 TrekTales"
+    )
 
     st.markdown(
         "Plan smarter trips with AI-powered travel agents."
@@ -1110,7 +723,9 @@ with st.sidebar:
         key="sidebar_access",
     ):
 
-        st.markdown("### 🔐 Access Model")
+        st.markdown(
+            "### 🔐 Access Model"
+        )
 
         st.markdown(
             f"**Day {FREE_DAYS}:** Free"
@@ -1144,7 +759,9 @@ with st.sidebar:
         ],
     )
 
-    st.markdown("### 🤖 AI Agents")
+    st.markdown(
+        "### 🤖 AI Agents"
+    )
 
     agents = [
         (
@@ -1189,7 +806,11 @@ with st.sidebar:
         ),
     ]
 
-    for number, name, description in agents:
+    for (
+        number,
+        name,
+        description,
+    ) in agents:
 
         with st.container(
             border=True,
@@ -1247,7 +868,9 @@ with st.container(
 # FEATURES
 # ============================================================
 
-st.markdown("## ✨ TrekTales Features")
+st.markdown(
+    "## ✨ TrekTales Features"
+)
 
 feature_columns = st.columns(3)
 
@@ -1309,7 +932,9 @@ st.divider()
 # TRIP INPUT
 # ============================================================
 
-st.markdown("## 🧭 Create Your Rawalpindi Trip")
+st.markdown(
+    "## 🧭 Create Your Rawalpindi Trip"
+)
 
 st.caption(
     "Tell TrekTales about your trip and it will build a "
@@ -1325,10 +950,6 @@ input_col1, input_col2 = st.columns(2)
 
 with input_col1:
 
-    # --------------------------------------------------------
-    # DESTINATION
-    # --------------------------------------------------------
-
     destination = "Rawalpindi"
 
     st.markdown(
@@ -1341,18 +962,10 @@ with input_col1:
         unsafe_allow_html=True,
     )
 
-    # --------------------------------------------------------
-    # STARTING LOCATION
-    # --------------------------------------------------------
-
     starting_location = st.text_input(
         "🚗 Where will you start your journey?",
         placeholder="e.g. Islamabad",
     )
-
-    # --------------------------------------------------------
-    # TRIP DURATION
-    # --------------------------------------------------------
 
     requested_duration = st.selectbox(
         "📅 How long do you want to explore Rawalpindi?",
@@ -1365,10 +978,6 @@ with input_col1:
             else "3 Days — Full Experience"
         ),
     )
-
-    # --------------------------------------------------------
-    # TRAVELERS
-    # --------------------------------------------------------
 
     travelers = st.number_input(
         "👥 How many people are traveling?",
@@ -1384,10 +993,6 @@ with input_col1:
 # ============================================================
 
 with input_col2:
-
-    # --------------------------------------------------------
-    # BUDGET
-    # --------------------------------------------------------
 
     budget_options = {
         "Budget — PKR 1,500–3,000/person/day":
@@ -1405,14 +1010,14 @@ with input_col2:
 
     budget_label = st.selectbox(
         "💰 What is your approximate daily budget?",
-        list(budget_options.keys()),
+        list(
+            budget_options.keys()
+        ),
     )
 
-    budget = budget_options[budget_label]
-
-    # --------------------------------------------------------
-    # TRAVEL STYLE
-    # --------------------------------------------------------
+    budget = budget_options[
+        budget_label
+    ]
 
     travel_style = st.selectbox(
         "🎒 What type of Rawalpindi trip do you prefer?",
@@ -1427,10 +1032,6 @@ with input_col2:
             "Mixed",
         ],
     )
-
-    # --------------------------------------------------------
-    # INTERESTS
-    # --------------------------------------------------------
 
     interests = st.multiselect(
         "⭐ What would you like to explore?",
@@ -1497,7 +1098,9 @@ st.divider()
 # SYSTEM STATUS
 # ============================================================
 
-st.markdown("## ⚙️ System Status")
+st.markdown(
+    "## ⚙️ System Status"
+)
 
 status_col1, status_col2, status_col3 = st.columns(3)
 
@@ -1509,7 +1112,9 @@ with status_col1:
         key="status_groq",
     ):
 
-        st.markdown("### 🧠 AI Model")
+        st.markdown(
+            "### 🧠 AI Model"
+        )
 
         if GROQ_API_KEY:
 
@@ -1531,13 +1136,26 @@ with status_col2:
         key="status_faiss",
     ):
 
-        st.markdown("### 📚 Knowledge Base")
+        st.markdown(
+            "### 📚 Knowledge Base"
+        )
 
-        index_exists = FAISS_INDEX_PATH.exists()
-        metadata_exists = FAISS_METADATA_PATH.exists()
-        config_exists = FAISS_CONFIG_PATH.exists()
+        index_exists = (
+            FAISS_INDEX_PATH.exists()
+        )
 
-        if index_exists and metadata_exists:
+        metadata_exists = (
+            FAISS_METADATA_PATH.exists()
+        )
+
+        config_exists = (
+            FAISS_CONFIG_PATH.exists()
+        )
+
+        if (
+            index_exists
+            and metadata_exists
+        ):
 
             st.success(
                 "FAISS index ready"
@@ -1572,7 +1190,9 @@ with status_col3:
         key="status_agents",
     ):
 
-        st.markdown("### 🤖 Agent System")
+        st.markdown(
+            "### 🤖 Agent System"
+        )
 
         st.success(
             "8-agent architecture configured"
@@ -1598,7 +1218,11 @@ generate_trip = st.button(
 
 
 # ============================================================
-# GENERATE TRIP
+# GENERATION
+#
+# IMPORTANT:
+# Everything below executes ONLY when the user clicks
+# Generate.
 # ============================================================
 
 if generate_trip:
@@ -1658,7 +1282,7 @@ if generate_trip:
     st.session_state.last_error = None
 
     # --------------------------------------------------------
-    # RETRIEVAL
+    # RETRIEVAL + GENERATION
     # --------------------------------------------------------
 
     with st.status(
@@ -1670,9 +1294,15 @@ if generate_trip:
             "Loading the tourism knowledge base..."
         )
 
+        # ----------------------------------------------------
+        # RETRIEVER
+        # ----------------------------------------------------
+
         try:
 
-            RetrieverClass = safe_import_retriever()
+            RetrieverClass = (
+                safe_import_retriever()
+            )
 
             retriever = RetrieverClass(
                 index_path=FAISS_INDEX_PATH,
@@ -1687,7 +1317,8 @@ if generate_trip:
                 f"Budget: {budget}. "
                 f"Travel style: {travel_style}. "
                 f"Travelers: {travelers}. "
-                f"Interests: {', '.join(interests)}."
+                f"Interests: "
+                f"{', '.join(interests)}."
             )
 
             evidence = retrieve_with_retriever(
@@ -1698,15 +1329,24 @@ if generate_trip:
             if evidence is None:
                 evidence = []
 
-            st.session_state.trip_evidence = evidence
-
-            st.write(
-                f"Retrieved {len(evidence)} knowledge items."
+            st.session_state.trip_evidence = (
+                evidence
             )
 
-        except Exception as exc:
+            st.write(
+                f"Retrieved {len(evidence)} "
+                f"knowledge items."
+            )
 
-            st.session_state.last_error = str(exc)
+            if not evidence:
+
+                st.warning(
+                    "No tourism knowledge-base evidence "
+                    "was retrieved. The itinerary generator "
+                    "will not invent missing tourism facts."
+                )
+
+        except Exception as exc:
 
             status.update(
                 label="❌ Knowledge retrieval failed",
@@ -1763,23 +1403,9 @@ if generate_trip:
                 evidence=evidence,
             )
 
-            if result is None:
-
-                raise RuntimeError(
-                    "TrekTalesCrew returned no result."
-                )
-
-            extracted_result = extract_text_from_result(
+            st.session_state.trip_result = (
                 result
             )
-
-            if not extracted_result.strip():
-
-                raise RuntimeError(
-                    "TrekTalesCrew returned an empty itinerary."
-                )
-
-            st.session_state.trip_result = result
 
             status.update(
                 label="✅ TrekTales plan generated!",
@@ -1789,8 +1415,6 @@ if generate_trip:
 
         except Exception as exc:
 
-            st.session_state.last_error = str(exc)
-
             status.update(
                 label="❌ Trip generation failed",
                 state="error",
@@ -1798,8 +1422,8 @@ if generate_trip:
             )
 
             st.error(
-                "The TrekTales AI crew could not generate "
-                "the itinerary."
+                "The TrekTales AI crew could not "
+                "generate the itinerary."
             )
 
             st.exception(exc)
@@ -1836,30 +1460,22 @@ if st.session_state.trip_result:
         st.session_state.trip_result
     )
 
-    answer = clean_text(answer)
+    answer = clean_text(
+        answer
+    )
 
-    if answer:
+    with st.container(
+        border=True,
+        key="answer_card",
+    ):
 
-        with st.container(
-            border=True,
-            key="answer_card",
-        ):
+        st.markdown(
+            "### 🌿 Personalized Itinerary"
+        )
 
-            st.markdown(
-                "### 🌿 Personalized Itinerary"
-            )
-
-            # AI output is intentionally rendered as Markdown
-            # without allowing raw HTML.
-            st.markdown(
-                answer,
-                unsafe_allow_html=False,
-            )
-
-    else:
-
-        st.error(
-            "The generated itinerary was empty."
+        st.markdown(
+            answer,
+            unsafe_allow_html=False,
         )
 
 
@@ -1879,7 +1495,9 @@ if sources:
         "## 📚 Knowledge Sources"
     )
 
-    for index, source in enumerate(sources):
+    for index, source in enumerate(
+        sources
+    ):
 
         with st.container(
             border=True,
@@ -1892,7 +1510,8 @@ if sources:
 
             if (
                 source["page"]
-                and source["page"].lower() != "n/a"
+                and source["page"].lower()
+                != "n/a"
             ):
 
                 st.caption(
@@ -1956,7 +1575,8 @@ if requested_duration >= 2:
             )
 
             st.write(
-                f"Payment amount: **Rs. {UNLOCK_PRICE}**"
+                f"Payment amount: "
+                f"**Rs. {UNLOCK_PRICE}**"
             )
 
             st.write(
@@ -1979,15 +1599,17 @@ if requested_duration >= 2:
                     "`assets/jazzcash_qr.jpg`."
                 )
 
-            uploaded_screenshot = st.file_uploader(
-                "📸 Upload payment screenshot",
-                type=[
-                    "png",
-                    "jpg",
-                    "jpeg",
-                    "webp",
-                ],
-                key="payment_screenshot",
+            uploaded_screenshot = (
+                st.file_uploader(
+                    "📸 Upload payment screenshot",
+                    type=[
+                        "png",
+                        "jpg",
+                        "jpeg",
+                        "webp",
+                    ],
+                    key="payment_screenshot",
+                )
             )
 
             if uploaded_screenshot:
@@ -2010,13 +1632,25 @@ if requested_duration >= 2:
                                 safe_import_vision()
                             )
 
-                            uploaded_screenshot.seek(0)
+                            try:
 
-                            vision_result = (
-                                analyze_payment_screenshot(
-                                    uploaded_screenshot.read()
+                                vision_result = (
+                                    analyze_payment_screenshot(
+                                        uploaded_screenshot
+                                    )
                                 )
-                            )
+
+                            except TypeError:
+
+                                uploaded_screenshot.seek(
+                                    0
+                                )
+
+                                vision_result = (
+                                    analyze_payment_screenshot(
+                                        uploaded_screenshot.read()
+                                    )
+                                )
 
                             st.session_state.vision_result = (
                                 vision_result
@@ -2041,10 +1675,36 @@ if requested_duration >= 2:
                         st.session_state.vision_result
                     )
 
-                    if not isinstance(
+                    if isinstance(
                         vision,
                         dict,
                     ):
+
+                        recipient = str(
+                            vision.get(
+                                "recipient",
+                                "",
+                            )
+                        ).strip()
+
+                        amount = vision.get(
+                            "amount",
+                            0,
+                        )
+
+                        payment_status = str(
+                            vision.get(
+                                "status",
+                                "",
+                            )
+                        ).strip()
+
+                        confidence = vision.get(
+                            "confidence",
+                            "",
+                        )
+
+                    else:
 
                         st.error(
                             "Vision Agent returned an "
@@ -2053,66 +1713,13 @@ if requested_duration >= 2:
 
                         st.stop()
 
-                    is_payment_screenshot = bool(
-                        vision.get(
-                            "is_payment_screenshot",
-                            False,
-                        )
-                    )
-
-                    if not is_payment_screenshot:
-
-                        message = str(
-                            vision.get(
-                                "message",
-                                "The uploaded image does not appear "
-                                "to be a payment screenshot.",
-                            )
-                        ).strip()
-
-                        st.error(
-                            message
-                            if message
-                            else
-                            "The uploaded image does not appear "
-                            "to be a payment screenshot."
-                        )
-
-                        st.stop()
-
-                    recipient = str(
-                        vision.get(
-                            "recipient",
-                            "",
-                        )
-                    ).strip()
-
-                    amount = vision.get(
-                        "amount",
-                        0,
-                    )
-
-                    payment_status = str(
-                        vision.get(
-                            "status",
-                            "",
-                        )
-                    ).strip()
-
-                    confidence = vision.get(
-                        "confidence",
-                        "",
-                    )
-
-                    # ------------------------------------------------
-                    # SCREENSHOT ANALYSIS
-                    # ------------------------------------------------
-
                     st.markdown(
                         "### 👁️ Screenshot Analysis"
                     )
 
-                    metric1, metric2, metric3 = st.columns(3)
+                    metric1, metric2, metric3 = (
+                        st.columns(3)
+                    )
 
                     with metric1:
 
@@ -2142,7 +1749,8 @@ if requested_duration >= 2:
                     if confidence:
 
                         st.caption(
-                            f"Vision confidence: {confidence}"
+                            f"Vision confidence: "
+                            f"{confidence}"
                         )
 
                     # ------------------------------------------------
@@ -2178,8 +1786,10 @@ if requested_duration >= 2:
                         payment_result
                     )
 
-                    verified = is_payment_verified(
-                        payment_result
+                    verified = (
+                        is_payment_verified(
+                            payment_result
+                        )
                     )
 
                     st.session_state.payment_verified = (
@@ -2203,29 +1813,11 @@ if requested_duration >= 2:
                             "❌ Payment could not be verified."
                         )
 
-                        if isinstance(
-                            payment_result,
-                            dict,
-                        ):
-
-                            reason = payment_result.get(
-                                "reason",
-                                "",
-                            )
-
-                            if reason:
-
-                                st.warning(
-                                    str(reason)
-                                )
-
-                        else:
-
-                            st.warning(
-                                "The recipient, amount and "
-                                "payment status did not satisfy "
-                                "the application's verification rules."
-                            )
+                        st.warning(
+                            "The recipient, amount and payment "
+                            "status did not satisfy the application's "
+                            "verification rules."
+                        )
 
     else:
 
@@ -2239,7 +1831,9 @@ if requested_duration >= 2:
         ):
 
             st.session_state.payment_verified = False
+
             st.session_state.payment_result = None
+
             st.session_state.vision_result = None
 
             st.rerun()
@@ -2272,7 +1866,9 @@ with st.container(
 
 st.markdown("---")
 
-footer_col1, footer_col2, footer_col3 = st.columns(3)
+footer_col1, footer_col2, footer_col3 = (
+    st.columns(3)
+)
 
 with footer_col1:
 
@@ -2291,4 +1887,4 @@ with footer_col3:
     st.markdown(
         "Built with Streamlit + Groq"
     )
-
+````
