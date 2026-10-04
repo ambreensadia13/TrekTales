@@ -1,4 +1,3 @@
-````python
 from pathlib import Path
 import re
 import json
@@ -1887,4 +1886,4 @@ with footer_col3:
     st.markdown(
         "Built with Streamlit + Groq"
     )
-````
+
