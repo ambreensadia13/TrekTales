@@ -459,54 +459,49 @@ div[data-baseweb="select"] * {{
    LANGUAGE SELECTOR - FORCE SELECTED TEXT BLACK
    ========================================================= */
 
-section[data-testid="stSidebar"] div[data-testid="stSelectbox"] div[data-baseweb="select"] {
+section[data-testid="stSidebar"] div[data-testid="stSelectbox"] div[data-baseweb="select"] {{
     background-color: #FFFFFF !important;
-}
+}}
 
-section[data-testid="stSidebar"] div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+section[data-testid="stSidebar"] div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {{
     background-color: #FFFFFF !important;
-}
+}}
 
-/* Selected language text */
-section[data-testid="stSidebar"] div[data-testid="stSelectbox"] div[data-baseweb="select"] span {
+section[data-testid="stSidebar"] div[data-testid="stSelectbox"] div[data-baseweb="select"] span {{
     color: #111111 !important;
     -webkit-text-fill-color: #111111 !important;
-}
+}}
 
-/* Selected language text and nested elements */
-section[data-testid="stSidebar"] div[data-testid="stSelectbox"] div[data-baseweb="select"] span * {
+section[data-testid="stSidebar"] div[data-testid="stSelectbox"] div[data-baseweb="select"] span * {{
     color: #111111 !important;
     -webkit-text-fill-color: #111111 !important;
-}
+}}
 
-/* Input used internally by BaseWeb */
-section[data-testid="stSidebar"] div[data-testid="stSelectbox"] input {
+section[data-testid="stSidebar"] div[data-testid="stSelectbox"] input {{
     color: #111111 !important;
     -webkit-text-fill-color: #111111 !important;
     caret-color: #111111 !important;
-}
+}}
 
-/* Dropdown arrow */
-section[data-testid="stSidebar"] div[data-testid="stSelectbox"] svg {
+section[data-testid="stSidebar"] div[data-testid="stSelectbox"] svg {{
     color: #111111 !important;
     fill: #111111 !important;
-}
+}}
 
-/* Dropdown menu */
-div[data-baseweb="popover"] {
+div[data-baseweb="popover"] {{
     background-color: #FFFFFF !important;
-}
+}}
 
-div[data-baseweb="popover"] [role="option"] {
+div[data-baseweb="popover"] [role="option"] {{
     color: #111111 !important;
     -webkit-text-fill-color: #111111 !important;
     background-color: #FFFFFF !important;
-}
+}}
 
-div[data-baseweb="popover"] [role="option"] * {
+div[data-baseweb="popover"] [role="option"] * {{
     color: #111111 !important;
     -webkit-text-fill-color: #111111 !important;
-}
+}}
 
 /* =========================================================
    FILE UPLOADER - LIGHT GREEN TEXT
@@ -541,41 +536,37 @@ div[data-testid="stFileUploaderDropzoneInstructions"] * {{
    PREPARING TREKTALES STATUS - BLACK TEXT
    ========================================================= */
 
-div[data-testid="stStatusWidget"] {
+div[data-testid="stStatusWidget"] {{
     background-color: #FFFFFF !important;
     color: #111111 !important;
-}
+}}
 
-/* Status title */
-div[data-testid="stStatusWidget"] > div {
+div[data-testid="stStatusWidget"] > div {{
     color: #111111 !important;
     -webkit-text-fill-color: #111111 !important;
-}
+}}
 
-/* All status text */
 div[data-testid="stStatusWidget"] p,
 div[data-testid="stStatusWidget"] span,
 div[data-testid="stStatusWidget"] div,
-div[data-testid="stStatusWidget"] label {
+div[data-testid="stStatusWidget"] label {{
     color: #111111 !important;
     -webkit-text-fill-color: #111111 !important;
-}
+}}
 
-/* Nested elements */
 div[data-testid="stStatusWidget"] p *,
 div[data-testid="stStatusWidget"] span *,
 div[data-testid="stStatusWidget"] div *,
-div[data-testid="stStatusWidget"] label * {
+div[data-testid="stStatusWidget"] label * {{
     color: #111111 !important;
     -webkit-text-fill-color: #111111 !important;
-}
+}}
 
-/* Status icon */
-div[data-testid="stStatusWidget"] svg {
+div[data-testid="stStatusWidget"] svg {{
     color: #111111 !important;
     fill: #111111 !important;
     stroke: #111111 !important;
-}
+}}
 
 /* =========================================================
    METRICS
