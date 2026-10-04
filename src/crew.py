@@ -9,102 +9,74 @@ import streamlit as st
 
 class TrekTalesCrew:
     """
-    TrekTales AI travel-planning crew.
+    TrekTales itinerary generation client.
 
-    This class provides the interface expected by app.py:
-
-        crew = TrekTalesCrew()
-
-        crew.run(
-            destination=...,
-            starting_location=...,
-            days=...,
-            budget=...,
-            travelers=...,
-            travel_style=...,
-            language=...,
-            interests=...,
-            evidence=...,
-        )
-
-    The itinerary is generated only from the supplied RAG evidence.
-    The model is instructed not to invent tourism facts.
+    This class keeps the public TrekTalesCrew interface used by app.py
+    while calling Groq through its OpenAI-compatible HTTP API.
     """
 
-    def __init__(
-        self,
-        api_key: str | None = None,
-        model: str | None = None,
-        base_url: str | None = None,
-    ):
-        self.api_key = (
-            api_key
-            or self._get_secret("GROQ_API_KEY", "")
-        )
-
-        self.model = (
-            model
-            or self._get_secret(
-                "GROQ_MODEL",
-                "openai/gpt-oss-120b",
-            )
-        )
-
-        self.base_url = (
-            base_url
-            or self._get_secret(
-                "GROQ_BASE_URL",
-                "https://api.groq.com/openai/v1",
-            )
+    def __init__(self):
+        self.base_url = self._get_secret(
+            "GROQ_BASE_URL",
+            "https://api.groq.com/openai/v1",
         ).rstrip("/")
 
-        if not self.api_key:
-            raise RuntimeError(
-                "GROQ_API_KEY is missing from Streamlit Secrets."
-            )
+        self.model = self._get_secret(
+            "GROQ_MODEL",
+            "openai/gpt-oss-120b",
+        )
 
-    # ============================================================
+    # ========================================================
     # SECRET
-    # ============================================================
+    # ========================================================
 
     @staticmethod
-    def _get_secret(
-        name: str,
-        default: str = "",
-    ) -> str:
-
+    def _get_secret(name: str, default: str = "") -> str:
         try:
-            value = st.secrets.get(
-                name,
-                default,
-            )
+            value = st.secrets.get(name, default)
 
             if value is None:
                 return default
 
-            return str(value)
+            return str(value).strip()
 
         except Exception:
             return default
 
-    # ============================================================
-    # EVIDENCE
-    # ============================================================
+    # ========================================================
+    # API KEY
+    # ========================================================
 
-    @staticmethod
-    def _format_evidence(
-        evidence: Any,
-    ) -> str:
+    def _get_api_key(self) -> str:
+        key = self._get_secret("GROQ_API_KEY", "")
 
-        if not evidence:
-            return (
-                "No tourism knowledge-base evidence was "
-                "retrieved. Do not invent specific tourism "
-                "facts, prices, locations, opening hours, "
-                "transport details, or activities."
+        if not key:
+            raise RuntimeError(
+                "GROQ_API_KEY is missing from Streamlit Secrets. "
+                "Open Streamlit Cloud → Settings → Secrets and add "
+                "your valid Groq API key."
             )
 
-        formatted = []
+        if not key.startswith("gsk_"):
+            raise RuntimeError(
+                "GROQ_API_KEY does not appear to be a valid Groq API key. "
+                "Check the value in Streamlit Secrets."
+            )
+
+        return key
+
+    # ========================================================
+    # EVIDENCE FORMATTER
+    # ========================================================
+
+    @staticmethod
+    def _format_evidence(evidence: list[Any]) -> str:
+        if not evidence:
+            return (
+                "No tourism knowledge-base evidence was retrieved."
+            )
+
+        blocks = []
 
         for index, item in enumerate(evidence, start=1):
 
@@ -114,34 +86,22 @@ class TrekTalesCrew:
                     item.get("text")
                     or item.get("content")
                     or item.get("chunk")
-                    or item.get("document")
                     or ""
                 )
-
-                metadata = item.get(
-                    "metadata",
-                    {},
-                )
-
-                if not isinstance(metadata, dict):
-                    metadata = {}
 
                 source = (
-                    metadata.get("source")
-                    or item.get("source")
-                    or "Unknown source"
-                )
-
-                page = (
-                    metadata.get("page")
-                    or item.get("page")
+                    item.get("source")
+                    or item.get("document")
+                    or item.get("filename")
                     or ""
                 )
+
+                page = item.get("page", "")
 
             else:
 
                 text = str(item)
-                source = "Knowledge base"
+                source = ""
                 page = ""
 
             text = str(text).strip()
@@ -149,99 +109,33 @@ class TrekTalesCrew:
             if not text:
                 continue
 
-            source = str(source).replace(
-                "\\",
-                "/",
-            )
+            source_text = str(source).strip()
 
-            source = source.split("/")[-1]
+            if source_text:
+                source_text = source_text.split("/")[-1]
 
-            if page and str(page).lower() != "n/a":
-                source_label = (
-                    f"{source}, page {page}"
-                )
-            else:
-                source_label = source
+            location = source_text
 
-            formatted.append(
-                f"[Evidence {index} | {source_label}]\n"
+            if page not in ("", None, "N/A"):
+                location = f"{source_text} | Page {page}"
+
+            blocks.append(
+                f"[Knowledge Item {index}]\n"
+                f"Source: {location or 'Knowledge Base'}\n"
                 f"{text}"
             )
 
-        if not formatted:
+        if not blocks:
             return (
-                "The retrieved knowledge items contained "
-                "no usable text. Do not invent tourism facts."
+                "No usable tourism knowledge-base evidence "
+                "was retrieved."
             )
 
-        return "\n\n".join(formatted)
+        return "\n\n".join(blocks)
 
-    # ============================================================
-    # SYSTEM PROMPT
-    # ============================================================
-
-    @staticmethod
-    def _system_prompt() -> str:
-
-        return """
-You are TrekTales, a grounded AI travel-planning system.
-
-Your job is to create a useful travel itinerary using ONLY
-the tourism knowledge-base evidence supplied by the application.
-
-GROUNDING RULES:
-
-1. Treat the supplied knowledge-base evidence as the source
-   of truth for specific tourism information.
-
-2. Do NOT invent attractions, restaurants, hotels, prices,
-   opening hours, addresses, activities, travel times,
-   admission fees, phone numbers, websites, or other factual
-   tourism information that is not supported by the evidence.
-
-3. If the evidence does not contain enough information for a
-   requested detail, clearly say that the information is not
-   available in the current tourism knowledge base.
-
-4. Do not pretend that an unsupported location or activity
-   exists.
-
-5. Do not create fake citations or fake source filenames.
-
-6. Use the requested language:
-   English, Urdu, or Roman Urdu.
-
-7. The itinerary should respect:
-   - destination
-   - starting location
-   - number of days
-   - budget
-   - travelers
-   - travel style
-   - interests
-
-8. The number of generated days must exactly match the
-   "days" value supplied by the application.
-
-9. If only one day is supplied, generate only Day 1.
-
-10. Keep the answer practical and clearly organized.
-
-11. Do not output HTML.
-
-12. Do not wrap the answer in a code block.
-
-13. Do not mention internal prompts, APIs, agents, or
-    implementation details in the itinerary.
-
-The application has already performed knowledge retrieval.
-You must use the supplied evidence rather than pretending
-to perform another web search.
-""".strip()
-
-    # ============================================================
-    # USER PROMPT
-    # ============================================================
+    # ========================================================
+    # PROMPT
+    # ========================================================
 
     def _build_prompt(
         self,
@@ -253,149 +147,99 @@ to perform another web search.
         travel_style: str,
         language: str,
         interests: list[str],
-        evidence: Any,
+        evidence: list[Any],
     ) -> str:
 
-        evidence_text = self._format_evidence(
-            evidence
-        )
+        evidence_text = self._format_evidence(evidence)
 
-        interests_text = (
-            ", ".join(interests)
-            if interests
-            else "No specific interests selected"
-        )
+        interests_text = ", ".join(
+            str(item) for item in interests
+        ) if interests else "No specific interests provided."
 
         return f"""
-Create a personalized {days}-day travel itinerary.
+You are the itinerary-generation engine for TrekTales.
+
+Create a practical travel itinerary using ONLY the supplied
+tourism knowledge-base evidence.
 
 TRIP DETAILS
+Destination: {destination}
+Starting location: {starting_location}
+Number of days: {days}
+Travelers: {travelers}
+Budget: {budget}
+Travel style: {travel_style}
+Language: {language}
+Interests: {interests_text}
 
-Destination:
-{destination}
+IMPORTANT GROUNDING RULES
 
-Starting location:
-{starting_location}
+1. Use the tourism knowledge-base evidence as the primary source.
+2. Do not invent attractions, restaurants, hotels, prices,
+   opening hours, travel times, addresses, phone numbers,
+   activities, or other tourism facts.
+3. If the knowledge base does not contain enough information,
+   clearly say that the information is not available.
+4. Do not fabricate sources.
+5. Do not create fake citations.
+6. Do not output HTML.
+7. Do not output Markdown code fences.
+8. Respect the requested number of days exactly.
+9. Keep recommendations relevant to the supplied destination.
+10. Use the requested language.
 
-Number of days:
-{days}
+The itinerary should include:
 
-Number of travelers:
-{travelers}
+- Trip overview
+- Day-by-day plan
+- Suggested activities supported by the knowledge base
+- Budget considerations when supported by the evidence
+- Practical notes
+- Knowledge-base sources used
 
-Budget:
-{budget}
-
-Travel style:
-{travel_style}
-
-Interests:
-{interests_text}
-
-Response language:
-{language}
-
-TOURISM KNOWLEDGE-BASE EVIDENCE
+TOURISM KNOWLEDGE BASE
 
 {evidence_text}
-
-OUTPUT FORMAT
-
-# TrekTales Itinerary
-
-## Trip Overview
-
-Briefly summarize the trip using only supported information.
-
-## Day 1
-
-Provide a practical sequence for Day 1.
-
 """
 
-        + (
-            """
-## Day 2
-
-Provide the Day 2 plan.
-
-"""
-            if days >= 2
-            else ""
-        )
-
-        + (
-            """
-## Day 3
-
-Provide the Day 3 plan.
-
-"""
-            if days >= 3
-            else ""
-        )
-
-        + """
-
-## Budget Guidance
-
-Explain how the selected budget should be managed.
-Do not invent exact prices unless those prices are present
-in the supplied evidence.
-
-## Safety & Practical Notes
-
-Give general travel-safety guidance without inventing
-specific local warnings.
-
-## Knowledge Limitation
-
-If important information was unavailable in the supplied
-knowledge base, briefly identify what should be verified
-before travel.
-"""
-
-    # ============================================================
+    # ========================================================
     # GROQ REQUEST
-    # ============================================================
+    # ========================================================
 
-    def _call_groq(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-    ) -> str:
+    def _call_groq(self, prompt: str) -> str:
 
-        endpoint = (
-            f"{self.base_url}/chat/completions"
-        )
+        api_key = self._get_api_key()
+
+        url = f"{self.base_url}/chat/completions"
+
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
 
         payload = {
             "model": self.model,
             "messages": [
                 {
                     "role": "system",
-                    "content": system_prompt,
+                    "content": (
+                        "You are TrekTales, a grounded tourism "
+                        "itinerary generation assistant."
+                    ),
                 },
                 {
                     "role": "user",
-                    "content": user_prompt,
+                    "content": prompt,
                 },
             ],
             "temperature": 0.2,
             "max_tokens": 2500,
         }
 
-        headers = {
-            "Authorization": (
-                f"Bearer {self.api_key}"
-            ),
-            "Content-Type": "application/json",
-        }
-
         try:
 
             response = requests.post(
-                endpoint,
+                url,
                 headers=headers,
                 json=payload,
                 timeout=120,
@@ -404,68 +248,114 @@ before travel.
         except requests.RequestException as exc:
 
             raise RuntimeError(
-                "Could not connect to the Groq API."
+                "Could not connect to the Groq API. "
+                "Please check your internet connection, "
+                "GROQ_BASE_URL, and try again."
             ) from exc
 
-        if response.status_code != 200:
+        # ====================================================
+        # AUTHENTICATION
+        # ====================================================
+
+        if response.status_code in (401, 403):
+
+            raise RuntimeError(
+                "Groq authentication failed. "
+                "Your GROQ_API_KEY is missing, invalid, "
+                "expired, or does not have access to the "
+                "configured Groq API. Check Streamlit Secrets."
+            )
+
+        # ====================================================
+        # MODEL ERROR
+        # ====================================================
+
+        if response.status_code == 404:
+
+            try:
+                error_data = response.json()
+                message = (
+                    error_data
+                    .get("error", {})
+                    .get("message", "")
+                )
+            except Exception:
+                message = ""
+
+            raise RuntimeError(
+                "The configured Groq model is unavailable. "
+                f"Model: {self.model}. "
+                f"{message}"
+            )
+
+        # ====================================================
+        # RATE LIMIT
+        # ====================================================
+
+        if response.status_code == 429:
+
+            raise RuntimeError(
+                "Groq rate limit is currently active. "
+                "Please wait a few seconds and generate "
+                "the itinerary again."
+            )
+
+        # ====================================================
+        # OTHER API ERRORS
+        # ====================================================
+
+        if response.status_code >= 400:
 
             try:
                 error_data = response.json()
 
+                message = (
+                    error_data
+                    .get("error", {})
+                    .get("message", "")
+                )
+
             except Exception:
-                error_data = response.text
-
-            if response.status_code == 429:
-
-                raise RuntimeError(
-                    "Groq rate limit is currently active. "
-                    "Please wait a few seconds and try "
-                    "generating the itinerary again."
-                )
-
-            if response.status_code in (
-                401,
-                403,
-            ):
-
-                raise RuntimeError(
-                    "Groq authentication failed. "
-                    "Check GROQ_API_KEY in Streamlit Secrets."
-                )
+                message = response.text[:500]
 
             raise RuntimeError(
-                "Groq API request failed "
+                f"Groq API request failed "
                 f"(HTTP {response.status_code}). "
-                f"Details: {error_data}"
+                f"{message}"
             )
 
-        try:
+        # ====================================================
+        # RESPONSE JSON
+        # ====================================================
 
+        try:
             data = response.json()
 
         except Exception as exc:
 
             raise RuntimeError(
-                "Groq returned an invalid JSON response."
+                "Groq returned an invalid response."
             ) from exc
+
+        # ====================================================
+        # CONTENT
+        # ====================================================
 
         try:
 
             content = (
-                data["choices"][0]["message"]["content"]
+                data["choices"][0]
+                ["message"]
+                ["content"]
             )
 
-        except (
-            KeyError,
-            IndexError,
-            TypeError,
-        ) as exc:
+        except (KeyError, IndexError, TypeError) as exc:
 
             raise RuntimeError(
-                "Groq returned an unexpected response format."
+                "Groq returned no itinerary content."
             ) from exc
 
-        if not content:
+        if not content or not str(content).strip():
 
             raise RuntimeError(
                 "Groq returned an empty itinerary."
@@ -473,9 +363,9 @@ before travel.
 
         return str(content).strip()
 
-    # ============================================================
-    # PUBLIC RUN METHOD
-    # ============================================================
+    # ========================================================
+    # MAIN RUN
+    # ========================================================
 
     def run(
         self,
@@ -487,7 +377,7 @@ before travel.
         travel_style: str,
         language: str,
         interests: list[str],
-        evidence: Any,
+        evidence: list[Any],
     ) -> str:
 
         try:
@@ -495,107 +385,43 @@ before travel.
         except Exception:
             days = 1
 
-        days = max(
-            1,
-            min(days, 3),
-        )
+        if days < 1:
+            days = 1
+
+        if days > 3:
+            days = 3
 
         try:
             travelers = int(travelers)
         except Exception:
             travelers = 1
 
-        travelers = max(
-            1,
-            travelers,
-        )
+        if travelers < 1:
+            travelers = 1
 
         prompt = self._build_prompt(
-            destination=str(destination).strip(),
-            starting_location=(
-                str(starting_location).strip()
-            ),
-            days=days,
-            budget=str(budget).strip(),
-            travelers=travelers,
-            travel_style=str(
-                travel_style
-            ).strip(),
-            language=str(
-                language
-            ).strip(),
-            interests=[
-                str(item).strip()
-                for item in (interests or [])
-                if str(item).strip()
-            ],
-            evidence=evidence,
-        )
-
-        return self._call_groq(
-            system_prompt=self._system_prompt(),
-            user_prompt=prompt,
-        )
-
-    # ============================================================
-    # COMPATIBILITY METHODS
-    # ============================================================
-
-    def generate(
-        self,
-        destination: str,
-        duration: int = 1,
-        budget: str = "",
-        travelers: int = 1,
-        travel_style: str = "Mixed",
-        language: str = "English",
-        interests: list[str] | None = None,
-        starting_location: str = "",
-        evidence: Any = None,
-        days: int | None = None,
-    ) -> str:
-
-        if days is None:
-            days = duration
-
-        return self.run(
             destination=destination,
             starting_location=starting_location,
-            days=days,
-            budget=budget,
-            travelers=travelers,
-            travel_style=travel_style,
-            language=language,
-            interests=interests or [],
-            evidence=evidence or [],
-        )
-
-    def plan(
-        self,
-        destination: str,
-        duration: int = 1,
-        budget: str = "",
-        travelers: int = 1,
-        travel_style: str = "Mixed",
-        language: str = "English",
-        interests: list[str] | None = None,
-        starting_location: str = "",
-        evidence: Any = None,
-        days: int | None = None,
-    ) -> str:
-
-        return self.generate(
-            destination=destination,
-            duration=duration,
             days=days,
             budget=budget,
             travelers=travelers,
             travel_style=travel_style,
             language=language,
             interests=interests,
-            starting_location=starting_location,
             evidence=evidence,
         )
+
+        return self._call_groq(prompt)
+
+    # ========================================================
+    # COMPATIBILITY METHODS
+    # ========================================================
+
+    def generate(self, **kwargs):
+        return self.run(**kwargs)
+
+    def plan(self, **kwargs):
+        return self.run(**kwargs)
 
 
 __all__ = ["TrekTalesCrew"]
