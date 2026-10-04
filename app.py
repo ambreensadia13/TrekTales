@@ -1,4 +1,4 @@
-from pathlib import Path
+in this app.py from pathlib import Path
 import base64
 import json
 import re
@@ -6,9 +6,10 @@ import re
 import streamlit as st
 
 
-# ============================================================
-# PAGE CONFIG
-# ============================================================
+
+\# ============================================================
+\# PAGE CONFIG
+\# ============================================================
 
 st.set_page_config(
     page_title="TrekTales",
@@ -18,11 +19,12 @@ st.set_page_config(
 )
 
 
-# ============================================================
-# PROJECT PATHS
-# ============================================================
 
-ROOT_DIR = Path(__file__).resolve().parent
+\# ============================================================
+\# PROJECT PATHS
+\# ============================================================
+
+ROOT_DIR = Path(\_\_file\_\_).resolve().parent
 
 FAISS_DIR = ROOT_DIR / "faiss_db"
 FAISS_INDEX_PATH = FAISS_DIR / "index.faiss"
@@ -33,9 +35,10 @@ ASSETS_DIR = ROOT_DIR / "assets"
 QR_PATH = ASSETS_DIR / "jazzcash_qr.jpg"
 
 
-# ============================================================
-# TREKTALES SETTINGS
-# ============================================================
+
+\# ============================================================
+\# TREKTALES SETTINGS
+\# ============================================================
 
 FREE_DAYS = 1
 MAX_TRIP_DAYS = 10
@@ -50,15 +53,16 @@ DEFAULT_GROQ_VISION_MODEL = (
 )
 
 DEFAULT_GROQ_BASE_URL = (
-    "https://api.groq.com/openai/v1"
+    "[https://api.groq.com/openai/v1](https://api.groq.com/openai/v1)"
 )
 
 TOP_K = 6
 
 
-# ============================================================
-# COLORS
-# ============================================================
+
+\# ============================================================
+\# COLORS
+\# ============================================================
 
 RED = "#DA2C38"
 GREEN = "#226F54"
@@ -72,15 +76,16 @@ SOFT_WHITE = "#FFFDF4"
 LIGHT_GREY = "#F5F5F5"
 
 
-# ============================================================
-# CSS
-# ============================================================
+
+\# ============================================================
+\# CSS
+\# ============================================================
 
 st.markdown(
     f"""
-<style>
+\<style>
 
-* {{
+\* {{
     box-sizing: border-box;
 }}
 
@@ -96,7 +101,7 @@ body,
             135deg,
             {SOFT_WHITE} 0%,
             {CREAM} 48%,
-            #ffffff 100%
+            \#ffffff 100%
         );
     color: {BLACK};
 }}
@@ -108,9 +113,10 @@ body,
 }}
 
 
-/* ============================================================
+
+/\* ============================================================
    SIDEBAR
-   ============================================================ */
+   \============================================================ \*/
 
 [data-testid="stSidebar"] {{
     background: {GREEN} !important;
@@ -120,7 +126,7 @@ body,
     background: {GREEN} !important;
 }}
 
-[data-testid="stSidebar"] * {{
+[data-testid="stSidebar"] \* {{
     color: {WHITE} !important;
 }}
 
@@ -163,9 +169,10 @@ body,
 }}
 
 
-/* ============================================================
+
+/\* ============================================================
    BRAND
-   ============================================================ */
+   \============================================================ \*/
 
 .brand-wrapper {{
     text-align: center;
@@ -191,9 +198,10 @@ body,
 }}
 
 
-/* ============================================================
+
+/\* ============================================================
    HERO
-   ============================================================ */
+   \============================================================ \*/
 
 .hero-card {{
     background:
@@ -225,9 +233,10 @@ body,
 }}
 
 
-/* ============================================================
+
+/\* ============================================================
    SECTION HEADINGS
-   ============================================================ */
+   \============================================================ \*/
 
 .section-title {{
     color: {BROWN};
@@ -244,9 +253,10 @@ body,
 }}
 
 
-/* ============================================================
+
+/\* ============================================================
    FEATURE CARDS
-   ============================================================ */
+   \============================================================ \*/
 
 .feature-card {{
     background: {WHITE};
@@ -275,9 +285,10 @@ body,
 }}
 
 
-/* ============================================================
+
+/\* ============================================================
    FORM INPUTS
-   ============================================================ */
+   \============================================================ \*/
 
 label {{
     color: {BROWN} !important;
@@ -293,17 +304,18 @@ label {{
     border-radius: 11px !important;
 }}
 
-.stTextInput input:focus,
-.stTextArea textarea:focus,
-.stNumberInput input:focus {{
+.stTextInput input\:focus,
+.stTextArea textarea\:focus,
+.stNumberInput input\:focus {{
     border-color: {GREEN} !important;
     box-shadow: 0 0 0 2px rgba(135, 195, 143, 0.25) !important;
 }}
 
 
-/* ============================================================
+
+/\* ============================================================
    SELECT BOXES
-   ============================================================ */
+   \============================================================ \*/
 
 div[data-baseweb="select"] > div {{
     background: {WHITE} !important;
@@ -324,15 +336,16 @@ li[role="option"] {{
     color: {BLACK} !important;
 }}
 
-li[role="option"]:hover {{
+li[role="option"]\:hover {{
     background: {LIGHT_GREEN} !important;
     color: {BLACK} !important;
 }}
 
 
-/* ============================================================
+
+/\* ============================================================
    MULTISELECT
-   ============================================================ */
+   \============================================================ \*/
 
 div[data-baseweb="tag"] {{
     background: {LIGHT_GREEN} !important;
@@ -343,9 +356,10 @@ div[data-baseweb="tag"] span {{
 }}
 
 
-/* ============================================================
+
+/\* ============================================================
    BUTTONS
-   ============================================================ */
+   \============================================================ \*/
 
 .stButton > button {{
     background: {RED} !important;
@@ -357,15 +371,16 @@ div[data-baseweb="tag"] span {{
     font-size: 15px !important;
 }}
 
-.stButton > button:hover {{
+.stButton > button\:hover {{
     background: {BROWN} !important;
     color: {WHITE} !important;
 }}
 
 
-/* ============================================================
+
+/\* ============================================================
    AI RESPONSE
-   ============================================================ */
+   \============================================================ \*/
 
 .response-card {{
     background: {WHITE};
@@ -393,9 +408,10 @@ div[data-baseweb="tag"] span {{
 }}
 
 
-/* ============================================================
+
+/\* ============================================================
    SOURCE CARDS
-   ============================================================ */
+   \============================================================ \*/
 
 .source-card {{
     background: {CREAM};
@@ -417,9 +433,10 @@ div[data-baseweb="tag"] span {{
 }}
 
 
-/* ============================================================
+
+/\* ============================================================
    AGENT CARDS
-   ============================================================ */
+   \============================================================ \*/
 
 .agent-card {{
     background: {WHITE};
@@ -451,9 +468,10 @@ div[data-baseweb="tag"] span {{
 }}
 
 
-/* ============================================================
+
+/\* ============================================================
    STATUS
-   ============================================================ */
+   \============================================================ \*/
 
 .status-card {{
     background: {WHITE};
@@ -474,9 +492,10 @@ div[data-baseweb="tag"] span {{
 }}
 
 
-/* ============================================================
+
+/\* ============================================================
    PAYMENT CARD
-   ============================================================ */
+   \============================================================ \*/
 
 .payment-card {{
     background: {WHITE};
@@ -499,9 +518,10 @@ div[data-baseweb="tag"] span {{
 }}
 
 
-/* ============================================================
+
+/\* ============================================================
    FILE UPLOADER
-   ============================================================ */
+   \============================================================ \*/
 
 .stFileUploader {{
     background: {LIGHT_GREEN} !important;
@@ -520,7 +540,7 @@ div[data-baseweb="tag"] span {{
 }}
 
 .stFileUploader label,
-.stFileUploader label * {{
+.stFileUploader label \* {{
     color: {BLACK} !important;
 }}
 
@@ -532,15 +552,16 @@ div[data-baseweb="tag"] span {{
     font-weight: 800 !important;
 }}
 
-.stFileUploader button:hover {{
+.stFileUploader button\:hover {{
     background: {GREEN} !important;
     color: {WHITE} !important;
 }}
 
 
-/* ============================================================
+
+/\* ============================================================
    FOOTER
-   ============================================================ */
+   \============================================================ \*/
 
 .footer {{
     text-align: center;
@@ -551,9 +572,10 @@ div[data-baseweb="tag"] span {{
 }}
 
 
-/* ============================================================
+
+/\* ============================================================
    MOBILE
-   ============================================================ */
+   \============================================================ \*/
 
 @media screen and (max-width: 768px) {{
 
@@ -642,15 +664,16 @@ div[data-baseweb="tag"] span {{
     }}
 }}
 
-</style>
+\</style>
 """,
     unsafe_allow_html=True,
 )
 
 
-# ============================================================
-# SAFE HELPERS
-# ============================================================
+
+\# ============================================================
+\# SAFE HELPERS
+\# ============================================================
 
 def get_secret(name, default=""):
     try:
@@ -664,6 +687,7 @@ def get_secret(name, default=""):
     return str(value)
 
 
+
 def clean_text(value):
     if value is None:
         return ""
@@ -672,7 +696,7 @@ def clean_text(value):
 
     text = text.replace("\x00", "")
 
-    # Remove accidental HTML tags from model output.
+    \# Remove accidental HTML tags from model output.
     text = re.sub(
         r"<[^>]+>",
         "",
@@ -680,6 +704,7 @@ def clean_text(value):
     )
 
     return text.strip()
+
 
 
 def normalize_metadata(raw):
@@ -696,12 +721,13 @@ def normalize_metadata(raw):
             "data",
         ]:
 
-            value = raw.get(key)
+            value = raw\.get(key)
 
             if isinstance(value, list):
                 return value
 
     return []
+
 
 
 def get_record_text(record):
@@ -724,6 +750,7 @@ def get_record_text(record):
     return ""
 
 
+
 def get_record_source(record):
     if not isinstance(record, dict):
         return "Unknown source"
@@ -744,6 +771,7 @@ def get_record_source(record):
     return "Unknown source"
 
 
+
 def get_record_page(record):
     if not isinstance(record, dict):
         return ""
@@ -762,9 +790,10 @@ def get_record_page(record):
     return ""
 
 
-# ============================================================
-# LOAD METADATA
-# ============================================================
+
+\# ============================================================
+\# LOAD METADATA
+\# ============================================================
 
 @st.cache_data(show_spinner=False)
 def load_metadata():
@@ -789,9 +818,10 @@ def load_metadata():
         return []
 
 
-# ============================================================
-# LOAD FAISS
-# ============================================================
+
+\# ============================================================
+\# LOAD FAISS
+\# ============================================================
 
 @st.cache_resource(show_spinner=False)
 def load_faiss_resources():
@@ -839,9 +869,10 @@ def load_faiss_resources():
     return index, metadata, model
 
 
-# ============================================================
-# KEYWORD SCORE
-# ============================================================
+
+\# ============================================================
+\# KEYWORD SCORE
+\# ============================================================
 
 def keyword_score(query, text):
 
@@ -869,9 +900,10 @@ def keyword_score(query, text):
     return len(overlap) / len(query_words)
 
 
-# ============================================================
-# RETRIEVAL
-# ============================================================
+
+\# ============================================================
+\# RETRIEVAL
+\# ============================================================
 
 def retrieve_context(
     query,
@@ -940,8 +972,8 @@ def retrieve_context(
         )
 
         combined = (
-            0.75 * semantic
-            + 0.25 * keyword
+            0.75 \* semantic
+            \+ 0.25 \* keyword
         )
 
         results.append(
@@ -959,6 +991,7 @@ def retrieve_context(
     )
 
     return results[:top_k]
+
 
 
 def build_context(results):
@@ -993,9 +1026,10 @@ SOURCE {number}
     ).join(pieces)
 
 
-# ============================================================
-# GROQ CLIENT
-# ============================================================
+
+\# ============================================================
+\# GROQ CLIENT
+\# ============================================================
 
 def get_groq_client():
 
@@ -1033,9 +1067,10 @@ def get_groq_client():
         )
 
 
-# ============================================================
-# 8-AGENT ARCHITECTURE
-# ============================================================
+
+\# ============================================================
+\# 8-AGENT ARCHITECTURE
+\# ============================================================
 
 AGENTS = [
     (
@@ -1081,9 +1116,10 @@ AGENTS = [
 ]
 
 
-# ============================================================
-# TRIP GENERATION
-# ============================================================
+
+\# ============================================================
+\# TRIP GENERATION
+\# ============================================================
 
 def generate_trip(
     destination,
@@ -1109,31 +1145,31 @@ You are TrekTales, an AI tourism planning system.
 
 The TrekTales architecture contains exactly eight agents:
 
-1. Master Orchestrator
-2. Knowledge Agent
-3. Planner Agent
-4. Budget Agent
-5. Safety Agent
-6. Summarizer Agent
-7. Payment Agent
-8. Vision Agent
+1\. Master Orchestrator
+2\. Knowledge Agent
+3\. Planner Agent
+4\. Budget Agent
+5\. Safety Agent
+6\. Summarizer Agent
+7\. Payment Agent
+8\. Vision Agent
 
 For this itinerary request, the Master Orchestrator coordinates
 the Knowledge, Planner, Budget, Safety and Summarizer workflow.
 
 IMPORTANT FACTUAL RULES:
 
-- Use ONLY the supplied knowledge-base evidence.
-- Do not invent tourism facts.
-- Do not invent hotels.
-- Do not invent restaurants.
-- Do not invent attractions.
-- Do not invent prices.
-- Do not invent opening hours.
-- Do not invent transport schedules.
-- Do not invent addresses.
-- Do not invent safety rules.
-- Do not invent contact information.
+\- Use ONLY the supplied knowledge-base evidence.
+\- Do not invent tourism facts.
+\- Do not invent hotels.
+\- Do not invent restaurants.
+\- Do not invent attractions.
+\- Do not invent prices.
+\- Do not invent opening hours.
+\- Do not invent transport schedules.
+\- Do not invent addresses.
+\- Do not invent safety rules.
+\- Do not invent contact information.
 
 If the knowledge base does not contain required information,
 write:
@@ -1150,7 +1186,7 @@ Response language:
 Keep the response useful, readable and practical.
 
 The response must not contain HTML tags.
-Do not output <div>, <p>, <span>, style attributes,
+Do not output \<div>, \<p>, \<span>, style attributes,
 or any other HTML.
 
 Use Markdown headings and bullet points only.
@@ -1183,11 +1219,11 @@ Knowledge-base evidence:
 
 Structure the answer as:
 
-# TrekTales {duration}-Day Plan
+\# TrekTales {duration}-Day Plan
 
-## Trip Overview
+\## Trip Overview
 
-## Day 1
+\## Day 1
 Morning
 Afternoon
 Evening
@@ -1201,7 +1237,7 @@ Day Notes
     ):
 
         user_prompt += f"""
-## Day {day}
+\## Day {day}
 
 Morning
 Afternoon
@@ -1211,15 +1247,15 @@ Day Notes
 """
 
     user_prompt += """
-## Budget Notes
+\## Budget Notes
 
 Only mention prices supported by the evidence.
 
-## Safety Notes
+\## Safety Notes
 
 Only mention safety information supported by the evidence.
 
-## Sources Used
+\## Sources Used
 
 List only the source filenames present in the supplied evidence.
 """
@@ -1249,9 +1285,10 @@ List only the source filenames present in the supplied evidence.
     return clean_text(content)
 
 
-# ============================================================
-# PAYMENT VISION
-# ============================================================
+
+\# ============================================================
+\# PAYMENT VISION
+\# ============================================================
 
 def image_to_data_url(
     uploaded_file,
@@ -1268,6 +1305,7 @@ def image_to_data_url(
     return (
         f"data:{mime};base64,{encoded}"
     )
+
 
 
 def analyze_payment_image(
@@ -1374,20 +1412,20 @@ Do not approve the payment.
         cleaned = content.strip()
 
         cleaned = re.sub(
-            r"^```json",
+            r"^\`\`\`json",
             "",
             cleaned,
             flags=re.IGNORECASE,
         )
 
         cleaned = re.sub(
-            r"^```",
+            r"^\`\`\`",
             "",
             cleaned,
         )
 
         cleaned = re.sub(
-            r"```$",
+            r"\`\`\`$",
             "",
             cleaned,
         )
@@ -1403,9 +1441,10 @@ Do not approve the payment.
         }
 
 
-# ============================================================
-# DETERMINISTIC PAYMENT VERIFICATION
-# ============================================================
+
+\# ============================================================
+\# DETERMINISTIC PAYMENT VERIFICATION
+\# ============================================================
 
 def verify_payment_data(
     payment_data,
@@ -1448,7 +1487,7 @@ def verify_payment_data(
     ).strip().lower()
 
     numbers = re.findall(
-        r"\d+(?:\.\d+)?",
+        r"\d+(?:\\.\d+)?",
         amount_raw,
     )
 
@@ -1511,9 +1550,10 @@ def verify_payment_data(
     )
 
 
-# ============================================================
-# ACCESS CONTROL
-# ============================================================
+
+\# ============================================================
+\# ACCESS CONTROL
+\# ============================================================
 
 def accessible_days(
     requested_days,
@@ -1537,9 +1577,10 @@ def accessible_days(
     return 1
 
 
-# ============================================================
-# SOURCE DISPLAY
-# ============================================================
+
+\# ============================================================
+\# SOURCE DISPLAY
+\# ============================================================
 
 def show_sources(
     results,
@@ -1549,7 +1590,7 @@ def show_sources(
         return
 
     st.markdown(
-        '<div class="section-title">📚 Knowledge Sources</div>',
+        '\<div class="section-title">📚 Knowledge Sources\</div>',
         unsafe_allow_html=True,
     )
 
@@ -1579,22 +1620,23 @@ def show_sources(
 
         st.markdown(
             f"""
-            <div class="source-card">
-                <div class="source-card-title">
+            \<div class="source-card">
+                \<div class="source-card-title">
                     📄 {source}
-                </div>
-                <div class="source-card-text">
+                \</div>
+                \<div class="source-card-text">
                     {location}
-                </div>
-            </div>
+                \</div>
+            \</div>
             """,
             unsafe_allow_html=True,
         )
 
 
-# ============================================================
-# SESSION STATE
-# ============================================================
+
+\# ============================================================
+\# SESSION STATE
+\# ============================================================
 
 if "payment_verified" not in st.session_state:
     st.session_state.payment_verified = False
@@ -1612,37 +1654,38 @@ if "generated_days" not in st.session_state:
     st.session_state.generated_days = 0
 
 
-# ============================================================
-# SIDEBAR
-# ============================================================
+
+\# ============================================================
+\# SIDEBAR
+\# ============================================================
 
 with st.sidebar:
 
     st.markdown(
         """
-        <div class="sidebar-brand">
-            <div class="sidebar-brand-title">
+        \<div class="sidebar-brand">
+            \<div class="sidebar-brand-title">
                 🌿 TrekTales
-            </div>
-            <div class="sidebar-brand-subtitle">
+            \</div>
+            \<div class="sidebar-brand-subtitle">
                 AI Travel Planner
-            </div>
-        </div>
+            \</div>
+        \</div>
         """,
         unsafe_allow_html=True,
     )
 
     st.markdown(
         """
-        <div class="sidebar-card">
-            <div class="sidebar-card-title">
+        \<div class="sidebar-card">
+            \<div class="sidebar-card-title">
                 🔓 ACCESS MODEL
-            </div>
-            <div class="sidebar-card-text">
-                Day 1 is free.<br>
+            \</div>
+            \<div class="sidebar-card-text">
+                Day 1 is free.\<br>
                 Days 2–10 require premium unlock.
-            </div>
-        </div>
+            \</div>
+        \</div>
         """,
         unsafe_allow_html=True,
     )
@@ -1658,21 +1701,21 @@ with st.sidebar:
 
     st.markdown(
         """
-        <div class="sidebar-card">
-            <div class="sidebar-card-title">
+        \<div class="sidebar-card">
+            \<div class="sidebar-card-title">
                 🤖 8 AI AGENTS
-            </div>
-            <div class="sidebar-card-text">
-                🎯 Master Orchestrator<br>
-                🔎 Knowledge Agent<br>
-                🗺️ Planner Agent<br>
-                💰 Budget Agent<br>
-                🛡️ Safety Agent<br>
-                📝 Summarizer Agent<br>
-                💳 Payment Agent<br>
+            \</div>
+            \<div class="sidebar-card-text">
+                🎯 Master Orchestrator\<br>
+                🔎 Knowledge Agent\<br>
+                🗺️ Planner Agent\<br>
+                💰 Budget Agent\<br>
+                🛡️ Safety Agent\<br>
+                📝 Summarizer Agent\<br>
+                💳 Payment Agent\<br>
                 👁️ Vision Agent
-            </div>
-        </div>
+            \</div>
+        \</div>
         """,
         unsafe_allow_html=True,
     )
@@ -1684,64 +1727,67 @@ with st.sidebar:
 
     st.markdown(
         f"""
-        <div class="sidebar-card">
-            <div class="sidebar-card-title">
+        \<div class="sidebar-card">
+            \<div class="sidebar-card-title">
                 ⚡ GROQ MODEL
-            </div>
-            <div class="sidebar-card-text">
+            \</div>
+            \<div class="sidebar-card-text">
                 {model_name}
-            </div>
-        </div>
+            \</div>
+        \</div>
         """,
         unsafe_allow_html=True,
     )
 
 
-# ============================================================
-# BRAND
-# ============================================================
+
+\# ============================================================
+\# BRAND
+\# ============================================================
 
 st.markdown(
     """
-    <div class="brand-wrapper">
-        <div class="brand-title">
-            Trek<span>Tales</span> 🌿
-        </div>
-        <div class="brand-subtitle">
+    \<div class="brand-wrapper">
+        \<div class="brand-title">
+            Trek\<span>Tales\</span> 🌿
+        \</div>
+        \<div class="brand-subtitle">
             AI-powered tourism planning grounded in your knowledge base
-        </div>
-    </div>
+        \</div>
+    \</div>
     """,
     unsafe_allow_html=True,
 )
 
 
-# ============================================================
-# HERO
-# ============================================================
+
+\# ============================================================
+\# HERO
+\# ============================================================
 
 st.markdown(
     """
-    <div class="hero-card">
-        <h1>
-            Plan your journey.<br>
+    \<div class="hero-card">
+        \<h1>
+            Plan your journey.\<br>
             Explore with confidence.
-        </h1>
+        \</h1>
 
-        <p>
+        \<p>
             TrekTales creates personalized travel itineraries
             using your tourism knowledge base and Groq-powered
             AI agents.
-        </p>
-    </div>
+        \</p>
+    \</div>
     """,
     unsafe_allow_html=True,
 )
 
 
-# ============================================================
-# FEATURES
-# ============================================================
+
+\# ============================================================
+\# FEATURES
+\# ============================================================
 
 feature1, feature2, feature3 = st.columns(3)
 
@@ -1749,14 +1795,14 @@ with feature1:
 
     st.markdown(
         """
-        <div class="feature-card">
-            <div class="feature-icon">🧠</div>
-            <h3>Knowledge-Grounded AI</h3>
-            <p>
+        \<div class="feature-card">
+            \<div class="feature-icon">🧠\</div>
+            \<h3>Knowledge-Grounded AI\</h3>
+            \<p>
                 Tourism recommendations are generated from
                 retrieved knowledge-base evidence.
-            </p>
-        </div>
+            \</p>
+        \</div>
         """,
         unsafe_allow_html=True,
     )
@@ -1765,14 +1811,14 @@ with feature2:
 
     st.markdown(
         """
-        <div class="feature-card">
-            <div class="feature-icon">🗺️</div>
-            <h3>Personalized Planning</h3>
-            <p>
+        \<div class="feature-card">
+            \<div class="feature-icon">🗺️\</div>
+            \<h3>Personalized Planning\</h3>
+            \<p>
                 Build trips based on duration, travelers,
                 budget, travel style and interests.
-            </p>
-        </div>
+            \</p>
+        \</div>
         """,
         unsafe_allow_html=True,
     )
@@ -1781,30 +1827,31 @@ with feature3:
 
     st.markdown(
         """
-        <div class="feature-card">
-            <div class="feature-icon">🛡️</div>
-            <h3>Evidence First</h3>
-            <p>
+        \<div class="feature-card">
+            \<div class="feature-icon">🛡️\</div>
+            \<h3>Evidence First\</h3>
+            \<p>
                 TrekTales avoids inventing facts when the
                 knowledge base does not contain the answer.
-            </p>
-        </div>
+            \</p>
+        \</div>
         """,
         unsafe_allow_html=True,
     )
 
 
-# ============================================================
-# 8 AGENTS
-# ============================================================
+
+\# ============================================================
+\# 8 AGENTS
+\# ============================================================
 
 st.markdown(
-    '<div class="section-title">🤖 TrekTales 8-Agent System</div>',
+    '\<div class="section-title">🤖 TrekTales 8-Agent System\</div>',
     unsafe_allow_html=True,
 )
 
 st.markdown(
-    '<div class="section-subtitle">Eight specialized agents work together in the TrekTales architecture.</div>',
+    '\<div class="section-subtitle">Eight specialized agents work together in the TrekTales architecture.\</div>',
     unsafe_allow_html=True,
 )
 
@@ -1818,7 +1865,7 @@ for row_start in range(
 
     for column, agent in zip(
         columns,
-        AGENTS[row_start:row_start + 4],
+        AGENTS[row_start\:row_start + 4],
     ):
 
         number, name, role = agent
@@ -1827,35 +1874,36 @@ for row_start in range(
 
             st.markdown(
                 f"""
-                <div class="agent-card">
-                    <div class="agent-number">
+                \<div class="agent-card">
+                    \<div class="agent-number">
                         AGENT {number}
-                    </div>
+                    \</div>
 
-                    <div class="agent-name">
+                    \<div class="agent-name">
                         {name}
-                    </div>
+                    \</div>
 
-                    <div class="agent-role">
+                    \<div class="agent-role">
                         {role}
-                    </div>
-                </div>
+                    \</div>
+                \</div>
                 """,
                 unsafe_allow_html=True,
             )
 
 
-# ============================================================
-# TRIP PLANNER
-# ============================================================
+
+\# ============================================================
+\# TRIP PLANNER
+\# ============================================================
 
 st.markdown(
-    '<div class="section-title">🧭 Build Your Trip</div>',
+    '\<div class="section-title">🧭 Build Your Trip\</div>',
     unsafe_allow_html=True,
 )
 
 st.markdown(
-    '<div class="section-subtitle">Tell TrekTales what kind of journey you want.</div>',
+    '\<div class="section-subtitle">Tell TrekTales what kind of journey you want.\</div>',
     unsafe_allow_html=True,
 )
 
@@ -1874,6 +1922,7 @@ with col2:
         "Starting Location",
         placeholder="e.g. Islamabad",
     )
+
 
 
 col3, col4, col5 = st.columns(3)
@@ -1919,6 +1968,7 @@ with col5:
     )
 
 
+
 travel_style = st.selectbox(
     "Travel Style",
     [
@@ -1935,12 +1985,13 @@ travel_style = st.selectbox(
 )
 
 
-# ============================================================
-# INTEREST OPTIONS
-# ============================================================
+
+\# ============================================================
+\# INTEREST OPTIONS
+\# ============================================================
 
 st.markdown(
-    '<div class="section-subtitle">❤️ Choose your interests</div>',
+    '\<div class="section-subtitle">❤️ Choose your interests\</div>',
     unsafe_allow_html=True,
 )
 
@@ -1971,13 +2022,15 @@ selected_interests = st.multiselect(
 )
 
 
+
 other_interests = st.text_input(
     "Other interests",
     placeholder="e.g. local markets, architecture, hidden places",
 )
 
 
-# Build final interest text.
+
+\# Build final interest text.
 
 interest_parts = list(
     selected_interests
@@ -2000,12 +2053,13 @@ else:
     interests = "General sightseeing and exploration"
 
 
-# ============================================================
-# SYSTEM STATUS
-# ============================================================
+
+\# ============================================================
+\# SYSTEM STATUS
+\# ============================================================
 
 st.markdown(
-    '<div class="section-title">⚙️ System Status</div>',
+    '\<div class="section-title">⚙️ System Status\</div>',
     unsafe_allow_html=True,
 )
 
@@ -2024,14 +2078,14 @@ with status1:
 
         st.markdown(
             """
-            <div class="status-card">
-                <div class="status-ready">
+            \<div class="status-card">
+                \<div class="status-ready">
                     🟢 Groq API Ready
-                </div>
-                <small>
+                \</div>
+                \<small>
                     GroqCloud key configured.
-                </small>
-            </div>
+                \</small>
+            \</div>
             """,
             unsafe_allow_html=True,
         )
@@ -2040,17 +2094,18 @@ with status1:
 
         st.markdown(
             """
-            <div class="status-card">
-                <div class="status-warning">
+            \<div class="status-card">
+                \<div class="status-warning">
                     🔴 Groq API Missing
-                </div>
-                <small>
+                \</div>
+                \<small>
                     Add GROQ_API_KEY to Secrets.
-                </small>
-            </div>
+                \</small>
+            \</div>
             """,
             unsafe_allow_html=True,
         )
+
 
 
 with status2:
@@ -2064,14 +2119,14 @@ with status2:
 
         st.markdown(
             """
-            <div class="status-card">
-                <div class="status-ready">
+            \<div class="status-card">
+                \<div class="status-ready">
                     🟢 FAISS Ready
-                </div>
-                <small>
+                \</div>
+                \<small>
                     Knowledge base detected.
-                </small>
-            </div>
+                \</small>
+            \</div>
             """,
             unsafe_allow_html=True,
         )
@@ -2080,39 +2135,41 @@ with status2:
 
         st.markdown(
             """
-            <div class="status-card">
-                <div class="status-warning">
+            \<div class="status-card">
+                \<div class="status-warning">
                     🔴 FAISS Missing
-                </div>
-                <small>
+                \</div>
+                \<small>
                     Check faiss_db.
-                </small>
-            </div>
+                \</small>
+            \</div>
             """,
             unsafe_allow_html=True,
         )
+
 
 
 with status3:
 
     st.markdown(
         """
-        <div class="status-card">
-            <div class="status-ready">
+        \<div class="status-card">
+            \<div class="status-ready">
                 🟢 8-Agent System
-            </div>
-            <small>
+            \</div>
+            \<small>
                 All eight TrekTales roles configured.
-            </small>
-        </div>
+            \</small>
+        \</div>
         """,
         unsafe_allow_html=True,
     )
 
 
-# ============================================================
-# ACCESS MESSAGE
-# ============================================================
+
+\# ============================================================
+\# ACCESS MESSAGE
+\# ============================================================
 
 requested_days = int(duration)
 
@@ -2134,12 +2191,13 @@ if requested_days > 1:
         )
 
 
-# ============================================================
-# GENERATE BUTTON
-# ============================================================
+
+\# ============================================================
+\# GENERATE BUTTON
+\# ============================================================
 
 st.markdown(
-    '<div class="section-title">✨ Generate Your Journey</div>',
+    '\<div class="section-title">✨ Generate Your Journey\</div>',
     unsafe_allow_html=True,
 )
 
@@ -2147,6 +2205,7 @@ generate_button = st.button(
     "🌿 Generate My Trip",
     use_container_width=True,
 )
+
 
 
 if generate_button:
@@ -2280,33 +2339,34 @@ Interests: {interests}
                 )
 
 
-# ============================================================
-# TRIP RESULT
-# ============================================================
+
+\# ============================================================
+\# TRIP RESULT
+\# ============================================================
 
 if st.session_state.trip_result:
 
     st.markdown(
-        '<div class="section-title">🗺️ Your TrekTales Journey</div>',
+        '\<div class="section-title">🗺️ Your TrekTales Journey\</div>',
         unsafe_allow_html=True,
     )
 
     st.markdown(
-        '<div class="response-card">',
+        '\<div class="response-card">',
         unsafe_allow_html=True,
     )
 
-    # IMPORTANT:
-    # The AI output is cleaned before display.
-    # No HTML tags such as <p> or <div> are shown
-    # inside the actual response.
+    \# IMPORTANT:
+    \# The AI output is cleaned before display.
+    \# No HTML tags such as \<p> or \<div> are shown
+    \# inside the actual response.
 
     st.markdown(
         st.session_state.trip_result
     )
 
     st.markdown(
-        "</div>",
+        "\</div>",
         unsafe_allow_html=True,
     )
 
@@ -2315,14 +2375,15 @@ if st.session_state.trip_result:
     )
 
 
-# ============================================================
-# PAYMENT / PREMIUM SECTION
-# ============================================================
+
+\# ============================================================
+\# PAYMENT / PREMIUM SECTION
+\# ============================================================
 
 if requested_days >= 2:
 
     st.markdown(
-        '<div class="section-title">🔓 Premium Access</div>',
+        '\<div class="section-title">🔓 Premium Access\</div>',
         unsafe_allow_html=True,
     )
 
@@ -2346,7 +2407,7 @@ if requested_days >= 2:
         with payment_left:
 
             st.markdown(
-                '<div class="payment-card">',
+                '\<div class="payment-card">',
                 unsafe_allow_html=True,
             )
 
@@ -2367,7 +2428,7 @@ if requested_days >= 2:
             )
 
             st.markdown(
-                "</div>",
+                "\</div>",
                 unsafe_allow_html=True,
             )
 
@@ -2388,7 +2449,7 @@ if requested_days >= 2:
         with payment_right:
 
             st.markdown(
-                '<div class="payment-card">',
+                '\<div class="payment-card">',
                 unsafe_allow_html=True,
             )
 
@@ -2401,7 +2462,7 @@ if requested_days >= 2:
             )
 
             st.markdown(
-                "</div>",
+                "\</div>",
                 unsafe_allow_html=True,
             )
 
@@ -2495,9 +2556,10 @@ if requested_days >= 2:
                             )
 
 
-# ============================================================
-# PREMIUM LOCK NOTICE
-# ============================================================
+
+\# ============================================================
+\# PREMIUM LOCK NOTICE
+\# ============================================================
 
 if (
     requested_days > 1
@@ -2511,12 +2573,13 @@ if (
     )
 
 
-# ============================================================
-# DISCLAIMER
-# ============================================================
+
+\# ============================================================
+\# DISCLAIMER
+\# ============================================================
 
 st.markdown(
-    '<div class="section-title">⚠️ Information Notice</div>',
+    '\<div class="section-title">⚠️ Information Notice\</div>',
     unsafe_allow_html=True,
 )
 
@@ -2528,17 +2591,18 @@ st.info(
 )
 
 
-# ============================================================
-# FOOTER
-# ============================================================
+
+\# ============================================================
+\# FOOTER
+\# ============================================================
 
 st.markdown(
     """
-    <div class="footer">
+    \<div class="footer">
         🌿 TrekTales — AI-Powered Tourism Planner
-        <br>
+        \<br>
         FAISS • Sentence Transformers • Groq • 8-Agent Architecture
-    </div>
+    \</div>
     """,
     unsafe_allow_html=True,
-)
+)           only remove the html like tags that are shown on the ui
