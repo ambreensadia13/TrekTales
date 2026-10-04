@@ -1,5 +1,5 @@
 from pathlib import Path
-import os
+import json
 
 import streamlit as st
 
@@ -8,215 +8,225 @@ import streamlit as st
 # PROJECT PATHS
 # ============================================================
 
-SRC_DIR = Path(__file__).resolve().parent
-ROOT_DIR = SRC_DIR.parent
+# src/config.py
+# parents[0] = src
+# parents[1] = TrekTales project root
+ROOT_DIR = Path(__file__).resolve().parents[1]
+
+SRC_DIR = ROOT_DIR / "src"
+ASSETS_DIR = ROOT_DIR / "assets"
+KNOWLEDGE_BASE_DIR = ROOT_DIR / "tourism_knowledge_base"
+
+FAISS_DIR = ROOT_DIR / "faiss_db"
+FAISS_INDEX_PATH = FAISS_DIR / "index.faiss"
+METADATA_PATH = FAISS_DIR / "metadata.json"
+FAISS_CONFIG_PATH = FAISS_DIR / "config.json"
+
+PAYMENT_QR_PATH = ASSETS_DIR / "jazzcash_qr.jpg"
 
 
 # ============================================================
-# GROQ CONFIGURATION
-# ============================================================
-
-def get_secret(name, default=""):
-    """
-    Safely read a value from Streamlit Secrets first,
-    then environment variables.
-    """
-
-    try:
-        value = st.secrets.get(name, "")
-    except Exception:
-        value = ""
-
-    if value:
-        return str(value).strip()
-
-    value = os.getenv(name, default)
-
-    if value:
-        return str(value).strip()
-
-    return default
-
-
-GROQ_API_KEY = get_secret(
-    "GROQ_API_KEY"
-)
-
-
-GROQ_MODEL = get_secret(
-    "GROQ_MODEL",
-    "openai/gpt-oss-120b",
-)
-
-
-GROQ_VISION_MODEL = get_secret(
-    "GROQ_VISION_MODEL",
-    "meta-llama/llama-4-scout-17b-16e-instruct",
-)
-
-
-GROQ_BASE_URL = get_secret(
-    "GROQ_BASE_URL",
-    "https://api.groq.com/openai/v1",
-)
-
-
-# ============================================================
-# TRIP ACCESS
+# TREKTALES ACCESS SETTINGS
 # ============================================================
 
 FREE_DAYS = 1
-
 PAID_DAYS = 2
-
-MAX_TRIP_DAYS = FREE_DAYS + PAID_DAYS
+MAX_TRIP_DAYS = 3
 
 UNLOCK_PRICE = 199
 
 
 # ============================================================
-# DEMO PAYMENT
+# GROQ SETTINGS
 # ============================================================
 
-EXPECTED_PAYMENT_RECIPIENT = get_secret(
-    "EXPECTED_PAYMENT_RECIPIENT",
-    "TrekTales",
-)
-
-
-# ============================================================
-# FAISS PATHS
-# ============================================================
-
-# Primary/current structure:
-#
-# faiss_db/
-#   index.faiss
-#   metadata.json
-#   config.json
-
-PRIMARY_FAISS_DIR = ROOT_DIR / "faiss_db"
-
-
-# Compatibility with the previous structure:
-#
-# data/faiss_index/
-#   index.faiss
-#   metadata.json
-#   config.json
-
-LEGACY_FAISS_DIR = (
-    ROOT_DIR
-    / "data"
-    / "faiss_index"
-)
-
-
-def choose_faiss_directory():
+def get_secret(name: str, default=None):
     """
-    Prefer the root-level faiss_db folder.
+    Safely read a value from Streamlit secrets.
 
-    If it is not available, support the older
-    data/faiss_index structure.
+    This prevents the application from crashing during import
+    if a secret has not been configured yet.
     """
+    try:
+        value = st.secrets.get(name, default)
+    except Exception:
+        value = default
 
-    primary_index = (
-        PRIMARY_FAISS_DIR
-        / "index.faiss"
-    )
+    if value is None:
+        return default
 
-    primary_metadata = (
-        PRIMARY_FAISS_DIR
-        / "metadata.json"
-    )
-
-    if (
-        primary_index.exists()
-        and primary_metadata.exists()
-    ):
-        return PRIMARY_FAISS_DIR
-
-    legacy_index = (
-        LEGACY_FAISS_DIR
-        / "index.faiss"
-    )
-
-    legacy_metadata = (
-        LEGACY_FAISS_DIR
-        / "metadata.json"
-    )
-
-    if (
-        legacy_index.exists()
-        and legacy_metadata.exists()
-    ):
-        return LEGACY_FAISS_DIR
-
-    return PRIMARY_FAISS_DIR
+    return value
 
 
-FAISS_DIR = choose_faiss_directory()
+GROQ_API_KEY = get_secret("GROQ_API_KEY", "")
 
-FAISS_INDEX_PATH = (
-    FAISS_DIR
-    / "index.faiss"
+GROQ_MODEL = get_secret(
+    "GROQ_MODEL",
+    "openai/gpt-oss-120b"
 )
 
-METADATA_PATH = (
-    FAISS_DIR
-    / "metadata.json"
-)
-
-CONFIG_PATH = (
-    FAISS_DIR
-    / "config.json"
+GROQ_VISION_MODEL = get_secret(
+    "GROQ_VISION_MODEL",
+    "meta-llama/llama-4-scout-17b-16e-instruct"
 )
 
 
 # ============================================================
-# EMBEDDING CONFIG
+# RAG / EMBEDDING SETTINGS
 # ============================================================
 
-DEFAULT_EMBEDDING_MODEL = (
-    "sentence-transformers/all-MiniLM-L6-v2"
-)
+DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+
+DEFAULT_CHUNK_SIZE = 900
+DEFAULT_CHUNK_OVERLAP = 150
+
+DEFAULT_TOP_K = 6
 
 
-# ============================================================
-# RAG CONFIG
-# ============================================================
-
-DEFAULT_TOP_K = 8
-
-KEYWORD_WEIGHT = 0.25
-
-SEMANTIC_WEIGHT = 0.75
-
-
-# ============================================================
-# VALIDATION
-# ============================================================
-
-def validate_configuration():
+def load_faiss_config() -> dict:
     """
-    Return human-readable configuration problems.
+    Load the FAISS configuration.
+
+    If config.json is missing or invalid, safe defaults are
+    returned instead of crashing the Streamlit application.
     """
 
-    errors = []
+    if not FAISS_CONFIG_PATH.exists():
+        return {
+            "embedding_model": DEFAULT_EMBEDDING_MODEL,
+            "chunk_size": DEFAULT_CHUNK_SIZE,
+            "chunk_overlap": DEFAULT_CHUNK_OVERLAP,
+            "metric": "cosine",
+        }
 
-    if not GROQ_API_KEY:
-        errors.append(
-            "GROQ_API_KEY is missing."
-        )
+    try:
+        with open(FAISS_CONFIG_PATH, "r", encoding="utf-8") as file:
+            data = json.load(file)
 
-    if not FAISS_INDEX_PATH.exists():
-        errors.append(
-            f"FAISS index not found: {FAISS_INDEX_PATH}"
-        )
+        if not isinstance(data, dict):
+            raise ValueError("FAISS config must contain a JSON object.")
 
-    if not METADATA_PATH.exists():
-        errors.append(
-            f"Metadata file not found: {METADATA_PATH}"
-        )
+        return {
+            "embedding_model": data.get(
+                "embedding_model",
+                DEFAULT_EMBEDDING_MODEL
+            ),
+            "chunk_size": data.get(
+                "chunk_size",
+                DEFAULT_CHUNK_SIZE
+            ),
+            "chunk_overlap": data.get(
+                "chunk_overlap",
+                DEFAULT_CHUNK_OVERLAP
+            ),
+            "metric": data.get(
+                "metric",
+                "cosine"
+            ),
+        }
 
-    return errors
+    except Exception:
+        return {
+            "embedding_model": DEFAULT_EMBEDDING_MODEL,
+            "chunk_size": DEFAULT_CHUNK_SIZE,
+            "chunk_overlap": DEFAULT_CHUNK_OVERLAP,
+            "metric": "cosine",
+        }
+
+
+FAISS_CONFIG = load_faiss_config()
+
+EMBEDDING_MODEL = FAISS_CONFIG["embedding_model"]
+CHUNK_SIZE = FAISS_CONFIG["chunk_size"]
+CHUNK_OVERLAP = FAISS_CONFIG["chunk_overlap"]
+FAISS_METRIC = FAISS_CONFIG["metric"]
+
+
+# ============================================================
+# APPLICATION LIMITS
+# ============================================================
+
+MIN_TRIP_DAYS = 1
+
+TOP_K = DEFAULT_TOP_K
+
+
+# ============================================================
+# HELPER FUNCTIONS
+# ============================================================
+
+def faiss_files_exist() -> bool:
+    """
+    Check whether the three required FAISS files exist.
+    """
+
+    return (
+        FAISS_INDEX_PATH.exists()
+        and METADATA_PATH.exists()
+        and FAISS_CONFIG_PATH.exists()
+    )
+
+
+def get_faiss_status() -> dict:
+    """
+    Return a simple FAISS database status.
+    """
+
+    return {
+        "directory": str(FAISS_DIR),
+        "index": FAISS_INDEX_PATH.exists(),
+        "metadata": METADATA_PATH.exists(),
+        "config": FAISS_CONFIG_PATH.exists(),
+        "ready": faiss_files_exist(),
+    }
+
+
+def validate_trip_days(days: int) -> int:
+    """
+    Keep requested trip length within TrekTales limits.
+    """
+
+    try:
+        days = int(days)
+    except (TypeError, ValueError):
+        days = MIN_TRIP_DAYS
+
+    return max(MIN_TRIP_DAYS, min(days, MAX_TRIP_DAYS))
+
+
+def get_accessible_days(
+    requested_days: int,
+    payment_verified: bool = False
+) -> int:
+    """
+    Determine how many days the user may access.
+
+    Day 1 is free.
+    Days 2-3 require payment verification.
+    """
+
+    requested_days = validate_trip_days(requested_days)
+
+    if requested_days <= FREE_DAYS:
+        return requested_days
+
+    if payment_verified:
+        return requested_days
+
+    return FREE_DAYS
+
+
+def payment_required(
+    requested_days: int,
+    payment_verified: bool = False
+) -> bool:
+    """
+    Return True when payment is needed for the requested trip.
+    """
+
+    requested_days = validate_trip_days(requested_days)
+
+    return (
+        requested_days > FREE_DAYS
+        and not payment_verified
+    )
