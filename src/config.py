@@ -1,29 +1,30 @@
 from pathlib import Path
 import json
-
 import streamlit as st
 
 
 # ============================================================
-# PROJECT PATHS
+# ROOT
 # ============================================================
-
-# This file is:
-# TrekTales/src/config.py
-#
-# parents[0] = src
-# parents[1] = TrekTales project root
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 
 SRC_DIR = ROOT_DIR / "src"
+
 ASSETS_DIR = ROOT_DIR / "assets"
 
 KNOWLEDGE_BASE_DIR = (
     ROOT_DIR / "tourism_knowledge_base"
 )
 
-FAISS_DIR = ROOT_DIR / "faiss_db"
+FAISS_DIR = (
+    ROOT_DIR / "faiss_db"
+)
+
+
+# ============================================================
+# FAISS
+# ============================================================
 
 FAISS_INDEX_PATH = (
     FAISS_DIR / "index.faiss"
@@ -37,14 +38,14 @@ FAISS_CONFIG_PATH = (
     FAISS_DIR / "config.json"
 )
 
+
+# ============================================================
+# PAYMENT
+# ============================================================
+
 PAYMENT_QR_PATH = (
     ASSETS_DIR / "jazzcash_qr.jpg"
 )
-
-
-# ============================================================
-# TREKTALES ACCESS
-# ============================================================
 
 FREE_DAYS = 1
 
@@ -56,35 +57,29 @@ UNLOCK_PRICE = 199
 
 
 # ============================================================
-# STREAMLIT SECRETS
+# SECRETS
 # ============================================================
 
 def get_secret(
-    name: str,
-    default=None,
+    name,
+    default=None
 ):
-    """
-    Safely read a Streamlit secret.
-
-    Missing secrets return the supplied default
-    instead of crashing the application.
-    """
 
     try:
 
         value = st.secrets.get(
             name,
-            default,
+            default
         )
+
+        if value is None:
+            return default
+
+        return value
 
     except Exception:
 
-        value = default
-
-    if value is None:
         return default
-
-    return value
 
 
 # ============================================================
@@ -93,22 +88,22 @@ def get_secret(
 
 GROQ_API_KEY = get_secret(
     "GROQ_API_KEY",
-    "",
+    ""
 )
 
 GROQ_BASE_URL = get_secret(
     "GROQ_BASE_URL",
-    "https://api.groq.com/openai/v1",
+    "https://api.groq.com/openai/v1"
 )
 
 GROQ_MODEL = get_secret(
     "GROQ_MODEL",
-    "openai/gpt-oss-120b",
+    "openai/gpt-oss-120b"
 )
 
 GROQ_VISION_MODEL = get_secret(
     "GROQ_VISION_MODEL",
-    "meta-llama/llama-4-scout-17b-16e-instruct",
+    "meta-llama/llama-4-scout-17b-16e-instruct"
 )
 
 
@@ -118,12 +113,12 @@ GROQ_VISION_MODEL = get_secret(
 
 EXPECTED_PAYMENT_RECIPIENT = get_secret(
     "EXPECTED_PAYMENT_RECIPIENT",
-    "TrekTales",
+    "TrekTales"
 )
 
 
 # ============================================================
-# RAG / EMBEDDING DEFAULTS
+# RAG
 # ============================================================
 
 DEFAULT_EMBEDDING_MODEL = (
@@ -136,42 +131,36 @@ DEFAULT_CHUNK_OVERLAP = 150
 
 DEFAULT_TOP_K = 6
 
-
-# ============================================================
-# HYBRID RETRIEVAL WEIGHTS
-# ============================================================
-
 SEMANTIC_WEIGHT = 0.75
 
 KEYWORD_WEIGHT = 0.25
 
 
 # ============================================================
-# FAISS CONFIG
+# LOAD FAISS CONFIG
 # ============================================================
 
-def load_faiss_config() -> dict:
-    """
-    Read the existing FAISS config.
-
-    Supports both:
-        metric
-    and:
-        similarity
-
-    because the current config.json uses
-    "similarity": "cosine".
-    """
+def load_faiss_config():
 
     defaults = {
-        "embedding_model": DEFAULT_EMBEDDING_MODEL,
-        "chunk_size": DEFAULT_CHUNK_SIZE,
-        "chunk_overlap": DEFAULT_CHUNK_OVERLAP,
-        "metric": "cosine",
-        "index": "IndexFlatIP",
+        "embedding_model":
+            DEFAULT_EMBEDDING_MODEL,
+
+        "chunk_size":
+            DEFAULT_CHUNK_SIZE,
+
+        "chunk_overlap":
+            DEFAULT_CHUNK_OVERLAP,
+
+        "metric":
+            "cosine",
+
+        "index":
+            "IndexFlatIP"
     }
 
     if not FAISS_CONFIG_PATH.exists():
+
         return defaults
 
     try:
@@ -179,44 +168,44 @@ def load_faiss_config() -> dict:
         with open(
             FAISS_CONFIG_PATH,
             "r",
-            encoding="utf-8",
-        ) as file:
+            encoding="utf-8"
+        ) as f:
 
-            data = json.load(file)
-
-        if not isinstance(
-            data,
-            dict,
-        ):
-            return defaults
+            data = json.load(f)
 
         return {
-            "embedding_model": data.get(
-                "embedding_model",
+            "embedding_model":
                 data.get(
-                    "embedding_model_name",
-                    DEFAULT_EMBEDDING_MODEL,
+                    "embedding_model",
+                    DEFAULT_EMBEDDING_MODEL
                 ),
-            ),
-            "chunk_size": data.get(
-                "chunk_size",
-                DEFAULT_CHUNK_SIZE,
-            ),
-            "chunk_overlap": data.get(
-                "chunk_overlap",
-                DEFAULT_CHUNK_OVERLAP,
-            ),
-            "metric": data.get(
-                "metric",
+
+            "chunk_size":
                 data.get(
-                    "similarity",
-                    "cosine",
+                    "chunk_size",
+                    DEFAULT_CHUNK_SIZE
                 ),
-            ),
-            "index": data.get(
-                "index",
-                "IndexFlatIP",
-            ),
+
+            "chunk_overlap":
+                data.get(
+                    "chunk_overlap",
+                    DEFAULT_CHUNK_OVERLAP
+                ),
+
+            "metric":
+                data.get(
+                    "metric",
+                    data.get(
+                        "similarity",
+                        "cosine"
+                    )
+                ),
+
+            "index":
+                data.get(
+                    "index",
+                    "IndexFlatIP"
+                )
         }
 
     except Exception:
@@ -227,40 +216,32 @@ def load_faiss_config() -> dict:
 FAISS_CONFIG = load_faiss_config()
 
 
-EMBEDDING_MODEL = FAISS_CONFIG[
-    "embedding_model"
-]
+EMBEDDING_MODEL = (
+    FAISS_CONFIG["embedding_model"]
+)
 
-CHUNK_SIZE = FAISS_CONFIG[
-    "chunk_size"
-]
+CHUNK_SIZE = (
+    FAISS_CONFIG["chunk_size"]
+)
 
-CHUNK_OVERLAP = FAISS_CONFIG[
-    "chunk_overlap"
-]
+CHUNK_OVERLAP = (
+    FAISS_CONFIG["chunk_overlap"]
+)
 
-FAISS_METRIC = FAISS_CONFIG[
-    "metric"
-]
-
-
-# ============================================================
-# APPLICATION LIMITS
-# ============================================================
-
-MIN_TRIP_DAYS = 1
+FAISS_METRIC = (
+    FAISS_CONFIG["metric"]
+)
 
 TOP_K = DEFAULT_TOP_K
 
+MIN_TRIP_DAYS = 1
+
 
 # ============================================================
-# FAISS STATUS
+# FILE STATUS
 # ============================================================
 
-def faiss_files_exist() -> bool:
-    """
-    Check all required FAISS files.
-    """
+def faiss_files_exist():
 
     return (
         FAISS_INDEX_PATH.exists()
@@ -269,89 +250,66 @@ def faiss_files_exist() -> bool:
     )
 
 
-def get_faiss_status() -> dict:
-    """
-    Return FAISS database status.
-    """
+def get_faiss_status():
 
     return {
-        "directory": str(
-            FAISS_DIR
-        ),
-        "index": FAISS_INDEX_PATH.exists(),
-        "metadata": METADATA_PATH.exists(),
-        "config": FAISS_CONFIG_PATH.exists(),
-        "ready": faiss_files_exist(),
+        "index":
+            FAISS_INDEX_PATH.exists(),
+
+        "metadata":
+            METADATA_PATH.exists(),
+
+        "config":
+            FAISS_CONFIG_PATH.exists(),
+
+        "ready":
+            faiss_files_exist()
     }
 
 
 # ============================================================
-# TRIP-DAY VALIDATION
+# DAYS
 # ============================================================
 
-def validate_trip_days(
-    days: int,
-) -> int:
-    """
-    Keep trip length between 1 and 3 days.
-    """
+def validate_trip_days(days):
 
     try:
-
         days = int(days)
 
-    except (
-        TypeError,
-        ValueError,
-    ):
-
-        days = MIN_TRIP_DAYS
+    except Exception:
+        days = 1
 
     return max(
         MIN_TRIP_DAYS,
         min(
             days,
-            MAX_TRIP_DAYS,
-        ),
+            MAX_TRIP_DAYS
+        )
     )
 
 
-# ============================================================
-# ACCESS CONTROL
-# ============================================================
-
 def get_accessible_days(
-    requested_days: int,
-    payment_verified: bool = False,
-) -> int:
-    """
-    Day 1 is free.
-
-    Days 2-3 require verified payment.
-    """
+    requested_days,
+    payment_verified=False
+):
 
     requested_days = validate_trip_days(
         requested_days
     )
 
     if requested_days <= FREE_DAYS:
-
         return requested_days
 
     if payment_verified:
-
         return requested_days
 
     return FREE_DAYS
 
 
 def payment_required(
-    requested_days: int,
-    payment_verified: bool = False,
-) -> bool:
-    """
-    Determine whether payment is required.
-    """
+    requested_days,
+    payment_verified=False
+):
 
     requested_days = validate_trip_days(
         requested_days
