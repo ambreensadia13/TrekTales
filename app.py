@@ -1305,15 +1305,15 @@ with input_col1:
 
     destination = "Rawalpindi"
 
-st.markdown(
-    """
-    <div class="destination-box">
-        <div class="destination-label">📍 Destination</div>
-        <div class="destination-value">RAWALPINDI</div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+    st.markdown(
+        """
+        <div class="destination-box">
+            <div class="destination-label">📍 Destination</div>
+            <div class="destination-value">RAWALPINDI</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     # --------------------------------------------------------
     # STARTING LOCATION
@@ -1321,7 +1321,7 @@ st.markdown(
 
     starting_location = st.text_input(
         "🚗 Where will you start your journey?",
-        placeholder="e.g. Islamabad, Saddar, or Karachi",
+        placeholder="e.g. Islamabad",
     )
 
     # --------------------------------------------------------
