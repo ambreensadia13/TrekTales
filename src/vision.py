@@ -1,14 +1,55 @@
+````python
 import base64
 import json
 import re
 
+import streamlit as st
 from openai import OpenAI
 
-from src.config import (
-    GROQ_API_KEY,
-    GROQ_BASE_URL,
-    GROQ_VISION_MODEL,
-)
+
+# ============================================================
+# DEFAULT SETTINGS
+# ============================================================
+
+DEFAULT_GROQ_BASE_URL = "https://api.groq.com/openai/v1"
+DEFAULT_VISION_MODEL = "qwen/qwen3.8-27b"
+
+
+# ============================================================
+# SECRET HELPERS
+# ============================================================
+
+def _get_secret(name, default=""):
+    """Read a value directly from Streamlit Secrets."""
+
+    try:
+        value = st.secrets.get(name, default)
+
+        if value is None:
+            return default
+
+        return str(value).strip()
+
+    except Exception:
+        return default
+
+
+def _get_groq_settings():
+    """Get the current Groq configuration from Streamlit Secrets."""
+
+    api_key = _get_secret("GROQ_API_KEY", "")
+
+    base_url = _get_secret(
+        "GROQ_BASE_URL",
+        DEFAULT_GROQ_BASE_URL,
+    )
+
+    vision_model = _get_secret(
+        "GROQ_VISION_MODEL",
+        DEFAULT_VISION_MODEL,
+    )
+
+    return api_key, base_url, vision_model
 
 
 # ============================================================
@@ -16,15 +57,14 @@ from src.config import (
 # ============================================================
 
 def _extract_json(text):
-    """
-    Extract a JSON object from model output.
-    """
+    """Safely extract a JSON object from model output."""
 
     if not text:
         return {}
 
     cleaned = str(text).strip()
 
+    # Remove markdown JSON fences.
     cleaned = re.sub(
         r"^```(?:json)?",
         "",
@@ -40,6 +80,7 @@ def _extract_json(text):
 
     cleaned = cleaned.strip()
 
+    # Try direct JSON parsing first.
     try:
         value = json.loads(cleaned)
 
@@ -49,6 +90,7 @@ def _extract_json(text):
     except Exception:
         pass
 
+    # Try extracting JSON from surrounding text.
     match = re.search(
         r"\{.*\}",
         cleaned,
@@ -76,7 +118,15 @@ def _extract_json(text):
 
 def _normalize_amount(value):
     """
-    Convert a visible amount into a numeric value.
+    Convert values such as:
+
+        199
+        "199"
+        "Rs. 199"
+        "PKR 199"
+        "1,199"
+
+    into a numeric value.
     """
 
     if value is None:
@@ -105,34 +155,27 @@ def _normalize_amount(value):
 
 
 # ============================================================
-# CONVERT UPLOADED FILE TO BYTES
+# IMAGE BYTES
 # ============================================================
 
 def _get_image_bytes(uploaded_file):
-    """
-    Convert a Streamlit UploadedFile or bytes-like object
-    into raw bytes.
-    """
+    """Convert an uploaded file or bytes object into image bytes."""
 
     if uploaded_file is None:
         return b""
 
-    # Already raw bytes
     if isinstance(uploaded_file, bytes):
         return uploaded_file
 
-    # bytearray
     if isinstance(uploaded_file, bytearray):
         return bytes(uploaded_file)
 
-    # Streamlit UploadedFile
     if hasattr(uploaded_file, "getvalue"):
         data = uploaded_file.getvalue()
 
         if isinstance(data, bytes):
             return data
 
-    # File-like object
     if hasattr(uploaded_file, "read"):
         data = uploaded_file.read()
 
@@ -145,18 +188,11 @@ def _get_image_bytes(uploaded_file):
 
 
 # ============================================================
-# IMAGE MIME TYPE
+# IMAGE MIME DETECTION
 # ============================================================
 
 def _detect_image_mime(image_bytes):
-    """
-    Detect image type from raw bytes.
-
-    Supported:
-    - JPEG
-    - PNG
-    - WEBP
-    """
+    """Detect supported image type from its file signature."""
 
     if not image_bytes:
         return None
@@ -166,7 +202,9 @@ def _detect_image_mime(image_bytes):
         return "image/jpeg"
 
     # PNG
-    if image_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
+    if image_bytes.startswith(
+        b"\x89PNG\r\n\x1a\n"
+    ):
         return "image/png"
 
     # WEBP
@@ -181,104 +219,17 @@ def _detect_image_mime(image_bytes):
 
 
 # ============================================================
-# PAYMENT SCREENSHOT ANALYSIS
+# PAYMENT EXTRACTION PROMPT
 # ============================================================
 
-def analyze_payment_screenshot(image_bytes):
-    """
-    Analyze an uploaded payment screenshot using Groq Vision.
+PAYMENT_EXTRACTION_PROMPT = """
+You are the Vision Agent for a travel application.
 
-    This function only extracts information visible in the image.
+Your task is ONLY to extract information visibly present
+in a payment or transaction screenshot.
 
-    It does NOT:
-    - approve payment
-    - verify payment authenticity
-    - contact a bank
-    - contact JazzCash
-    - contact Easypaisa
-    - guarantee that money was received
-    """
-
-    # --------------------------------------------------------
-    # API KEY
-    # --------------------------------------------------------
-
-    if not GROQ_API_KEY:
-        raise RuntimeError(
-            "GROQ_API_KEY is missing."
-        )
-
-    # --------------------------------------------------------
-    # CONVERT STREAMLIT UPLOADED FILE TO BYTES
-    # --------------------------------------------------------
-
-    image_bytes = _get_image_bytes(
-        image_bytes
-    )
-
-    # --------------------------------------------------------
-    # EMPTY FILE
-    # --------------------------------------------------------
-
-    if not image_bytes:
-        raise ValueError(
-            "Payment screenshot is empty."
-        )
-
-    # --------------------------------------------------------
-    # IMAGE TYPE
-    # --------------------------------------------------------
-
-    mime_type = _detect_image_mime(
-        image_bytes
-    )
-
-    if mime_type is None:
-        return {
-            "is_payment_screenshot": False,
-            "recipient": "",
-            "amount": 0,
-            "status": "",
-            "confidence": "low",
-            "message": (
-                "The uploaded file is not a supported image. "
-                "Please upload a clear payment screenshot."
-            ),
-        }
-
-    # --------------------------------------------------------
-    # GROQ CLIENT
-    # --------------------------------------------------------
-
-    client = OpenAI(
-        api_key=GROQ_API_KEY,
-        base_url=GROQ_BASE_URL,
-    )
-
-    # --------------------------------------------------------
-    # ENCODE IMAGE
-    # --------------------------------------------------------
-
-    encoded_image = base64.b64encode(
-        image_bytes
-    ).decode("utf-8")
-
-    image_url = (
-        f"data:{mime_type};base64,"
-        f"{encoded_image}"
-    )
-
-    # --------------------------------------------------------
-    # VISION PROMPT
-    # --------------------------------------------------------
-
-    prompt = """
-You are a payment screenshot information extractor.
-
-Analyze the uploaded image carefully.
-
-First determine whether the image appears to be a
-payment or transaction confirmation screenshot.
+First determine whether the uploaded image appears to be
+a payment or transaction confirmation screenshot.
 
 A payment screenshot may contain visible information such as:
 
@@ -371,20 +322,122 @@ Rules:
 17. Return JSON only.
 """
 
+
+# ============================================================
+# MAIN VISION FUNCTION
+# ============================================================
+
+def analyze_payment_screenshot(image_bytes):
+    """
+    Analyze a payment screenshot using the configured
+    Groq Vision model.
+
+    Returns:
+
+    {
+        "is_payment_screenshot": bool,
+        "recipient": str,
+        "amount": number,
+        "status": str,
+        "confidence": str,
+        "message": str
+    }
+    """
+
     # --------------------------------------------------------
-    # GROQ VISION REQUEST
+    # LOAD CURRENT SECRETS
+    # --------------------------------------------------------
+
+    (
+        groq_api_key,
+        groq_base_url,
+        groq_vision_model,
+    ) = _get_groq_settings()
+
+    if not groq_api_key:
+        raise RuntimeError(
+            "GROQ_API_KEY is missing from Streamlit Secrets. "
+            "Add your current Groq API key under Settings → Secrets."
+        )
+
+    if not groq_base_url:
+        groq_base_url = DEFAULT_GROQ_BASE_URL
+
+    if not groq_vision_model:
+        groq_vision_model = DEFAULT_VISION_MODEL
+
+    # --------------------------------------------------------
+    # READ IMAGE
+    # --------------------------------------------------------
+
+    image_bytes = _get_image_bytes(image_bytes)
+
+    if not image_bytes:
+        raise ValueError(
+            "Payment screenshot is empty."
+        )
+
+    # --------------------------------------------------------
+    # DETECT IMAGE TYPE
+    # --------------------------------------------------------
+
+    mime_type = _detect_image_mime(image_bytes)
+
+    if mime_type is None:
+        return {
+            "is_payment_screenshot": False,
+            "recipient": "",
+            "amount": 0,
+            "status": "",
+            "confidence": "low",
+            "message": (
+                "The uploaded file is not a supported image. "
+                "Please upload a clear JPG, JPEG, PNG, or WEBP "
+                "payment screenshot."
+            ),
+        }
+
+    # --------------------------------------------------------
+    # CREATE GROQ CLIENT
+    # --------------------------------------------------------
+
+    try:
+        client = OpenAI(
+            api_key=groq_api_key,
+            base_url=groq_base_url,
+        )
+
+    except Exception as exc:
+        raise RuntimeError(
+            f"Could not initialize the Groq Vision client: {exc}"
+        ) from exc
+
+    # --------------------------------------------------------
+    # ENCODE IMAGE
+    # --------------------------------------------------------
+
+    encoded_image = base64.b64encode(
+        image_bytes
+    ).decode("utf-8")
+
+    image_url = (
+        f"data:{mime_type};base64,{encoded_image}"
+    )
+
+    # --------------------------------------------------------
+    # CALL GROQ VISION
     # --------------------------------------------------------
 
     try:
         response = client.chat.completions.create(
-            model=GROQ_VISION_MODEL,
+            model=groq_vision_model,
             messages=[
                 {
                     "role": "user",
                     "content": [
                         {
                             "type": "text",
-                            "text": prompt,
+                            "text": PAYMENT_EXTRACTION_PROMPT,
                         },
                         {
                             "type": "image_url",
@@ -403,59 +456,108 @@ Rules:
         )
 
     except Exception as exc:
-
         error_text = str(exc)
         error_lower = error_text.lower()
 
-        # Model unavailable
+        # ----------------------------------------------------
+        # AUTHENTICATION ERROR
+        # ----------------------------------------------------
+
         if (
-            "model_not_found" in error_lower
+            "401" in error_text
+            or "invalid api key" in error_lower
+            or "invalid_api_key" in error_lower
+            or "authentication" in error_lower
+            or "unauthorized" in error_lower
+        ):
+            raise RuntimeError(
+                "Groq authentication failed for the Vision Agent. "
+                "Your GROQ_API_KEY in Streamlit Secrets is invalid, "
+                "expired, revoked, or not being accepted by Groq. "
+                "Create a new Groq API key, update Streamlit Secrets, "
+                "and restart/redeploy the app."
+            ) from exc
+
+        # ----------------------------------------------------
+        # MODEL ERROR
+        # ----------------------------------------------------
+
+        if (
+            "404" in error_text
+            or "model_not_found" in error_lower
             or "does not exist" in error_lower
-            or "404" in error_text
+            or "not found" in error_lower
         ):
             raise RuntimeError(
                 "The configured Groq Vision model is unavailable. "
-                "Set GROQ_VISION_MODEL to "
-                "'qwen/qwen3.8-27b'."
+                "Check GROQ_VISION_MODEL in Streamlit Secrets. "
+                f"Current configured model: {groq_vision_model}"
             ) from exc
 
-        # Rate limit
+        # ----------------------------------------------------
+        # RATE LIMIT ERROR
+        # ----------------------------------------------------
+
         if (
-            "rate_limit" in error_lower
+            "429" in error_text
             or "rate limit" in error_lower
-            or "429" in error_text
+            or "rate_limit" in error_lower
+            or "too many requests" in error_lower
         ):
             raise RuntimeError(
                 "Groq Vision is temporarily rate-limited. "
                 "Please wait a few seconds and try again."
             ) from exc
 
+        # ----------------------------------------------------
+        # BAD REQUEST
+        # ----------------------------------------------------
+
+        if (
+            "400" in error_text
+            or "bad request" in error_lower
+        ):
+            raise RuntimeError(
+                "Groq rejected the Vision Agent request. "
+                "Check the configured Vision model and "
+                "the uploaded image format."
+            ) from exc
+
+        # ----------------------------------------------------
+        # OTHER ERROR
+        # ----------------------------------------------------
+
         raise RuntimeError(
             f"Vision analysis failed: {error_text}"
         ) from exc
 
     # --------------------------------------------------------
-    # RESPONSE CHECK
+    # CHECK RESPONSE
     # --------------------------------------------------------
 
-    if not response.choices:
+    if not response:
         raise RuntimeError(
             "Vision model returned no response."
         )
 
-    content = (
-        response.choices[0]
-        .message
-        .content
-    )
+    if not response.choices:
+        raise RuntimeError(
+            "Vision model returned no response choices."
+        )
+
+    message = response.choices[0].message
+    content = message.content
+
+    if not content:
+        raise RuntimeError(
+            "Vision model returned an empty response."
+        )
 
     # --------------------------------------------------------
-    # JSON PARSING
+    # PARSE JSON
     # --------------------------------------------------------
 
-    data = _extract_json(
-        content
-    )
+    data = _extract_json(content)
 
     if not data:
         raise RuntimeError(
@@ -463,7 +565,7 @@ Rules:
         )
 
     # --------------------------------------------------------
-    # PAYMENT FLAG
+    # NORMALIZE RESULT
     # --------------------------------------------------------
 
     is_payment = data.get(
@@ -471,10 +573,7 @@ Rules:
         False,
     )
 
-    if isinstance(
-        is_payment,
-        str,
-    ):
+    if isinstance(is_payment, str):
         is_payment = (
             is_payment.strip().lower()
             in {
@@ -484,13 +583,7 @@ Rules:
             }
         )
     else:
-        is_payment = bool(
-            is_payment
-        )
-
-    # --------------------------------------------------------
-    # NORMALIZE VALUES
-    # --------------------------------------------------------
+        is_payment = bool(is_payment)
 
     recipient = str(
         data.get(
@@ -520,7 +613,7 @@ Rules:
         )
     ).strip().lower()
 
-    message = str(
+    message_text = str(
         data.get(
             "message",
             "",
@@ -528,18 +621,28 @@ Rules:
     ).strip()
 
     # --------------------------------------------------------
-    # INVALID PAYMENT IMAGE
+    # NORMALIZE CONFIDENCE
+    # --------------------------------------------------------
+
+    if confidence not in {
+        "low",
+        "medium",
+        "high",
+    }:
+        confidence = "low"
+
+    # --------------------------------------------------------
+    # NON-PAYMENT IMAGE
     # --------------------------------------------------------
 
     if not is_payment:
-
         recipient = ""
         amount = 0
         status = ""
         confidence = "low"
 
-        if not message:
-            message = (
+        if not message_text:
+            message_text = (
                 "The uploaded image does not appear "
                 "to be a payment screenshot."
             )
@@ -554,5 +657,114 @@ Rules:
         "amount": amount,
         "status": status,
         "confidence": confidence,
-        "message": message,
+        "message": message_text,
     }
+
+
+# ============================================================
+# DETERMINISTIC PAYMENT VALIDATOR
+# ============================================================
+
+def verify_payment(
+    vision_result,
+    required_amount=199,
+    expected_recipient="TrekTales",
+):
+    """
+    Validate information extracted from the screenshot.
+
+    This does NOT prove that money was actually received.
+    It only checks the information extracted by the Vision Agent.
+    """
+
+    if not isinstance(vision_result, dict):
+        return False
+
+    if not vision_result.get(
+        "is_payment_screenshot",
+        False,
+    ):
+        return False
+
+    # --------------------------------------------------------
+    # AMOUNT
+    # --------------------------------------------------------
+
+    amount = _normalize_amount(
+        vision_result.get(
+            "amount",
+            0,
+        )
+    )
+
+    try:
+        required_amount = float(
+            required_amount
+        )
+    except Exception:
+        required_amount = 199
+
+    if amount < required_amount:
+        return False
+
+    # --------------------------------------------------------
+    # RECIPIENT
+    # --------------------------------------------------------
+
+    recipient = str(
+        vision_result.get(
+            "recipient",
+            "",
+        )
+    ).strip().lower()
+
+    expected = str(
+        expected_recipient
+    ).strip().lower()
+
+    if not recipient:
+        return False
+
+    if expected and expected not in recipient:
+        return False
+
+    # --------------------------------------------------------
+    # PAYMENT STATUS
+    # --------------------------------------------------------
+
+    status = str(
+        vision_result.get(
+            "status",
+            "",
+        )
+    ).strip().lower()
+
+    successful_statuses = {
+        "successful",
+        "success",
+        "completed",
+        "complete",
+        "paid",
+        "payment successful",
+        "transaction successful",
+        "transaction completed",
+    }
+
+    if not any(
+        value in status
+        for value in successful_statuses
+    ):
+        return False
+
+    return True
+
+
+# ============================================================
+# PUBLIC API
+# ============================================================
+
+__all__ = [
+    "analyze_payment_screenshot",
+    "verify_payment",
+]
+````
