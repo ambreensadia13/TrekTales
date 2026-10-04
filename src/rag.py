@@ -1,140 +1,572 @@
-import re
 from pathlib import Path
-from typing import Any
+import json
+import re
 
-from pypdf import PdfReader
+import faiss
+import numpy as np
+from sentence_transformers import SentenceTransformer
 
-from .config import CHUNK_OVERLAP, CHUNK_SIZE
+from src.config import (
+    DEFAULT_EMBEDDING_MODEL,
+    DEFAULT_TOP_K,
+    KEYWORD_WEIGHT,
+    SEMANTIC_WEIGHT,
+)
 
 
-def clean_text(text: str) -> str:
+class HybridRetriever:
     """
-    Clean extracted PDF text while preserving useful content.
+    Hybrid tourism retriever.
+
+    FAISS provides semantic similarity.
+
+    A lightweight keyword score improves retrieval for
+    exact tourism terms such as hotel, food, park, stadium,
+    budget, transport and area names.
     """
-    if not text:
-        return ""
 
-    text = text.replace("\x00", " ")
-    text = text.replace("\r", "\n")
+    def __init__(
+        self,
+        index_path,
+        metadata_path,
+        config_path=None,
+    ):
 
-    # Remove excessive spaces but preserve paragraphs.
-    text = re.sub(r"[ \t]+", " ", text)
-    text = re.sub(r"\n{3,}", "\n\n", text)
+        self.index_path = Path(index_path)
 
-    return text.strip()
+        self.metadata_path = Path(
+            metadata_path
+        )
 
+        self.config_path = (
+            Path(config_path)
+            if config_path
+            else None
+        )
 
-def chunk_text(
-    text: str,
-    chunk_size: int = CHUNK_SIZE,
-    overlap: int = CHUNK_OVERLAP,
-) -> list[str]:
-    """
-    Character-based chunking with overlap.
-    """
-    text = clean_text(text)
+        self.index = None
 
-    if not text:
-        return []
+        self.metadata = []
 
-    if overlap >= chunk_size:
-        overlap = max(0, chunk_size // 5)
+        self.embedding_model = None
 
-    chunks = []
+        self.embedding_model_name = (
+            DEFAULT_EMBEDDING_MODEL
+        )
 
-    start = 0
-    text_length = len(text)
+        self._load_config()
 
-    while start < text_length:
-        end = min(start + chunk_size, text_length)
+        self._load_metadata()
 
-        chunk = text[start:end].strip()
+        self._load_index()
 
-        if chunk:
-            chunks.append(chunk)
-
-        if end >= text_length:
-            break
-
-        start = end - overlap
-
-    return chunks
+        self._load_embedding_model()
 
 
-def extract_pdf_chunks(pdf_path: Path) -> list[dict[str, Any]]:
-    """
-    Extract page-aware chunks from one PDF.
-    """
-    results: list[dict[str, Any]] = []
+    # ========================================================
+    # CONFIG
+    # ========================================================
 
-    reader = PdfReader(str(pdf_path))
+    def _load_config(self):
 
-    for page_number, page in enumerate(reader.pages, start=1):
+        if not self.config_path:
+            return
+
+        if not self.config_path.exists():
+            return
+
         try:
-            raw_text = page.extract_text() or ""
-        except Exception:
-            raw_text = ""
 
-        cleaned = clean_text(raw_text)
+            with open(
+                self.config_path,
+                "r",
+                encoding="utf-8",
+            ) as file:
 
-        if not cleaned:
-            continue
+                config = json.load(file)
 
-        chunks = chunk_text(cleaned)
-
-        for chunk_number, chunk in enumerate(chunks, start=1):
-            results.append(
-                {
-                    "source": pdf_path.name,
-                    "page": page_number,
-                    "department": infer_department(pdf_path.name),
-                    "chunk_id": f"{pdf_path.stem}_{page_number}_{chunk_number}",
-                    "content": chunk,
-                }
+            model_name = (
+                config.get("embedding_model")
+                or config.get("embedding_model_name")
             )
 
-    return results
+            if model_name:
+                self.embedding_model_name = str(
+                    model_name
+                )
 
-
-def infer_department(filename: str) -> str:
-    """
-    Infer the department/category from the expected PDF filename.
-    """
-    name = filename.lower()
-
-    mapping = {
-        "places": "Places",
-        "hotels": "Hotels",
-        "transport": "Transport",
-        "safety": "Safety",
-        "food": "Food",
-        "activities": "Activities",
-    }
-
-    for key, value in mapping.items():
-        if key in name:
-            return value
-
-    return "General Tourism"
-
-
-def load_all_pdfs(knowledge_base_dir: Path) -> list[dict[str, Any]]:
-    """
-    Extract chunks from every PDF in the knowledge base.
-    """
-    if not knowledge_base_dir.exists():
-        return []
-
-    pdf_files = sorted(knowledge_base_dir.glob("*.pdf"))
-
-    all_chunks: list[dict[str, Any]] = []
-
-    for pdf_path in pdf_files:
-        try:
-            all_chunks.extend(extract_pdf_chunks(pdf_path))
         except Exception:
-            # Skip a damaged/unreadable PDF instead of crashing
-            # the complete ingestion process.
-            continue
+            # Do not crash because config.json is optional.
+            self.embedding_model_name = (
+                DEFAULT_EMBEDDING_MODEL
+            )
 
-    return all_chunks
+
+    # ========================================================
+    # METADATA
+    # ========================================================
+
+    def _load_metadata(self):
+
+        if not self.metadata_path.exists():
+
+            raise FileNotFoundError(
+                "FAISS metadata file was not found: "
+                f"{self.metadata_path}"
+            )
+
+        with open(
+            self.metadata_path,
+            "r",
+            encoding="utf-8",
+        ) as file:
+
+            raw = json.load(file)
+
+
+        if isinstance(raw, list):
+
+            self.metadata = raw
+
+        elif isinstance(raw, dict):
+
+            if isinstance(
+                raw.get("metadata"),
+                list,
+            ):
+
+                self.metadata = raw["metadata"]
+
+            elif isinstance(
+                raw.get("documents"),
+                list,
+            ):
+
+                self.metadata = raw["documents"]
+
+            elif isinstance(
+                raw.get("items"),
+                list,
+            ):
+
+                self.metadata = raw["items"]
+
+            else:
+
+                self.metadata = []
+
+        else:
+
+            self.metadata = []
+
+
+        if not self.metadata:
+
+            raise ValueError(
+                "metadata.json was loaded, but it contains "
+                "no usable records."
+            )
+
+
+    # ========================================================
+    # FAISS
+    # ========================================================
+
+    def _load_index(self):
+
+        if not self.index_path.exists():
+
+            raise FileNotFoundError(
+                "FAISS index not found: "
+                f"{self.index_path}"
+            )
+
+        self.index = faiss.read_index(
+            str(self.index_path)
+        )
+
+        if self.index.ntotal == 0:
+
+            raise ValueError(
+                "The FAISS index is empty."
+            )
+
+        if self.index.ntotal != len(
+            self.metadata
+        ):
+
+            raise ValueError(
+                "FAISS/metadata mismatch: "
+                f"index contains {self.index.ntotal} "
+                f"vectors but metadata contains "
+                f"{len(self.metadata)} records."
+            )
+
+
+    # ========================================================
+    # EMBEDDING MODEL
+    # ========================================================
+
+    def _load_embedding_model(self):
+
+        self.embedding_model = (
+            SentenceTransformer(
+                self.embedding_model_name
+            )
+        )
+
+
+    # ========================================================
+    # TEXT NORMALIZATION
+    # ========================================================
+
+    @staticmethod
+    def _normalize_text(value):
+
+        if value is None:
+            return ""
+
+        text = str(value)
+
+        text = text.lower()
+
+        text = re.sub(
+            r"[^a-z0-9\s]",
+            " ",
+            text,
+        )
+
+        text = re.sub(
+            r"\s+",
+            " ",
+            text,
+        )
+
+        return text.strip()
+
+
+    # ========================================================
+    # KEYWORDS
+    # ========================================================
+
+    def _keywords(self, query):
+
+        normalized = self._normalize_text(
+            query
+        )
+
+        return set(
+            word
+            for word in normalized.split()
+            if len(word) >= 3
+        )
+
+
+    def _keyword_score(
+        self,
+        query,
+        record,
+    ):
+
+        query_words = self._keywords(
+            query
+        )
+
+        if not query_words:
+            return 0.0
+
+        text = record.get(
+            "text",
+            "",
+        )
+
+        normalized_text = (
+            self._normalize_text(text)
+        )
+
+        text_words = set(
+            normalized_text.split()
+        )
+
+        if not text_words:
+            return 0.0
+
+        overlap = (
+            query_words
+            & text_words
+        )
+
+        return (
+            len(overlap)
+            / len(query_words)
+        )
+
+
+    # ========================================================
+    # RECORD NORMALIZATION
+    # ========================================================
+
+    @staticmethod
+    def _normalize_record(
+        record,
+        score=None,
+        keyword_score=None,
+    ):
+
+        if not isinstance(
+            record,
+            dict,
+        ):
+
+            record = {
+                "text": str(record)
+            }
+
+        metadata = record.get(
+            "metadata",
+            {},
+        )
+
+        if not isinstance(
+            metadata,
+            dict,
+        ):
+
+            metadata = {}
+
+
+        text = (
+            record.get("text")
+            or record.get("content")
+            or record.get("page_content")
+            or ""
+        )
+
+
+        source = (
+            record.get("source")
+            or metadata.get("source")
+            or "Unknown source"
+        )
+
+
+        page = (
+            record.get("page")
+            or metadata.get("page")
+            or "N/A"
+        )
+
+
+        department = (
+            record.get("department")
+            or metadata.get("department")
+            or ""
+        )
+
+
+        record_id = (
+            record.get("record_id")
+            or metadata.get("record_id")
+            or ""
+        )
+
+
+        normalized_metadata = {
+            **metadata,
+            "source": str(source),
+            "page": str(page),
+            "department": str(department),
+            "record_id": str(record_id),
+        }
+
+
+        result = {
+            "text": str(text),
+            "source": str(source),
+            "page": str(page),
+            "department": str(department),
+            "record_id": str(record_id),
+            "metadata": normalized_metadata,
+        }
+
+
+        if score is not None:
+            result["semantic_score"] = float(
+                score
+            )
+
+        if keyword_score is not None:
+            result["keyword_score"] = float(
+                keyword_score
+            )
+
+        return result
+
+
+    # ========================================================
+    # SEARCH
+    # ========================================================
+
+    def search(
+        self,
+        query,
+        top_k=DEFAULT_TOP_K,
+    ):
+
+        query = str(query).strip()
+
+        if not query:
+            return []
+
+        if not self.metadata:
+            return []
+
+        if self.index.ntotal == 0:
+            return []
+
+
+        candidate_k = min(
+            max(top_k * 4, top_k),
+            self.index.ntotal,
+        )
+
+
+        query_embedding = (
+            self.embedding_model.encode(
+                [query],
+                convert_to_numpy=True,
+                normalize_embeddings=True,
+            )
+        )
+
+
+        query_embedding = np.asarray(
+            query_embedding,
+            dtype="float32",
+        )
+
+
+        semantic_scores, indices = (
+            self.index.search(
+                query_embedding,
+                candidate_k,
+            )
+        )
+
+
+        candidates = []
+
+
+        for score, index_id in zip(
+            semantic_scores[0],
+            indices[0],
+        ):
+
+            if index_id < 0:
+                continue
+
+            if index_id >= len(
+                self.metadata
+            ):
+                continue
+
+            record = self.metadata[
+                int(index_id)
+            ]
+
+            keyword_score = (
+                self._keyword_score(
+                    query,
+                    record,
+                )
+            )
+
+
+            # FAISS IndexFlatIP with normalized
+            # embeddings gives cosine similarity.
+            semantic_normalized = max(
+                0.0,
+                min(
+                    1.0,
+                    (float(score) + 1.0) / 2.0,
+                ),
+            )
+
+
+            combined_score = (
+                SEMANTIC_WEIGHT
+                * semantic_normalized
+                +
+                KEYWORD_WEIGHT
+                * keyword_score
+            )
+
+
+            candidates.append(
+                (
+                    combined_score,
+                    semantic_normalized,
+                    keyword_score,
+                    record,
+                )
+            )
+
+
+        candidates.sort(
+            key=lambda item: item[0],
+            reverse=True,
+        )
+
+
+        results = []
+
+
+        for (
+            combined_score,
+            semantic_score,
+            keyword_score,
+            record,
+        ) in candidates[:top_k]:
+
+            normalized = (
+                self._normalize_record(
+                    record,
+                    score=combined_score,
+                    keyword_score=keyword_score,
+                )
+            )
+
+            normalized[
+                "combined_score"
+            ] = float(
+                combined_score
+            )
+
+            normalized[
+                "semantic_score"
+            ] = float(
+                semantic_score
+            )
+
+            results.append(
+                normalized
+            )
+
+
+        return results
+
+
+    # ========================================================
+    # COMPATIBILITY ALIAS
+    # ========================================================
+
+    def retrieve(
+        self,
+        query,
+        top_k=DEFAULT_TOP_K,
+    ):
+
+        return self.search(
+            query,
+            top_k=top_k,
+        )
