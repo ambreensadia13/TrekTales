@@ -456,7 +456,35 @@ div[data-baseweb="select"] * {{
 }}
 
 /* =========================================================
-   FILE UPLOADER
+   LANGUAGE SELECTOR - BLACK TEXT
+   ========================================================= */
+
+div[data-baseweb="select"] {{
+    color: {BLACK} !important;
+}}
+
+div[data-baseweb="select"] > div {{
+    color: {BLACK} !important;
+}}
+
+div[data-baseweb="select"] span {{
+    color: {BLACK} !important;
+}}
+
+div[data-baseweb="select"] input {{
+    color: {BLACK} !important;
+}}
+
+div[data-baseweb="popover"] {{
+    color: {BLACK} !important;
+}}
+
+div[data-baseweb="popover"] * {{
+    color: {BLACK} !important;
+}}
+
+/* =========================================================
+   FILE UPLOADER - LIGHT GREEN TEXT
    ========================================================= */
 
 section[data-testid="stFileUploaderDropzone"] {{
@@ -466,7 +494,39 @@ section[data-testid="stFileUploaderDropzone"] {{
 }}
 
 section[data-testid="stFileUploaderDropzone"] * {{
-    color: {BLACK} !important;
+    color: {LIGHT_GREEN} !important;
+}}
+
+div[data-testid="stFileUploader"] label {{
+    color: {LIGHT_GREEN} !important;
+}}
+
+div[data-testid="stFileUploader"] label * {{
+    color: {LIGHT_GREEN} !important;
+}}
+
+div[data-testid="stFileUploaderDropzoneInstructions"] {{
+    color: {LIGHT_GREEN} !important;
+}}
+
+div[data-testid="stFileUploaderDropzoneInstructions"] * {{
+    color: {LIGHT_GREEN} !important;
+}}
+
+/* =========================================================
+   PREPARING TREKTALES STATUS - WHITE TEXT
+   ========================================================= */
+
+div[data-testid="stStatusWidget"] {{
+    color: {WHITE} !important;
+}}
+
+div[data-testid="stStatusWidget"] * {{
+    color: {WHITE} !important;
+}}
+
+div[data-testid="stStatusWidget"] svg {{
+    color: {WHITE} !important;
 }}
 
 /* =========================================================
