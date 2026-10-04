@@ -1608,6 +1608,74 @@ with st.status(
         st.exception(exc)
 
         st.stop()
+
+
+    # --------------------------------------------------------
+    # PREMIUM DAY ENFORCEMENT
+    # --------------------------------------------------------
+
+    if (
+        requested_duration > FREE_DAYS
+        and not st.session_state.payment_verified
+    ):
+
+        st.info(
+            "Premium is locked. "
+            "The AI will generate Day 1 only."
+        )
+
+
+    # --------------------------------------------------------
+    # CREW
+    # --------------------------------------------------------
+
+    st.write(
+        "🤖 Activating TrekTales AI agents..."
+    )
+
+    try:
+
+        CrewClass = safe_import_crew()
+
+        crew = CrewClass()
+
+        result = run_crew(
+            crew=crew,
+            destination=destination,
+            duration=accessible_duration,
+            budget=budget,
+            travelers=travelers,
+            travel_style=travel_style,
+            language=language,
+            interests=interests,
+            starting_location=starting_location,
+            evidence=evidence,
+        )
+
+        st.session_state.trip_result = result
+
+        status.update(
+            label="✅ TrekTales plan generated!",
+            state="complete",
+            expanded=False,
+        )
+
+    except Exception as exc:
+
+        status.update(
+            label="❌ Trip generation failed",
+            state="error",
+            expanded=True,
+        )
+
+        st.error(
+            "The TrekTales AI crew could not generate "
+            "the itinerary."
+        )
+
+        st.exception(exc)
+
+        st.stop()
         
         # ----------------------------------------------------
         # PREMIUM DAY ENFORCEMENT
