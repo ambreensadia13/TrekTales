@@ -1,198 +1,194 @@
+```python
 from crewai import Task
 
 
 def create_tasks(agents):
     """
-    Create the 8 TrekTales CrewAI tasks.
+    Create the TrekTales travel-planning tasks.
 
-    Expected agent keys:
-        master_orchestrator
+    Required agents:
         knowledge
         planner
         budget
         safety
         summarizer
-        payment
-        vision
+
+    Payment and vision processing should be handled separately by the
+    application and are intentionally not included in the normal
+    travel-planning workflow.
     """
 
-    master_task = Task(
-        description="""
-You are the Master Orchestrator for TrekTales.
-
-Coordinate the travel-planning workflow using the provided user request
-and the outputs of the specialist agents.
-
-User request:
-{request}
-
-Create a clear travel-planning objective for the specialist agents.
-
-Do not invent places, prices, timings, policies, or safety information.
-Use the retrieved knowledge supplied to the workflow whenever possible.
-""",
-        expected_output="""
-A concise travel-planning objective containing:
-- destination
-- duration
-- traveler type
-- interests
-- budget
-- language
-- important constraints
-""",
-        agent=agents["master_orchestrator"],
-    )
-
+    # ---------------------------------------------------------
+    # 1. KNOWLEDGE TASK
+    # ---------------------------------------------------------
     knowledge_task = Task(
         description="""
-You are the Knowledge Agent.
+Use the tourism knowledge-base evidence to find information relevant
+to the user's trip.
 
-Use the supplied tourism knowledge-base evidence to identify information
-relevant to the user's trip.
+Trip:
+Destination: {destination}
+Duration: {duration}
+Traveler type: {traveler_type}
+Interests: {interests}
+Budget: {budget}
 
-User request:
-{request}
-
-Retrieved evidence:
+Knowledge-base evidence:
 {evidence}
 
-Return only information supported by the retrieved evidence.
+Rules:
+- Use only information contained in the evidence.
+- Do not invent attractions, hotels, prices, opening hours, addresses,
+  transport schedules, weather, or safety warnings.
+- If the evidence is empty or does not contain relevant information,
+  clearly say that the information is unavailable.
+- Keep the response concise.
+- Preserve useful source filenames when they are available.
 
-Clearly distinguish between:
-- information found in the knowledge base
-- information that is not available
-
-Never invent facts, prices, opening hours, addresses, transport schedules,
-or safety information.
+Return only the most relevant evidence for planning the trip.
 """,
         expected_output="""
-A structured evidence summary containing relevant:
-- places
-- hotels/accommodation information
-- transport information
-- food information
-- activities
-- safety information
-- source filenames
+A concise evidence summary containing only relevant supported information,
+including places, activities, accommodation, transport, food, safety
+information, and source filenames when available.
 """,
         agent=agents["knowledge"],
     )
 
+    # ---------------------------------------------------------
+    # 2. PLANNER TASK
+    # ---------------------------------------------------------
     planner_task = Task(
         description="""
-You are the Planner Agent.
+Create a practical travel itinerary using the trip information and
+the Knowledge Agent's findings.
 
-Create a practical day-by-day itinerary using the user's request and the
-Knowledge Agent's findings.
-
-User request:
-{request}
+Trip:
+Destination: {destination}
+Duration: {duration}
+Traveler type: {traveler_type}
+Interests: {interests}
+Budget: {budget}
+Language: {language}
 
 Knowledge findings:
 {knowledge_output}
 
-Do not invent unsupported facts.
+Rules:
+- Do not invent facts presented as verified information.
+- Prefer places and activities supported by the knowledge findings.
+- If knowledge is unavailable, clearly label suggestions as general
+  suggestions rather than verified facts.
+- Keep the itinerary concise.
+- Avoid unnecessary explanations.
 
-For every recommended location, prefer information supported by the
-knowledge-base evidence.
+For each day include:
+- Main places or activities
+- Approximate sequence
+- Meal suggestion
+- Transport/practical note when useful
 
-Create a realistic itinerary with:
-- Day number
-- approximate schedule
-- places to visit
-- activities
-- meal suggestions
-- transport suggestions
-- practical notes
+Create a realistic itinerary that fits the stated duration.
 """,
         expected_output="""
-A day-by-day travel itinerary with realistic sequencing and practical notes.
+A concise day-by-day itinerary with activities, places, meal suggestions,
+and practical travel notes.
 """,
         agent=agents["planner"],
         context=[knowledge_task],
     )
 
+    # ---------------------------------------------------------
+    # 3. BUDGET TASK
+    # ---------------------------------------------------------
     budget_task = Task(
         description="""
-You are the Budget Agent.
+Create a simple trip-budget estimate based on the user's budget,
+the itinerary, and available knowledge.
 
-Estimate the trip budget from the available knowledge and the user's
-specified budget.
-
-User request:
-{request}
+Trip:
+Destination: {destination}
+Duration: {duration}
+Budget: {budget}
 
 Knowledge findings:
 {knowledge_output}
 
-Planned itinerary:
+Itinerary:
 {planner_output}
 
-Do not pretend that an exact current price is known unless it is explicitly
-present in the provided evidence.
+Rules:
+- Never claim an exact current price unless it appears in the evidence.
+- Clearly distinguish known amounts from estimates.
+- If prices are unavailable, say so.
+- Do not create fake prices.
+- Keep the calculation simple and concise.
 
-Separate:
-- known amounts
-- estimated amounts
-- unavailable amounts
-
-Provide a simple budget breakdown.
+Cover:
+- Accommodation
+- Transport
+- Food
+- Activities
+- Miscellaneous
+- Estimated total
 """,
         expected_output="""
-A transparent budget breakdown covering:
-- accommodation
-- transport
-- food
-- activities
-- miscellaneous expenses
-- estimated total
-- important assumptions
+A concise and transparent budget breakdown with assumptions and an
+estimated total where possible.
 """,
         agent=agents["budget"],
         context=[knowledge_task, planner_task],
     )
 
+    # ---------------------------------------------------------
+    # 4. SAFETY TASK
+    # ---------------------------------------------------------
     safety_task = Task(
         description="""
-You are the Safety Agent.
+Review the proposed trip for practical safety considerations.
 
-Review the proposed itinerary for practical travel-safety considerations.
-
-User request:
-{request}
+Trip:
+Destination: {destination}
+Duration: {duration}
+Traveler type: {traveler_type}
 
 Knowledge findings:
 {knowledge_output}
 
-Planned itinerary:
+Itinerary:
 {planner_output}
 
-Only make safety claims supported by the available evidence or clearly label
-general precautions as general precautions.
+Rules:
+- Do not invent incidents, warnings, emergency numbers, road conditions,
+  weather conditions, or government advisories.
+- Location-specific safety information must be supported by the evidence.
+- General precautions must be clearly presented as general precautions.
+- Keep this section short and practical.
 
-Do not invent incidents, warnings, emergency numbers, road conditions,
-weather conditions, or government advisories.
+Return only the most useful safety recommendations.
 """,
         expected_output="""
-A concise safety section containing:
-- relevant precautions
-- transport considerations
-- location-specific considerations when supported
-- general travel precautions
+A concise safety section containing relevant precautions and clearly
+labelled general travel advice.
 """,
         agent=agents["safety"],
         context=[knowledge_task, planner_task],
     )
 
+    # ---------------------------------------------------------
+    # 5. FINAL SUMMARIZER TASK
+    # ---------------------------------------------------------
     summary_task = Task(
         description="""
-You are the Summarizer Agent.
+Create the final TrekTales travel plan.
 
-Create the final TrekTales travel response using the specialist outputs.
-
-User request:
-{request}
+Trip:
+Destination: {destination}
+Duration: {duration}
+Traveler type: {traveler_type}
+Interests: {interests}
+Budget: {budget}
+Language: {language}
 
 Knowledge:
 {knowledge_output}
@@ -206,25 +202,34 @@ Budget:
 Safety:
 {safety_output}
 
-Produce a clean, useful travel plan.
+Create a useful, concise final answer.
 
-Requirements:
-- Do not invent facts.
-- Do not claim unsupported prices are exact.
-- Keep the itinerary easy to follow.
-- Include budget information.
-- Include safety information.
+Use this structure:
+
+1. Trip Overview
+2. Day-by-Day Itinerary
+3. Budget
+4. Safety Tips
+5. Sources / Limitations
+
+Rules:
+- Do not invent verified facts.
+- Do not present estimated prices as exact prices.
 - Mention source filenames when available.
+- If the knowledge base returned no useful information, clearly state
+  that some recommendations are general suggestions.
 - Respect the requested language.
+- Do not repeat the same information.
+- Avoid lengthy explanations.
+- Keep the final answer practical.
 """,
         expected_output="""
-A polished final travel plan containing:
-1. Trip overview
-2. Day-by-day itinerary
-3. Budget
-4. Safety tips
-5. Sources
-6. Important assumptions or limitations
+A concise polished travel plan containing:
+- Trip overview
+- Day-by-day itinerary
+- Budget
+- Safety tips
+- Sources or limitations
 """,
         agent=agents["summarizer"],
         context=[
@@ -235,63 +240,25 @@ A polished final travel plan containing:
         ],
     )
 
-    payment_task = Task(
-        description="""
-You are the Payment Agent for TrekTales.
-
-This is a DEMONSTRATION payment workflow.
-
-Expected unlock price:
-Rs. 199
-
-Expected recipient:
-ambreen sadia
-
-Do not claim that a real payment has been verified.
-
-If payment information is supplied, summarize it for the application.
-Actual payment verification must be performed by deterministic Python
-validation outside the language model.
-""",
-        expected_output="""
-A concise payment-demo assessment without claiming real payment verification.
-""",
-        agent=agents["payment"],
-    )
-
-    vision_task = Task(
-        description="""
-You are the Vision Agent for TrekTales.
-
-This agent is intended for analysis of an uploaded JazzCash payment
-screenshot.
-
-Extract only information that is visibly present in the supplied image.
-
-Potential fields:
-- recipient
-- amount
-- payment status
-- transaction/reference information
-- confidence
-
-Never claim that a screenshot proves a real payment independently.
-The application performs deterministic validation after extraction.
-""",
-        expected_output="""
-Structured screenshot information containing recipient, amount, status,
-and confidence when visible.
-""",
-        agent=agents["vision"],
-    )
-
     return [
-        master_task,
         knowledge_task,
         planner_task,
         budget_task,
         safety_task,
         summary_task,
-        payment_task,
-        vision_task,
     ]
+```
+
+This version returns **exactly 5 travel tasks**, so your `crew.py` should receive a non-empty task list and won't produce the previous `No task outputs available` error.
+
+One important point: your `agents.py` must contain these five keys:
+
+```python
+agents["knowledge"]
+agents["planner"]
+agents["budget"]
+agents["safety"]
+agents["summarizer"]
+```
+
+If your current `agents.py` uses different names or still requires `master_orchestrator`, `payment`, or `vision`, it needs to be made consistent with this `tasks.py`.
