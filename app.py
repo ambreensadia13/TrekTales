@@ -513,6 +513,27 @@ div[data-baseweb="select"] svg {{
     fill: #111111 !important;
 }}
 
+/* =========================================================
+   RESPONSE LANGUAGE - FORCE BLACK TEXT
+   ========================================================= */
+
+section[data-testid="stSidebar"] div[data-baseweb="select"],
+section[data-testid="stSidebar"] div[data-baseweb="select"] > div,
+section[data-testid="stSidebar"] div[data-baseweb="select"] span,
+section[data-testid="stSidebar"] div[data-baseweb="select"] input {{
+    color: #111111 !important;
+    -webkit-text-fill-color: #111111 !important;
+}}
+
+section[data-testid="stSidebar"] div[data-baseweb="select"] > div {{
+    background: #FFFFFF !important;
+}}
+
+section[data-testid="stSidebar"] div[data-baseweb="select"] * {{
+    color: #111111 !important;
+    -webkit-text-fill-color: #111111 !important;
+}}
+
 =========================================================
    FILE UPLOADER - LIGHT GREEN TEXT
    ========================================================= */
