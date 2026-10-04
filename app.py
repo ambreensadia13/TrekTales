@@ -877,6 +877,18 @@ def run_crew(
     starting_location,
     evidence,
 ):
+    return crew.run(
+        destination=destination,
+        starting_location=starting_location,
+        days=duration,
+        budget=budget,
+        travelers=travelers,
+        travel_style=travel_style,
+        language=language,
+        interests=interests,
+        evidence=evidence,
+    )
+
     """
     Try common TrekTalesCrew interfaces without
     hardcoding one incompatible signature.
