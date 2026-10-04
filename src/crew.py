@@ -101,14 +101,9 @@ GROQ_MODEL = get_secret(
     "openai/gpt-oss-120b"
 )
 
-
-# ============================================================
-# GROQ VISION
-# ============================================================
-
 GROQ_VISION_MODEL = get_secret(
     "GROQ_VISION_MODEL",
-    "qwen/qwen3.8-27b"
+    "meta-llama/llama-4-scout-17b-16e-instruct"
 )
 
 
