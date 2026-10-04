@@ -1447,65 +1447,69 @@ if generate_trip:
     st.session_state.trip_evidence = []
     st.session_state.last_error = None
 
-    # --------------------------------------------------------
-    # RETRIEVAL
-    # --------------------------------------------------------
+# --------------------------------------------------------
+# RETRIEVAL
+# --------------------------------------------------------
 
-    with st.status(
-        "🔎 Preparing your TrekTales trip...",
-        expanded=True,
-    ) as status:
+with st.status(
+    "🔎 Preparing your TrekTales trip...",
+    expanded=True,
+) as status:
 
-        st.write(
-            "Loading the tourism knowledge base..."
+    st.write(
+        "Loading the tourism knowledge base..."
+    )
+
+    try:
+
+        RetrieverClass = safe_import_retriever()
+
+        retriever = RetrieverClass(
+            index_path=FAISS_INDEX_PATH,
+            metadata_path=FAISS_METADATA_PATH,
+            config_path=FAISS_CONFIG_PATH,
         )
 
-        try:
+        query = (
+            f"Destination: {destination}. "
+            f"Starting location: {starting_location}. "
+            f"Trip duration: {accessible_duration} days. "
+            f"Budget: {budget}. "
+            f"Travel style: {travel_style}. "
+            f"Travelers: {travelers}. "
+            f"Interests: {', '.join(interests)}."
+        )
 
-            RetrieverClass = safe_import_retriever()
+        evidence = retrieve_with_retriever(
+            retriever,
+            query,
+        )
 
-            retriever = RetrieverClass()
+        if evidence is None:
+            evidence = []
 
-            query = (
-                f"Destination: {destination}. "
-                f"Starting location: {starting_location}. "
-                f"Trip duration: {accessible_duration} days. "
-                f"Budget: {budget}. "
-                f"Travel style: {travel_style}. "
-                f"Travelers: {travelers}. "
-                f"Interests: {', '.join(interests)}."
-            )
+        st.session_state.trip_evidence = evidence
 
-            evidence = retrieve_with_retriever(
-                retriever,
-                query,
-            )
+        st.write(
+            f"Retrieved {len(evidence)} knowledge items."
+        )
 
-            if evidence is None:
-                evidence = []
+    except Exception as exc:
 
-            st.session_state.trip_evidence = evidence
+        status.update(
+            label="❌ Knowledge retrieval failed",
+            state="error",
+            expanded=True,
+        )
 
-            st.write(
-                f"Retrieved {len(evidence)} knowledge items."
-            )
+        st.error(
+            "The FAISS retriever could not be loaded."
+        )
 
-        except Exception as exc:
+        st.exception(exc)
 
-            status.update(
-                label="❌ Knowledge retrieval failed",
-                state="error",
-                expanded=True,
-            )
-
-            st.error(
-                "The FAISS retriever could not be loaded."
-            )
-
-            st.exception(exc)
-
-            st.stop()
-
+        st.stop()
+        
         # ----------------------------------------------------
         # PREMIUM DAY ENFORCEMENT
         # ----------------------------------------------------
