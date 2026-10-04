@@ -1,8 +1,8 @@
-streamlit>=1.40,<2
+streamlit==1.65.0
 groq>=0.30,<2
-openai>=1.50,<2
-faiss-cpu>=1.8,<2
-sentence-transformers>=3.0,<6
+faiss-cpu==1.15.1
+sentence-transformers==5.7.0
 numpy>=1.26,<3
 pypdf>=5.0,<7
 Pillow>=10,<13
+openai>=1.50,<2
