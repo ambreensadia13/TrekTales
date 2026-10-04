@@ -77,7 +77,7 @@ def get_secret(name, default=""):
         if value is None:
             return default
 
-        return str(value)
+        return str(value).strip()
 
     except Exception:
         return default
@@ -174,71 +174,60 @@ if "last_error" not in st.session_state:
 # ============================================================
 
 st.markdown(
-    """
+    f"""
     <style>
-    .stApp {
-        background: linear-gradient(
-            135deg,
-            #0f172a 0%,
-            #111827 50%,
-            #174936 100%
-        );
-        color: white;
-    }
 
-    .main .block-container {
-        padding-top: 2rem;
-        padding-bottom: 3rem;
-    }
+    .stApp {{
+        background:
+            linear-gradient(
+                135deg,
+                #F4F0BB 0%,
+                #FFFDF4 45%,
+                #E8F5E9 100%
+            );
+        color: {BLACK};
+    }}
 
-    [data-testid="stSidebar"] {
-        background: #0f172a;
-    }
-
-    [data-testid="stSidebar"] * {
-        color: white;
-    }
-
-    [data-testid="stHeader"] {
-        background: transparent;
-    }
-
-    .destination-box {
-        padding: 1rem 1.25rem;
-        border-radius: 14px;
-        margin-bottom: 1rem;
-        background: linear-gradient(
-            135deg,
-            #226F54,
-            #174936
-        );
-        border: 1px solid #87C38F;
-    }
-
-    .destination-label {
-        font-size: 0.9rem;
-        opacity: 0.9;
-    }
-
-    .destination-value {
-        font-size: 1.5rem;
+    .main-title {{
+        color: {DARK_GREEN};
+        font-size: 3rem;
         font-weight: 800;
-        letter-spacing: 1px;
-    }
+        margin-bottom: 0.2rem;
+    }}
 
-    [data-testid="stMetric"] {
-        background: rgba(255, 255, 255, 0.06);
-        padding: 0.75rem;
+    .subtitle {{
+        color: {GREEN};
+        font-size: 1.15rem;
+        font-weight: 600;
+    }}
+
+    .destination-box {{
+        border: 2px solid {GREEN};
+        border-radius: 16px;
+        padding: 18px;
+        margin-bottom: 12px;
+        background: {SOFT_WHITE};
+    }}
+
+    .destination-label {{
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: {GREEN};
+    }}
+
+    .destination-value {{
+        font-size: 1.7rem;
+        font-weight: 800;
+        color: {DARK_GREEN};
+        margin-top: 5px;
+    }}
+
+    div[data-testid="stMetric"] {{
+        background: {SOFT_WHITE};
         border-radius: 12px;
-    }
+        padding: 10px;
+    }}
 
-    div[data-testid="stVerticalBlockBorderWrapper"] {
-        border-radius: 14px;
-    }
-
-    h1, h2, h3 {
-        color: white;
-    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -251,10 +240,10 @@ st.markdown(
 
 def clean_text(text):
     """
-    Remove accidental HTML and code fences from model output.
+    Remove accidental HTML from model output.
 
-    Markdown is preserved so the enhanced itinerary can render
-    headings, lists and emphasis.
+    Markdown is intentionally preserved so the enhanced
+    itinerary can render headings, lists and emphasis.
     """
 
     if text is None:
@@ -323,6 +312,7 @@ def extract_text_from_result(result):
         return result
 
     if isinstance(result, dict):
+
         for key in (
             "answer",
             "result",
@@ -508,6 +498,7 @@ def run_crew(
         "evidence": evidence,
     }
 
+    # Preferred interface
     if hasattr(crew, "run"):
 
         try:
@@ -531,6 +522,7 @@ def run_crew(
             except TypeError:
                 pass
 
+    # kickoff()
     if hasattr(crew, "kickoff"):
 
         try:
@@ -539,6 +531,7 @@ def run_crew(
         except TypeError:
             pass
 
+    # plan()
     if hasattr(crew, "plan"):
 
         try:
@@ -558,6 +551,7 @@ def run_crew(
         except TypeError:
             pass
 
+    # generate()
     if hasattr(crew, "generate"):
 
         try:
@@ -655,12 +649,18 @@ def validate_requested_days(days):
 # BRAND
 # ============================================================
 
-with st.container(key="top_brand"):
-
-    st.markdown("# TrekTales")
+with st.container(
+    key="top_brand",
+):
 
     st.markdown(
-        "AI Multi-Agent Travel Planner"
+        '<div class="main-title">TrekTales</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="subtitle">AI Multi-Agent Travel Planner</div>',
+        unsafe_allow_html=True,
     )
 
 
@@ -695,9 +695,16 @@ with st.sidebar:
         )
 
         if st.session_state.payment_verified:
-            st.success("Premium unlocked")
+
+            st.success(
+                "Premium unlocked"
+            )
+
         else:
-            st.info("Premium locked")
+
+            st.info(
+                "Premium locked"
+            )
 
     st.divider()
 
@@ -1039,7 +1046,9 @@ st.divider()
 # SYSTEM STATUS
 # ============================================================
 
-st.markdown("## ⚙️ System Status")
+st.markdown(
+    "## ⚙️ System Status"
+)
 
 status_col1, status_col2, status_col3 = st.columns(3)
 
@@ -1051,12 +1060,21 @@ with status_col1:
         key="status_groq",
     ):
 
-        st.markdown("### 🧠 AI Model")
+        st.markdown(
+            "### 🧠 AI Model"
+        )
 
         if GROQ_API_KEY:
-            st.success("Groq API key detected")
+
+            st.success(
+                "Groq API key detected"
+            )
+
         else:
-            st.error("Groq API key not found")
+
+            st.error(
+                "Groq API key not found"
+            )
 
 
 with status_col2:
@@ -1066,16 +1084,25 @@ with status_col2:
         key="status_faiss",
     ):
 
-        st.markdown("### 📚 Knowledge Base")
+        st.markdown(
+            "### 📚 Knowledge Base"
+        )
 
         index_exists = FAISS_INDEX_PATH.exists()
         metadata_exists = FAISS_METADATA_PATH.exists()
         config_exists = FAISS_CONFIG_PATH.exists()
 
         if index_exists and metadata_exists:
-            st.success("FAISS index ready")
+
+            st.success(
+                "FAISS index ready"
+            )
+
         else:
-            st.error("FAISS index not found")
+
+            st.error(
+                "FAISS index not found"
+            )
 
         st.caption(
             f"index.faiss: "
@@ -1100,7 +1127,9 @@ with status_col3:
         key="status_agents",
     ):
 
-        st.markdown("### 🤖 Agent System")
+        st.markdown(
+            "### 🤖 Agent System"
+        )
 
         st.success(
             "8-agent architecture configured"
@@ -1135,31 +1164,45 @@ if generate_trip:
     # --------------------------------------------------------
 
     if not destination.strip():
-        st.error("Please enter a destination.")
+
+        st.error(
+            "Please enter a destination."
+        )
+
         st.stop()
 
     if not starting_location.strip():
-        st.error("Please enter your starting location.")
+
+        st.error(
+            "Please enter your starting location."
+        )
+
         st.stop()
 
     if not GROQ_API_KEY:
+
         st.error(
             "GROQ_API_KEY is missing from Streamlit Secrets."
         )
+
         st.stop()
 
     if not FAISS_INDEX_PATH.exists():
+
         st.error(
             "FAISS index not found at "
             "`faiss_db/index.faiss`."
         )
+
         st.stop()
 
     if not FAISS_METADATA_PATH.exists():
+
         st.error(
             "FAISS metadata not found at "
             "`faiss_db/metadata.json`."
         )
+
         st.stop()
 
     # --------------------------------------------------------
@@ -1204,7 +1247,8 @@ if generate_trip:
                 f"Budget: {budget}. "
                 f"Travel style: {travel_style}. "
                 f"Travelers: {travelers}. "
-                f"Interests: {', '.join(interests)}."
+                f"Interests: "
+                f"{', '.join(interests)}."
             )
 
             evidence = retrieve_with_retriever(
@@ -1243,6 +1287,7 @@ if generate_trip:
             )
 
             st.exception(exc)
+
             st.stop()
 
         # ----------------------------------------------------
@@ -1270,6 +1315,7 @@ if generate_trip:
         try:
 
             CrewClass = safe_import_crew()
+
             crew = CrewClass()
 
             result = run_crew(
@@ -1307,6 +1353,7 @@ if generate_trip:
             )
 
             st.exception(exc)
+
             st.stop()
 
 
@@ -1331,7 +1378,9 @@ if st.session_state.trip_result:
 
     elif requested_duration > FREE_DAYS:
 
-        st.info("Free preview: Day 1")
+        st.info(
+            "Free preview: Day 1"
+        )
 
     answer = extract_text_from_result(
         st.session_state.trip_result
@@ -1532,11 +1581,12 @@ if requested_duration >= 2:
                                 )
 
                                 st.exception(exc)
+
                                 st.stop()
 
-                        # ------------------------------------
+                        # ------------------------------------------------
                         # VISION RESULT
-                        # ------------------------------------
+                        # ------------------------------------------------
 
                         vision = (
                             st.session_state.vision_result
@@ -1615,9 +1665,9 @@ if requested_duration >= 2:
                                 f"{confidence}"
                             )
 
-                        # ------------------------------------
+                        # ------------------------------------------------
                         # DETERMINISTIC PAYMENT CHECK
-                        # ------------------------------------
+                        # ------------------------------------------------
 
                         payment_data = {
                             "recipient": recipient,
@@ -1641,6 +1691,7 @@ if requested_duration >= 2:
                             )
 
                             st.exception(exc)
+
                             st.stop()
 
                         st.session_state.payment_result = (
