@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import time
 from typing import Any
 
@@ -14,9 +13,8 @@ class TrekTalesCrew:
 
     Uses Groq's OpenAI-compatible HTTP API.
 
-    The class keeps the public TrekTalesCrew interface expected by
-    app.py while providing controlled retry handling for temporary
-    Groq rate limits.
+    The itinerary is generated strictly from the tourism
+    knowledge-base evidence supplied by the FAISS retriever.
     """
 
     def __init__(self):
@@ -30,8 +28,8 @@ class TrekTalesCrew:
             "openai/gpt-oss-120b",
         )
 
-        # Keep retries deliberately small.
-        # We do not want the Streamlit app repeatedly hammering Groq.
+        # Keep retries deliberately small so the app does not
+        # repeatedly hammer Groq during a rate-limit event.
         self.max_retries = 2
 
     # ========================================================
@@ -79,6 +77,13 @@ class TrekTalesCrew:
 
     @staticmethod
     def _format_evidence(evidence: list[Any]) -> str:
+        """
+        Convert retrieved FAISS evidence into a clean context
+        block for the language model.
+
+        No information is added that was not present in evidence.
+        """
+
         if not evidence:
             return (
                 "No tourism knowledge-base evidence was retrieved."
@@ -90,10 +95,19 @@ class TrekTalesCrew:
 
             if isinstance(item, dict):
 
+                # Some retrievers store metadata at the top level,
+                # while others store it inside item["metadata"].
+                metadata = item.get("metadata", {})
+
+                if not isinstance(metadata, dict):
+                    metadata = {}
+
                 text = (
                     item.get("text")
                     or item.get("content")
                     or item.get("chunk")
+                    or metadata.get("text")
+                    or metadata.get("content")
                     or ""
                 )
 
@@ -101,10 +115,17 @@ class TrekTalesCrew:
                     item.get("source")
                     or item.get("document")
                     or item.get("filename")
+                    or metadata.get("source")
+                    or metadata.get("document")
+                    or metadata.get("filename")
                     or ""
                 )
 
-                page = item.get("page", "")
+                page = (
+                    item.get("page")
+                    or metadata.get("page")
+                    or ""
+                )
 
             else:
 
@@ -123,10 +144,13 @@ class TrekTalesCrew:
                 source_text = source_text.replace("\\", "/")
                 source_text = source_text.split("/")[-1]
 
-            location = source_text
+            # Remove accidental HTML artifacts from source names.
+            source_text = source_text.replace(".html", "")
 
-            if page not in ("", None, "N/A"):
+            if page not in ("", None, "N/A", "n/a"):
                 location = f"{source_text} | Page {page}"
+            else:
+                location = source_text
 
             blocks.append(
                 f"[Knowledge Item {index}]\n"
@@ -168,76 +192,367 @@ class TrekTalesCrew:
         )
 
         return f"""
-You are the itinerary-generation engine for TrekTales.
+You are the TrekTales itinerary-generation engine.
 
-Create a practical travel itinerary using ONLY the supplied
-tourism knowledge-base evidence.
+Your task is to create a polished, useful and personalized travel
+itinerary for the user.
 
+CRITICAL RULE:
+
+You MUST use ONLY the tourism knowledge-base evidence provided
+at the end of this prompt.
+
+The knowledge base is the source of truth for tourism facts.
+
+Do NOT use outside knowledge.
+
+============================================================
 TRIP DETAILS
+============================================================
 
-Destination: {destination}
-Starting location: {starting_location}
-Number of days: {days}
-Travelers: {travelers}
-Budget: {budget}
-Travel style: {travel_style}
-Language: {language}
-Interests: {interests_text}
+Destination:
+{destination}
 
-IMPORTANT GROUNDING RULES
+Starting location:
+{starting_location}
 
-1. Use the tourism knowledge-base evidence as the primary source.
-2. Do not invent attractions, restaurants, hotels, prices,
-   opening hours, travel times, addresses, phone numbers,
-   activities, or other tourism facts.
-3. If the knowledge base does not contain enough information,
-   clearly say that the information is not available.
-4. Do not fabricate sources.
-5. Do not create fake citations.
-6. Do not output HTML.
-7. Do not output Markdown code fences.
-8. Respect the requested number of days exactly.
-9. Keep recommendations relevant to the supplied destination.
-10. Use the requested language.
-11. Do not use general world knowledge to fill missing tourism facts.
-12. Only make claims that are supported by the supplied evidence.
+Number of days:
+{days}
 
-The itinerary should include:
+Travelers:
+{travelers}
 
-- Trip overview
-- Day-by-day plan
-- Suggested activities supported by the knowledge base
-- Budget considerations when supported by the evidence
-- Practical notes
-- Knowledge-base sources used
+Budget:
+{budget}
 
-If information is missing from the knowledge base, say:
+Travel style:
+{travel_style}
 
-"Not available in the TrekTales tourism knowledge base."
+Language:
+{language}
 
-Do not invent an answer.
+Interests:
+{interests_text}
 
-TOURISM KNOWLEDGE BASE
+============================================================
+ABSOLUTE ANTI-HALLUCINATION RULES
+============================================================
+
+1. Never invent tourism information.
+
+2. Never invent:
+   - attractions
+   - restaurants
+   - hotels
+   - activities
+   - prices
+   - entry fees
+   - ticket costs
+   - travel times
+   - distances
+   - taxi fares
+   - transport routes
+   - opening hours
+   - closing hours
+   - addresses
+   - phone numbers
+   - contact information
+   - availability
+   - ratings
+   - reviews
+   - historical facts
+   - weather conditions
+   - safety conditions
+   - local rules
+   - events
+   - schedules
+
+3. Never use general knowledge to fill a missing tourism fact.
+
+4. Never estimate a missing price.
+
+5. Never estimate a missing distance.
+
+6. Never estimate a missing travel time.
+
+7. Never calculate a taxi cost when the necessary information
+   is not explicitly present in the knowledge base.
+
+8. Never create a restaurant, hotel or attraction simply because
+   it would make the itinerary look better.
+
+9. Every tourism recommendation must be supported by the supplied
+   knowledge-base evidence.
+
+10. If information is missing, explicitly write:
+
+Not available in the TrekTales tourism knowledge base.
+
+11. Do not create fake citations.
+
+12. Do not create fake filenames.
+
+13. Do not claim that a source contains information unless that
+    information is actually present in the supplied evidence.
+
+14. Do not output HTML.
+
+15. Do not output Markdown code fences.
+
+16. Use clean Markdown.
+
+17. Follow the requested language.
+
+18. Generate exactly {days} day(s).
+
+19. Do not add an extra day.
+
+20. Do not silently reduce the requested number of days.
+
+21. If the evidence is insufficient for a particular day,
+    clearly state that the required information is unavailable
+    instead of inventing activities.
+
+============================================================
+OUTPUT STYLE
+============================================================
+
+Make the result visually organized and easy to read.
+
+Use:
+
+- Markdown headings
+- Bold labels where useful
+- Bullet points
+- Short paragraphs
+- Emojis where appropriate
+- Clear day sections
+- Practical information
+- Knowledge-base source names
+
+Do not use HTML.
+
+Do not use code fences.
+
+============================================================
+REQUIRED OUTPUT STRUCTURE
+============================================================
+
+Begin with:
+
+# 🌿 Personalized {destination} Adventure Itinerary
+
+Then provide:
+
+## 📍 Trip Overview
+
+Include:
+
+- Destination
+- Starting location
+- Duration
+- Travelers
+- Budget
+- Travel style
+- Interests
+
+Only use values supplied in the trip details.
+
+============================================================
+DAY-BY-DAY ITINERARY
+============================================================
+
+Create exactly {days} day sections.
+
+Use:
+
+## ☀️ Day 1 — [appropriate theme]
+
+Then, if required:
+
+## ☀️ Day 2 — [appropriate theme]
+
+Continue until exactly Day {days}.
+
+For every day, create a useful structure such as:
+
+### ⏰ Suggested Schedule
+
+Use time blocks only when the knowledge base supports
+the timing.
+
+For each supported activity/place, provide:
+
+- Place/activity name
+- What is supported by the knowledge base
+- Relevant cost, if explicitly available
+- Relevant practical information, if explicitly available
+- Why it matches the user's stated interests, when this can
+  be supported without inventing facts
+
+Do not manufacture times just to make the itinerary look full.
+
+If a useful detail is missing, write:
+
+Not available in the TrekTales tourism knowledge base.
+
+============================================================
+TRAVEL / TRANSPORT
+============================================================
+
+When discussing movement between locations:
+
+Only provide travel time, distance, route, fare or transport
+information if it is explicitly supported by the evidence.
+
+Otherwise write:
+
+Not available in the TrekTales tourism knowledge base.
+
+Never estimate it.
+
+============================================================
+BUDGET
+============================================================
+
+After the daily itinerary, provide:
+
+## 💰 Budget Considerations
+
+List only costs explicitly supported by the knowledge base.
+
+If a cost is missing:
+
+Not available in the TrekTales tourism knowledge base.
+
+Do not invent a total.
+
+Do not calculate a total using unsupported values.
+
+============================================================
+PHOTOGRAPHY
+============================================================
+
+Provide:
+
+## 📸 Photography Highlights
+
+Only mention locations or activities supported by the knowledge
+base.
+
+Do not invent viewpoints, photo spots, landscapes or photography
+features.
+
+If insufficient information exists:
+
+Not available in the TrekTales tourism knowledge base.
+
+============================================================
+WHAT TO CARRY
+============================================================
+
+Provide:
+
+## 🎒 What to Carry
+
+Keep this practical.
+
+Do not invent weather conditions.
+
+Do not claim that a particular item is required because of
+weather or local conditions unless the supplied evidence supports
+that claim.
+
+============================================================
+IMPORTANT INFORMATION
+============================================================
+
+Provide:
+
+## ⚠️ Important Information
+
+Include only important information supported by the knowledge base.
+
+For unavailable tourism information:
+
+Not available in the TrekTales tourism knowledge base.
+
+============================================================
+KNOWLEDGE-BASE SOURCES
+============================================================
+
+Finish with:
+
+## 📚 Knowledge-Base Sources
+
+List only filenames that actually occur in the supplied evidence.
+
+Use the filename only.
+
+Do not invent filenames.
+
+Do not create fake references.
+
+============================================================
+LANGUAGE
+============================================================
+
+Write the complete itinerary in:
+
+{language}
+
+============================================================
+FINAL VALIDATION BEFORE ANSWERING
+============================================================
+
+Before producing the final response, internally verify:
+
+- Exactly {days} day(s) are present.
+- All tourism facts come from the supplied evidence.
+- No attraction was invented.
+- No restaurant was invented.
+- No hotel was invented.
+- No price was invented.
+- No travel time was invented.
+- No distance was invented.
+- No taxi fare was invented.
+- No opening hours were invented.
+- No fake source was invented.
+- Missing information is explicitly marked.
+- No HTML exists in the answer.
+- No Markdown code fence exists in the answer.
+- The destination remains {destination}.
+- The response follows the requested language.
+
+============================================================
+TOURISM KNOWLEDGE-BASE EVIDENCE
+============================================================
 
 {evidence_text}
-"""
 
+============================================================
+END OF KNOWLEDGE-BASE EVIDENCE
+============================================================
+
+Now generate the final TrekTales itinerary.
+"""
+    
     # ========================================================
     # RATE LIMIT INFORMATION
     # ========================================================
 
     @staticmethod
-    def _get_rate_limit_details(response: requests.Response) -> dict[str, str]:
-        """
-        Extract Groq rate-limit information from response headers.
-
-        Groq exposes retry-after and x-ratelimit-* headers.
-        """
+    def _get_rate_limit_details(
+        response: requests.Response,
+    ) -> dict[str, str]:
 
         headers = response.headers
 
         return {
-            "retry_after": headers.get("retry-after", ""),
+            "retry_after": headers.get(
+                "retry-after",
+                "",
+            ),
             "remaining_tokens": headers.get(
                 "x-ratelimit-remaining-tokens",
                 "",
@@ -275,11 +590,17 @@ TOURISM KNOWLEDGE BASE
         try:
             error_data = response.json()
 
-            error_object = error_data.get("error", {})
+            error_object = error_data.get(
+                "error",
+                {},
+            )
 
             if isinstance(error_object, dict):
                 message = str(
-                    error_object.get("message", "")
+                    error_object.get(
+                        "message",
+                        "",
+                    )
                 ).strip()
             else:
                 message = str(error_object).strip()
@@ -288,24 +609,28 @@ TOURISM KNOWLEDGE BASE
             message = ""
 
         if retry_after:
+
             wait_text = (
                 f"Groq asked the application to retry after "
                 f"{retry_after} seconds."
             )
 
         elif reset_tokens:
+
             wait_text = (
                 f"The token limit is expected to reset in "
                 f"{reset_tokens}."
             )
 
         elif reset_requests:
+
             wait_text = (
                 f"The request limit is expected to reset in "
                 f"{reset_requests}."
             )
 
         else:
+
             wait_text = (
                 "Groq has temporarily limited this request."
             )
@@ -334,7 +659,10 @@ TOURISM KNOWLEDGE BASE
     # GROQ REQUEST
     # ========================================================
 
-    def _call_groq(self, prompt: str) -> str:
+    def _call_groq(
+        self,
+        prompt: str,
+    ) -> str:
 
         api_key = self._get_api_key()
 
@@ -353,9 +681,12 @@ TOURISM KNOWLEDGE BASE
                     "content": (
                         "You are TrekTales, a grounded tourism "
                         "itinerary generation assistant. "
-                        "You must follow the supplied tourism "
-                        "knowledge base and must never invent "
-                        "tourism facts."
+                        "The supplied tourism knowledge base is "
+                        "the only source of tourism facts. "
+                        "Never invent missing tourism information. "
+                        "When information is unavailable, explicitly "
+                        "say: Not available in the TrekTales tourism "
+                        "knowledge base."
                     ),
                 },
                 {
@@ -370,7 +701,9 @@ TOURISM KNOWLEDGE BASE
 
         last_response = None
 
-        for attempt in range(self.max_retries + 1):
+        for attempt in range(
+            self.max_retries + 1
+        ):
 
             try:
 
@@ -411,6 +744,7 @@ TOURISM KNOWLEDGE BASE
             if response.status_code in (401, 403):
 
                 try:
+
                     error_data = response.json()
 
                     error_object = error_data.get(
@@ -418,19 +752,26 @@ TOURISM KNOWLEDGE BASE
                         {},
                     )
 
-                    if isinstance(error_object, dict):
+                    if isinstance(
+                        error_object,
+                        dict,
+                    ):
+
                         message = str(
                             error_object.get(
                                 "message",
                                 "",
                             )
                         ).strip()
+
                     else:
+
                         message = str(
                             error_object
                         ).strip()
 
                 except Exception:
+
                     message = ""
 
                 if response.status_code == 403:
@@ -457,6 +798,7 @@ TOURISM KNOWLEDGE BASE
             if response.status_code == 404:
 
                 try:
+
                     error_data = response.json()
 
                     error_object = error_data.get(
@@ -464,19 +806,26 @@ TOURISM KNOWLEDGE BASE
                         {},
                     )
 
-                    if isinstance(error_object, dict):
+                    if isinstance(
+                        error_object,
+                        dict,
+                    ):
+
                         message = str(
                             error_object.get(
                                 "message",
                                 "",
                             )
                         ).strip()
+
                     else:
+
                         message = str(
                             error_object
                         ).strip()
 
                 except Exception:
+
                     message = ""
 
                 raise RuntimeError(
@@ -493,30 +842,43 @@ TOURISM KNOWLEDGE BASE
 
                 if attempt < self.max_retries:
 
-                    details = self._get_rate_limit_details(
-                        response
+                    details = (
+                        self._get_rate_limit_details(
+                            response
+                        )
                     )
 
-                    retry_after = details["retry_after"]
+                    retry_after = (
+                        details["retry_after"]
+                    )
 
                     wait_seconds = 2.0
 
                     try:
+
                         if retry_after:
                             wait_seconds = float(
                                 retry_after
                             )
-                    except (TypeError, ValueError):
+
+                    except (
+                        TypeError,
+                        ValueError,
+                    ):
+
                         wait_seconds = 2.0
 
-                    # Never let a malformed header create
-                    # an excessive wait inside Streamlit.
                     wait_seconds = max(
                         1.0,
-                        min(wait_seconds, 15.0),
+                        min(
+                            wait_seconds,
+                            15.0,
+                        ),
                     )
 
-                    time.sleep(wait_seconds)
+                    time.sleep(
+                        wait_seconds
+                    )
 
                     continue
 
@@ -532,6 +894,7 @@ TOURISM KNOWLEDGE BASE
             if response.status_code >= 400:
 
                 try:
+
                     error_data = response.json()
 
                     error_object = error_data.get(
@@ -539,19 +902,26 @@ TOURISM KNOWLEDGE BASE
                         {},
                     )
 
-                    if isinstance(error_object, dict):
+                    if isinstance(
+                        error_object,
+                        dict,
+                    ):
+
                         message = str(
                             error_object.get(
                                 "message",
                                 "",
                             )
                         ).strip()
+
                     else:
+
                         message = str(
                             error_object
                         ).strip()
 
                 except Exception:
+
                     message = response.text[:500]
 
                 raise RuntimeError(
@@ -575,6 +945,7 @@ TOURISM KNOWLEDGE BASE
         # ========================================================
 
         try:
+
             data = last_response.json()
 
         except Exception as exc:
@@ -595,7 +966,11 @@ TOURISM KNOWLEDGE BASE
                 ["content"]
             )
 
-        except (KeyError, IndexError, TypeError) as exc:
+        except (
+            KeyError,
+            IndexError,
+            TypeError,
+        ) as exc:
 
             raise RuntimeError(
                 "Groq returned no itinerary content."
@@ -626,31 +1001,25 @@ TOURISM KNOWLEDGE BASE
         evidence: list[Any],
     ) -> str:
 
-        # ----------------------------------------------------
-        # DAYS
-        # ----------------------------------------------------
-
         try:
             days = int(days)
         except Exception:
             days = 1
 
-        days = max(1, min(days, 3))
-
-        # ----------------------------------------------------
-        # TRAVELERS
-        # ----------------------------------------------------
+        days = max(
+            1,
+            min(days, 3),
+        )
 
         try:
             travelers = int(travelers)
         except Exception:
             travelers = 1
 
-        travelers = max(1, travelers)
-
-        # ----------------------------------------------------
-        # PROMPT
-        # ----------------------------------------------------
+        travelers = max(
+            1,
+            travelers,
+        )
 
         prompt = self._build_prompt(
             destination=destination,
@@ -663,10 +1032,6 @@ TOURISM KNOWLEDGE BASE
             interests=interests,
             evidence=evidence,
         )
-
-        # ----------------------------------------------------
-        # GROQ
-        # ----------------------------------------------------
 
         return self._call_groq(prompt)
 
