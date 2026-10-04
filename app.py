@@ -1816,4 +1816,604 @@ if generate_trip:
     # --------------------------------------------------------
 
     with st.status(
-        "🔎 Preparing your Trek
+        "🔎 Preparing your TrekTales trip...",
+        expanded=True,
+    ) as status:
+
+        st.write(
+            "Loading the tourism knowledge base..."
+        )
+
+        # ----------------------------------------------------
+        # RETRIEVER
+        # ----------------------------------------------------
+
+        try:
+
+            RetrieverClass = (
+                safe_import_retriever()
+            )
+
+            retriever = RetrieverClass(
+                index_path=FAISS_INDEX_PATH,
+                metadata_path=FAISS_METADATA_PATH,
+                config_path=FAISS_CONFIG_PATH,
+            )
+
+            query = (
+                f"Destination: {destination}. "
+                f"Starting location: {starting_location}. "
+                f"Trip duration: {accessible_duration} days. "
+                f"Budget: {budget}. "
+                f"Travel style: {travel_style}. "
+                f"Travelers: {travelers}. "
+                f"Interests: "
+                f"{', '.join(interests)}."
+            )
+
+            evidence = retrieve_with_retriever(
+                retriever,
+                query,
+            )
+
+            if evidence is None:
+                evidence = []
+
+            st.session_state.trip_evidence = (
+                evidence
+            )
+
+            st.write(
+                f"Retrieved {len(evidence)} "
+                f"knowledge items."
+            )
+
+            if not evidence:
+
+                st.warning(
+                    "No tourism knowledge-base evidence "
+                    "was retrieved. The itinerary generator "
+                    "will not invent missing tourism facts."
+                )
+
+        except Exception as exc:
+
+            status.update(
+                label="❌ Knowledge retrieval failed",
+                state="error",
+                expanded=True,
+            )
+
+            st.error(
+                "The FAISS retriever could not be loaded."
+            )
+
+            st.exception(exc)
+
+            st.stop()
+
+        # ----------------------------------------------------
+        # PREMIUM DAY ENFORCEMENT
+        # ----------------------------------------------------
+
+        if (
+            requested_duration > FREE_DAYS
+            and not st.session_state.payment_verified
+        ):
+
+            st.info(
+                "Premium is locked. "
+                "The AI will generate Day 1 only."
+            )
+
+        # ----------------------------------------------------
+        # CREW
+        # ----------------------------------------------------
+
+        st.write(
+            "🤖 Activating TrekTales AI agents..."
+        )
+
+        try:
+
+            CrewClass = safe_import_crew()
+
+            crew = CrewClass()
+
+            result = run_crew(
+                crew=crew,
+                destination=destination,
+                duration=accessible_duration,
+                budget=budget,
+                travelers=travelers,
+                travel_style=travel_style,
+                language=language,
+                interests=interests,
+                starting_location=starting_location,
+                evidence=evidence,
+            )
+
+            st.session_state.trip_result = (
+                result
+            )
+
+            status.update(
+                label="✅ TrekTales plan generated!",
+                state="complete",
+                expanded=False,
+            )
+
+        except Exception as exc:
+
+            status.update(
+                label="❌ Trip generation failed",
+                state="error",
+                expanded=True,
+            )
+
+            st.error(
+                "The TrekTales AI crew could not "
+                "generate the itinerary."
+            )
+
+            st.exception(exc)
+
+            st.stop()
+
+
+# ============================================================
+# DISPLAY RESULT
+# ============================================================
+
+if st.session_state.trip_result:
+
+    st.divider()
+
+    st.markdown(
+        "## 🗺️ Your TrekTales Plan"
+    )
+
+    if st.session_state.payment_verified:
+
+        st.success(
+            f"Premium itinerary: "
+            f"{accessible_duration} day(s)"
+        )
+
+    elif requested_duration > FREE_DAYS:
+
+        st.info(
+            "Free preview: Day 1"
+        )
+
+    answer = extract_text_from_result(
+        st.session_state.trip_result
+    )
+
+    answer = clean_text(
+        answer
+    )
+
+    with st.container(
+        border=True,
+        key="answer_card",
+    ):
+
+        st.markdown(
+            "### 🌿 Personalized Itinerary"
+        )
+
+        st.markdown(
+            answer,
+            unsafe_allow_html=False,
+        )
+
+
+# ============================================================
+# SOURCES
+# ============================================================
+
+sources = extract_sources(
+    st.session_state.trip_evidence
+)
+
+if sources:
+
+    st.divider()
+
+    st.markdown(
+        "## 📚 Knowledge Sources"
+    )
+
+    for index, source in enumerate(
+        sources
+    ):
+
+        with st.container(
+            border=True,
+            key=f"source_{index}",
+        ):
+
+            st.markdown(
+                f"**📄 {source['source']}**"
+            )
+
+            if (
+                source["page"]
+                and source["page"].lower()
+                != "n/a"
+            ):
+
+                st.caption(
+                    f"Page: {source['page']}"
+                )
+
+
+# ============================================================
+# PREMIUM SECTION
+# ============================================================
+
+if requested_duration >= 2:
+
+    st.divider()
+
+    st.markdown(
+        "## 🔐 Unlock Additional Days"
+    )
+
+    with st.container(
+        border=True,
+        key="locked_card",
+    ):
+
+        if st.session_state.payment_verified:
+
+            st.markdown(
+                "### 🔓 Premium Unlocked"
+            )
+
+            st.markdown(
+                f"You can now generate all "
+                f"{requested_duration} requested days."
+            )
+
+        else:
+
+            st.markdown(
+                "### 🔒 Days 2–3 Are Locked"
+            )
+
+            st.markdown(
+                f"Day 1 is free. "
+                f"Unlock the premium itinerary for "
+                f"**Rs. {UNLOCK_PRICE}**."
+            )
+
+    # --------------------------------------------------------
+    # PAYMENT
+    # --------------------------------------------------------
+
+    if not st.session_state.payment_verified:
+
+        with st.container(
+            border=True,
+            key="payment_card",
+        ):
+
+            st.markdown(
+                "### 💳 Payment Verification"
+            )
+
+            st.write(
+                f"Payment amount: "
+                f"**Rs. {UNLOCK_PRICE}**"
+            )
+
+            st.write(
+                f"Recipient: "
+                f"**{EXPECTED_PAYMENT_RECIPIENT}**"
+            )
+
+            if QR_PATH.exists():
+
+                st.image(
+                    str(QR_PATH),
+                    caption="TrekTales Payment QR",
+                    width=260,
+                )
+
+            else:
+
+                st.warning(
+                    "Payment QR not found at "
+                    "`assets/jazzcash_qr.jpg`."
+                )
+
+            uploaded_screenshot = (
+                st.file_uploader(
+                    "📸 Upload payment screenshot",
+                    type=[
+                        "png",
+                        "jpg",
+                        "jpeg",
+                        "webp",
+                    ],
+                    key="payment_screenshot",
+                )
+            )
+
+            if uploaded_screenshot:
+
+                verify_button = st.button(
+                    "🔍 Verify Payment Screenshot",
+                    use_container_width=True,
+                )
+
+                if verify_button:
+
+                    with st.spinner(
+                        "👁️ Vision Agent is analyzing "
+                        "the screenshot..."
+                    ):
+
+                        try:
+
+                            analyze_payment_screenshot = (
+                                safe_import_vision()
+                            )
+
+                            try:
+
+                                vision_result = (
+                                    analyze_payment_screenshot(
+                                        uploaded_screenshot
+                                    )
+                                )
+
+                            except TypeError:
+
+                                uploaded_screenshot.seek(
+                                    0
+                                )
+
+                                vision_result = (
+                                    analyze_payment_screenshot(
+                                        uploaded_screenshot.read()
+                                    )
+                                )
+
+                            st.session_state.vision_result = (
+                                vision_result
+                            )
+
+                        except Exception as exc:
+
+                            st.error(
+                                "Vision Agent could not analyze "
+                                "the payment screenshot."
+                            )
+
+                            st.exception(exc)
+
+                            st.stop()
+
+                    # ------------------------------------------------
+                    # VISION RESULT
+                    # ------------------------------------------------
+
+                    vision = (
+                        st.session_state.vision_result
+                    )
+
+                    if isinstance(
+                        vision,
+                        dict,
+                    ):
+
+                        recipient = str(
+                            vision.get(
+                                "recipient",
+                                "",
+                            )
+                        ).strip()
+
+                        amount = vision.get(
+                            "amount",
+                            0,
+                        )
+
+                        payment_status = str(
+                            vision.get(
+                                "status",
+                                "",
+                            )
+                        ).strip()
+
+                        confidence = vision.get(
+                            "confidence",
+                            "",
+                        )
+
+                    else:
+
+                        st.error(
+                            "Vision Agent returned an "
+                            "unexpected response format."
+                        )
+
+                        st.stop()
+
+                    st.markdown(
+                        "### 👁️ Screenshot Analysis"
+                    )
+
+                    metric1, metric2, metric3 = (
+                        st.columns(3)
+                    )
+
+                    with metric1:
+
+                        st.metric(
+                            "Recipient",
+                            recipient
+                            if recipient
+                            else "Not detected",
+                        )
+
+                    with metric2:
+
+                        st.metric(
+                            "Amount",
+                            f"Rs. {amount}",
+                        )
+
+                    with metric3:
+
+                        st.metric(
+                            "Status",
+                            payment_status
+                            if payment_status
+                            else "Not detected",
+                        )
+
+                    if confidence:
+
+                        st.caption(
+                            f"Vision confidence: "
+                            f"{confidence}"
+                        )
+
+                    # ------------------------------------------------
+                    # DETERMINISTIC PAYMENT CHECK
+                    # ------------------------------------------------
+
+                    payment_data = {
+                        "recipient": recipient,
+                        "amount": amount,
+                        "status": payment_status,
+                    }
+
+                    try:
+
+                        payment_result = (
+                            verify_payment_safely(
+                                payment_data
+                            )
+                        )
+
+                    except Exception as exc:
+
+                        st.error(
+                            "The deterministic payment verifier "
+                            "could not validate the result."
+                        )
+
+                        st.exception(exc)
+
+                        st.stop()
+
+                    st.session_state.payment_result = (
+                        payment_result
+                    )
+
+                    verified = (
+                        is_payment_verified(
+                            payment_result
+                        )
+                    )
+
+                    st.session_state.payment_verified = (
+                        verified
+                    )
+
+                    if verified:
+
+                        st.success(
+                            "✅ Payment verified successfully."
+                        )
+
+                        st.info(
+                            "Generate your itinerary again "
+                            "to create all requested days."
+                        )
+
+                    else:
+
+                        st.error(
+                            "❌ Payment could not be verified."
+                        )
+
+                        st.warning(
+                            "The recipient, amount and payment "
+                            "status did not satisfy the application's "
+                            "verification rules."
+                        )
+
+    else:
+
+        st.success(
+            "🔓 Premium access is active for this session."
+        )
+
+        if st.button(
+            "🔒 Reset Premium Session",
+            use_container_width=True,
+        ):
+
+            st.session_state.payment_verified = False
+
+            st.session_state.payment_result = None
+
+            st.session_state.vision_result = None
+
+            st.rerun()
+
+
+# ============================================================
+# DISCLAIMER
+# ============================================================
+
+st.divider()
+
+with st.container(
+    border=True,
+    key="disclaimer_card",
+):
+
+    st.markdown(
+        "**Important:** TrekTales provides tourism planning "
+        "information for general informational purposes. "
+        "Travel conditions, prices, availability, weather, "
+        "transport schedules and local rules can change. "
+        "Verify important details with current or official "
+        "sources before travelling."
+    )
+
+
+# ============================================================
+# FOOTER
+# ============================================================
+
+st.markdown("---")
+
+footer_col1, footer_col2, footer_col3 = (
+    st.columns(3)
+)
+
+with footer_col1:
+
+    st.markdown(
+        "🌿 **TrekTales**"
+    )
+
+with footer_col2:
+
+    st.markdown(
+        "AI Multi-Agent Travel Planner"
+    )
+
+with footer_col3:
+
+    st.markdown(
+        "Built with Streamlit + Groq"
+    )
