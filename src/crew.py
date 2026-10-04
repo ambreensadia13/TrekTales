@@ -11,37 +11,17 @@ class TrekTalesCrew:
         self.agents = create_agents()
         self.tasks = create_tasks(self.agents)
 
-        # Only use the travel-planning tasks.
-        # Payment and vision are handled separately by the application.
-        travel_task_names = {
-            "knowledge",
-            "planner",
-            "budget",
-            "safety",
-            "summarizer",
-        }
-
-        travel_tasks = [
-            task
-            for task in self.tasks
-            if getattr(task, "name", None) in travel_task_names
-        ]
-
+        # create_tasks() already returns the tasks in the correct order.
+        # Keep all returned tasks so CrewAI always has valid tasks.
         self.crew = Crew(
-            agents=[
-                self.agents["knowledge"],
-                self.agents["planner"],
-                self.agents["budget"],
-                self.agents["safety"],
-                self.agents["summarizer"],
-            ],
-            tasks=travel_tasks,
+            agents=list(self.agents.values()),
+            tasks=self.tasks,
             process=Process.sequential,
             verbose=False,
         )
 
     def run(self, request):
-        """Run the TrekTales travel-planning workflow."""
+        """Run the TrekTales CrewAI workflow."""
 
         if not isinstance(request, dict):
             raise TypeError("request must be a dictionary")
@@ -55,21 +35,30 @@ class TrekTalesCrew:
                 if str(item).strip()
             )
         else:
-            interests = str(interests)
+            interests = str(interests).strip()
 
         evidence = request.get("evidence", "")
 
         if isinstance(evidence, list):
-            evidence = "\n".join(
+            evidence = "\n\n".join(
                 str(item).strip()
                 for item in evidence
                 if str(item).strip()
             )
         else:
-            evidence = str(evidence)
+            evidence = str(evidence).strip()
 
-        # Keep the request compact.
+        # Keep the input compact.
         inputs = {
+            "request": (
+                f"Destination: {str(request.get('destination', '')).strip()}\n"
+                f"Duration: {str(request.get('duration', '')).strip()}\n"
+                f"Traveler type: {str(request.get('traveler_type', '')).strip()}\n"
+                f"Interests: {interests}\n"
+                f"Budget: {str(request.get('budget', '')).strip()}\n"
+                f"Language: {str(request.get('language', 'English')).strip()}"
+            ),
+
             "destination": str(
                 request.get("destination", "")
             ).strip(),
@@ -94,7 +83,7 @@ class TrekTalesCrew:
 
             "evidence": evidence,
 
-            # These are kept for task compatibility.
+            # Used by the sequential task context.
             "knowledge_output": "",
             "planner_output": "",
             "budget_output": "",
@@ -104,5 +93,5 @@ class TrekTalesCrew:
         return self.crew.kickoff(inputs=inputs)
 
     def kickoff(self, request):
-        """Compatibility alias for kickoff()."""
+        """Compatibility alias for code that calls kickoff()."""
         return self.run(request)
