@@ -1283,35 +1283,62 @@ st.divider()
 # TRIP INPUT
 # ============================================================
 
-st.markdown("## 🧭 Create Your Trip")
+st.markdown("## 🧭 Create Your Rawalpindi Trip")
 
 st.caption(
-    "Tell TrekTales a little about your trip so the AI can "
-    "create a more personalized itinerary."
+    "Tell TrekTales about your trip and it will build a "
+    "Rawalpindi itinerary using your tourism knowledge base."
 )
 
 input_col1, input_col2 = st.columns(2)
 
+
+# ============================================================
+# LEFT COLUMN
+# ============================================================
+
 with input_col1:
 
-    destination = st.text_input(
-        "📍 Where are you going?",
-        placeholder="e.g. Rawalpindi",
+    # --------------------------------------------------------
+    # DESTINATION
+    # --------------------------------------------------------
+
+    destination = "Rawalpindi"
+
+    st.text_input(
+        "📍 Destination",
+        value="Rawalpindi",
+        disabled=True,
     )
+
+    # --------------------------------------------------------
+    # STARTING LOCATION
+    # --------------------------------------------------------
 
     starting_location = st.text_input(
         "🚗 Where will you start your journey?",
-        placeholder="e.g. Islamabad",
+        placeholder="e.g. Islamabad, Saddar, or Karachi",
     )
 
-    requested_duration = st.slider(
-        "📅 How many days do you want to travel?",
-        min_value=1,
-        max_value=PAID_DAYS,
-        value=1,
-        step=1,
-        format="%d day(s)",
+    # --------------------------------------------------------
+    # TRIP DURATION
+    # --------------------------------------------------------
+
+    requested_duration = st.selectbox(
+        "📅 How long do you want to explore Rawalpindi?",
+        options=[1, 2, 3],
+        format_func=lambda x: (
+            "1 Day — Quick Trip"
+            if x == 1
+            else "2 Days — Explore More"
+            if x == 2
+            else "3 Days — Full Experience"
+        ),
     )
+
+    # --------------------------------------------------------
+    # TRAVELERS
+    # --------------------------------------------------------
 
     travelers = st.number_input(
         "👥 How many people are traveling?",
@@ -1322,20 +1349,43 @@ with input_col1:
     )
 
 
+# ============================================================
+# RIGHT COLUMN
+# ============================================================
+
 with input_col2:
 
-    budget = st.selectbox(
-        "💰 What is your budget level?",
-        [
-            "Budget",
-            "Moderate",
-            "Comfortable",
-            "Premium",
-        ],
+    # --------------------------------------------------------
+    # BUDGET
+    # --------------------------------------------------------
+
+    budget_options = {
+        "Budget — PKR 1,500–3,000/person/day":
+            "Budget — PKR 1,500–3,000 per person per day",
+
+        "Moderate — PKR 3,000–6,000/person/day":
+            "Moderate — PKR 3,000–6,000 per person per day",
+
+        "Comfortable — PKR 6,000–10,000/person/day":
+            "Comfortable — PKR 6,000–10,000 per person per day",
+
+        "Premium — PKR 10,000–20,000+/person/day":
+            "Premium — PKR 10,000–20,000+ per person per day",
+    }
+
+    budget_label = st.selectbox(
+        "💰 What is your approximate daily budget?",
+        list(budget_options.keys()),
     )
 
+    budget = budget_options[budget_label]
+
+    # --------------------------------------------------------
+    # TRAVEL STYLE
+    # --------------------------------------------------------
+
     travel_style = st.selectbox(
-        "🎒 What type of trip do you prefer?",
+        "🎒 What type of Rawalpindi trip do you prefer?",
         [
             "Adventure",
             "Relaxed",
@@ -1348,8 +1398,12 @@ with input_col2:
         ],
     )
 
+    # --------------------------------------------------------
+    # INTERESTS
+    # --------------------------------------------------------
+
     interests = st.multiselect(
-        "⭐ What are you interested in?",
+        "⭐ What would you like to explore?",
         [
             "Mountains",
             "Nature",
