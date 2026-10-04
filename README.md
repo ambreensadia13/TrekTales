@@ -1,66 +1,83 @@
 # 🌿 TrekTales AI
 
-TrekTales is an AI-powered tourism planning application built with Streamlit, Groq, FAISS and Sentence Transformers.
+### AI-Powered Grounded Tourism Planner for Rawalpindi
 
-The application creates grounded travel itineraries using a local tourism knowledge base instead of allowing the language model to freely invent tourism information.
+TrekTales AI is an intelligent tourism planning application built with **Streamlit, Groq, FAISS, and Sentence Transformers**.
 
----
+The application generates personalized travel itineraries for **Rawalpindi** by combining user preferences with information retrieved from a local tourism knowledge base.
 
-## Features
-
-- AI-powered travel itinerary generation
-- Groq API integration
-- FAISS semantic retrieval
-- Hybrid semantic + keyword retrieval
-- Tourism knowledge base
-- Eight-agent architecture
-- Exact trip-day enforcement
-- Day 1 free access
-- Rs. 199 demo unlock for Days 2–3
-- Payment screenshot analysis
-- Deterministic payment validation
-- Source propagation
-- No itinerary generation when supporting knowledge is unavailable
-- English, Urdu and Roman Urdu responses
-- Streamlit interface
+Unlike a general-purpose chatbot, TrekTales is designed with a **Retrieval-Augmented Generation (RAG)** approach so that tourism recommendations are grounded in the application's indexed knowledge rather than relying entirely on the language model's general knowledge.
 
 ---
 
-## Project Structure
+## ✨ Overview
+
+TrekTales allows travelers to provide information such as:
+
+- Starting location
+- Trip duration
+- Number of travelers
+- Daily budget
+- Travel style
+- Interests
+- Preferred response language
+
+The system then retrieves relevant information from the Rawalpindi tourism knowledge base and uses Groq-powered AI agents to organize that information into a structured itinerary.
+
+The application is designed to provide:
+
+> **Personalized → Knowledge-Grounded → Source-Aware → Tourist-Friendly**
+
+travel planning.
+
+---
+
+# 🚀 Key Features
+
+## 🧭 Personalized Itinerary Generation
+
+TrekTales creates travel plans based on the user's:
+
+- Travel duration
+- Group size
+- Budget preference
+- Travel style
+- Starting location
+- Interests
+
+The generated itinerary can organize activities into:
+
+- Morning
+- Afternoon
+- Evening
+- Meal/rest breaks
+- Daily highlights
+- Known-cost summaries
+- Final trip summary
+
+---
+
+## 📚 Retrieval-Augmented Generation
+
+TrekTales uses a local tourism knowledge base rather than allowing the language model to freely invent tourism information.
+
+The general pipeline is:
 
 ```text
-TrekTales-AI/
-│
-├── app.py
-├── ingest.py
-├── requirements.txt
-├── README.md
-├── .gitignore
-│
-├── assets/
-│   └── jazzcash_qr.jpg
-│
-├── faiss_db/
-│   ├── index.faiss
-│   ├── metadata.json
-│   └── config.json
-│
-├── tourism_knowledge_base/
-│   ├── Pindi_Activities.pdf
-│   ├── Pindi_Food.pdf
-│   ├── Pindi_Hotels.pdf
-│   ├── Pindi_Places.pdf
-│   ├── Pindi_Safety.pdf
-│   └── Pindi_Transport.pdf
-│
-└── src/
-    ├── __init__.py
-    ├── config.py
-    ├── retriever.py
-    ├── rag.py
-    ├── agents.py
-    ├── tasks.py
-    ├── crew.py
-    ├── citations.py
-    ├── payment.py
-    └── vision.py
+Tourism PDFs
+     ↓
+Document Processing
+     ↓
+Text Chunks
+     ↓
+Sentence Transformer Embeddings
+     ↓
+FAISS Index
+     ↓
+Hybrid Retrieval
+     ↓
+Relevant Tourism Evidence
+     ↓
+Groq AI
+     ↓
+Personalized Itinerary
