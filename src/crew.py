@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from typing import Any
 
 import requests
@@ -11,8 +12,11 @@ class TrekTalesCrew:
     """
     TrekTales itinerary generation client.
 
-    This class keeps the public TrekTalesCrew interface used by app.py
-    while calling Groq through its OpenAI-compatible HTTP API.
+    Uses Groq's OpenAI-compatible HTTP API.
+
+    The class keeps the public TrekTalesCrew interface expected by
+    app.py while providing controlled retry handling for temporary
+    Groq rate limits.
     """
 
     def __init__(self):
@@ -25,6 +29,10 @@ class TrekTalesCrew:
             "GROQ_MODEL",
             "openai/gpt-oss-120b",
         )
+
+        # Keep retries deliberately small.
+        # We do not want the Streamlit app repeatedly hammering Groq.
+        self.max_retries = 2
 
     # ========================================================
     # SECRET
@@ -112,6 +120,7 @@ class TrekTalesCrew:
             source_text = str(source).strip()
 
             if source_text:
+                source_text = source_text.replace("\\", "/")
                 source_text = source_text.split("/")[-1]
 
             location = source_text
@@ -152,9 +161,11 @@ class TrekTalesCrew:
 
         evidence_text = self._format_evidence(evidence)
 
-        interests_text = ", ".join(
-            str(item) for item in interests
-        ) if interests else "No specific interests provided."
+        interests_text = (
+            ", ".join(str(item) for item in interests)
+            if interests
+            else "No specific interests provided."
+        )
 
         return f"""
 You are the itinerary-generation engine for TrekTales.
@@ -163,6 +174,7 @@ Create a practical travel itinerary using ONLY the supplied
 tourism knowledge-base evidence.
 
 TRIP DETAILS
+
 Destination: {destination}
 Starting location: {starting_location}
 Number of days: {days}
@@ -187,6 +199,8 @@ IMPORTANT GROUNDING RULES
 8. Respect the requested number of days exactly.
 9. Keep recommendations relevant to the supplied destination.
 10. Use the requested language.
+11. Do not use general world knowledge to fill missing tourism facts.
+12. Only make claims that are supported by the supplied evidence.
 
 The itinerary should include:
 
@@ -197,10 +211,124 @@ The itinerary should include:
 - Practical notes
 - Knowledge-base sources used
 
+If information is missing from the knowledge base, say:
+
+"Not available in the TrekTales tourism knowledge base."
+
+Do not invent an answer.
+
 TOURISM KNOWLEDGE BASE
 
 {evidence_text}
 """
+
+    # ========================================================
+    # RATE LIMIT INFORMATION
+    # ========================================================
+
+    @staticmethod
+    def _get_rate_limit_details(response: requests.Response) -> dict[str, str]:
+        """
+        Extract Groq rate-limit information from response headers.
+
+        Groq exposes retry-after and x-ratelimit-* headers.
+        """
+
+        headers = response.headers
+
+        return {
+            "retry_after": headers.get("retry-after", ""),
+            "remaining_tokens": headers.get(
+                "x-ratelimit-remaining-tokens",
+                "",
+            ),
+            "remaining_requests": headers.get(
+                "x-ratelimit-remaining-requests",
+                "",
+            ),
+            "reset_tokens": headers.get(
+                "x-ratelimit-reset-tokens",
+                "",
+            ),
+            "reset_requests": headers.get(
+                "x-ratelimit-reset-requests",
+                "",
+            ),
+        }
+
+    # ========================================================
+    # RATE LIMIT MESSAGE
+    # ========================================================
+
+    def _rate_limit_error(
+        self,
+        response: requests.Response,
+        attempt: int,
+    ) -> RuntimeError:
+
+        details = self._get_rate_limit_details(response)
+
+        retry_after = details["retry_after"]
+        reset_tokens = details["reset_tokens"]
+        reset_requests = details["reset_requests"]
+
+        try:
+            error_data = response.json()
+
+            error_object = error_data.get("error", {})
+
+            if isinstance(error_object, dict):
+                message = str(
+                    error_object.get("message", "")
+                ).strip()
+            else:
+                message = str(error_object).strip()
+
+        except Exception:
+            message = ""
+
+        if retry_after:
+            wait_text = (
+                f"Groq asked the application to retry after "
+                f"{retry_after} seconds."
+            )
+
+        elif reset_tokens:
+            wait_text = (
+                f"The token limit is expected to reset in "
+                f"{reset_tokens}."
+            )
+
+        elif reset_requests:
+            wait_text = (
+                f"The request limit is expected to reset in "
+                f"{reset_requests}."
+            )
+
+        else:
+            wait_text = (
+                "Groq has temporarily limited this request."
+            )
+
+        if attempt >= self.max_retries:
+
+            extra = ""
+
+            if message:
+                extra = f" Groq says: {message}"
+
+            return RuntimeError(
+                "Groq rate limit is currently active. "
+                f"{wait_text}"
+                f"{extra} "
+                "Please wait for the limit to reset and try "
+                "generating the itinerary again."
+            )
+
+        return RuntimeError(
+            f"Temporary Groq rate limit detected. "
+            f"{wait_text}"
+        )
 
     # ========================================================
     # GROQ REQUEST
@@ -224,7 +352,10 @@ TOURISM KNOWLEDGE BASE
                     "role": "system",
                     "content": (
                         "You are TrekTales, a grounded tourism "
-                        "itinerary generation assistant."
+                        "itinerary generation assistant. "
+                        "You must follow the supplied tourism "
+                        "knowledge base and must never invent "
+                        "tourism facts."
                     ),
                 },
                 {
@@ -233,103 +364,218 @@ TOURISM KNOWLEDGE BASE
                 },
             ],
             "temperature": 0.2,
-            "max_tokens": 2500,
+            "max_tokens": 1800,
+            "reasoning_effort": "medium",
         }
 
-        try:
+        last_response = None
 
-            response = requests.post(
-                url,
-                headers=headers,
-                json=payload,
-                timeout=120,
-            )
-
-        except requests.RequestException as exc:
-
-            raise RuntimeError(
-                "Could not connect to the Groq API. "
-                "Please check your internet connection, "
-                "GROQ_BASE_URL, and try again."
-            ) from exc
-
-        # ====================================================
-        # AUTHENTICATION
-        # ====================================================
-
-        if response.status_code in (401, 403):
-
-            raise RuntimeError(
-                "Groq authentication failed. "
-                "Your GROQ_API_KEY is missing, invalid, "
-                "expired, or does not have access to the "
-                "configured Groq API. Check Streamlit Secrets."
-            )
-
-        # ====================================================
-        # MODEL ERROR
-        # ====================================================
-
-        if response.status_code == 404:
+        for attempt in range(self.max_retries + 1):
 
             try:
-                error_data = response.json()
-                message = (
-                    error_data
-                    .get("error", {})
-                    .get("message", "")
-                )
-            except Exception:
-                message = ""
 
-            raise RuntimeError(
-                "The configured Groq model is unavailable. "
-                f"Model: {self.model}. "
-                f"{message}"
-            )
-
-        # ====================================================
-        # RATE LIMIT
-        # ====================================================
-
-        if response.status_code == 429:
-
-            raise RuntimeError(
-                "Groq rate limit is currently active. "
-                "Please wait a few seconds and generate "
-                "the itinerary again."
-            )
-
-        # ====================================================
-        # OTHER API ERRORS
-        # ====================================================
-
-        if response.status_code >= 400:
-
-            try:
-                error_data = response.json()
-
-                message = (
-                    error_data
-                    .get("error", {})
-                    .get("message", "")
+                response = requests.post(
+                    url,
+                    headers=headers,
+                    json=payload,
+                    timeout=120,
                 )
 
-            except Exception:
-                message = response.text[:500]
+                last_response = response
+
+            except requests.RequestException as exc:
+
+                if attempt < self.max_retries:
+
+                    time.sleep(2)
+
+                    continue
+
+                raise RuntimeError(
+                    "Could not connect to the Groq API. "
+                    "Please check your internet connection, "
+                    "GROQ_BASE_URL, and try again."
+                ) from exc
+
+            # ====================================================
+            # SUCCESS
+            # ====================================================
+
+            if response.status_code == 200:
+                break
+
+            # ====================================================
+            # AUTHENTICATION
+            # ====================================================
+
+            if response.status_code in (401, 403):
+
+                try:
+                    error_data = response.json()
+
+                    error_object = error_data.get(
+                        "error",
+                        {},
+                    )
+
+                    if isinstance(error_object, dict):
+                        message = str(
+                            error_object.get(
+                                "message",
+                                "",
+                            )
+                        ).strip()
+                    else:
+                        message = str(
+                            error_object
+                        ).strip()
+
+                except Exception:
+                    message = ""
+
+                if response.status_code == 403:
+
+                    raise RuntimeError(
+                        "Groq rejected access to the configured "
+                        "model or API resource. "
+                        f"Model: {self.model}. "
+                        f"{message}"
+                    )
+
+                raise RuntimeError(
+                    "Groq authentication failed. "
+                    "Your GROQ_API_KEY is missing, invalid, "
+                    "expired, or does not have access to the "
+                    "configured Groq API. "
+                    f"{message}"
+                )
+
+            # ====================================================
+            # MODEL ERROR
+            # ====================================================
+
+            if response.status_code == 404:
+
+                try:
+                    error_data = response.json()
+
+                    error_object = error_data.get(
+                        "error",
+                        {},
+                    )
+
+                    if isinstance(error_object, dict):
+                        message = str(
+                            error_object.get(
+                                "message",
+                                "",
+                            )
+                        ).strip()
+                    else:
+                        message = str(
+                            error_object
+                        ).strip()
+
+                except Exception:
+                    message = ""
+
+                raise RuntimeError(
+                    "The configured Groq model is unavailable. "
+                    f"Model: {self.model}. "
+                    f"{message}"
+                )
+
+            # ====================================================
+            # RATE LIMIT
+            # ====================================================
+
+            if response.status_code == 429:
+
+                if attempt < self.max_retries:
+
+                    details = self._get_rate_limit_details(
+                        response
+                    )
+
+                    retry_after = details["retry_after"]
+
+                    wait_seconds = 2.0
+
+                    try:
+                        if retry_after:
+                            wait_seconds = float(
+                                retry_after
+                            )
+                    except (TypeError, ValueError):
+                        wait_seconds = 2.0
+
+                    # Never let a malformed header create
+                    # an excessive wait inside Streamlit.
+                    wait_seconds = max(
+                        1.0,
+                        min(wait_seconds, 15.0),
+                    )
+
+                    time.sleep(wait_seconds)
+
+                    continue
+
+                raise self._rate_limit_error(
+                    response,
+                    attempt,
+                )
+
+            # ====================================================
+            # OTHER API ERRORS
+            # ====================================================
+
+            if response.status_code >= 400:
+
+                try:
+                    error_data = response.json()
+
+                    error_object = error_data.get(
+                        "error",
+                        {},
+                    )
+
+                    if isinstance(error_object, dict):
+                        message = str(
+                            error_object.get(
+                                "message",
+                                "",
+                            )
+                        ).strip()
+                    else:
+                        message = str(
+                            error_object
+                        ).strip()
+
+                except Exception:
+                    message = response.text[:500]
+
+                raise RuntimeError(
+                    f"Groq API request failed "
+                    f"(HTTP {response.status_code}). "
+                    f"{message}"
+                )
+
+        # ========================================================
+        # SAFETY CHECK
+        # ========================================================
+
+        if last_response is None:
 
             raise RuntimeError(
-                f"Groq API request failed "
-                f"(HTTP {response.status_code}). "
-                f"{message}"
+                "No response was received from Groq."
             )
 
-        # ====================================================
+        # ========================================================
         # RESPONSE JSON
-        # ====================================================
+        # ========================================================
 
         try:
-            data = response.json()
+            data = last_response.json()
 
         except Exception as exc:
 
@@ -337,9 +583,9 @@ TOURISM KNOWLEDGE BASE
                 "Groq returned an invalid response."
             ) from exc
 
-        # ====================================================
+        # ========================================================
         # CONTENT
-        # ====================================================
+        # ========================================================
 
         try:
 
@@ -380,24 +626,31 @@ TOURISM KNOWLEDGE BASE
         evidence: list[Any],
     ) -> str:
 
+        # ----------------------------------------------------
+        # DAYS
+        # ----------------------------------------------------
+
         try:
             days = int(days)
         except Exception:
             days = 1
 
-        if days < 1:
-            days = 1
+        days = max(1, min(days, 3))
 
-        if days > 3:
-            days = 3
+        # ----------------------------------------------------
+        # TRAVELERS
+        # ----------------------------------------------------
 
         try:
             travelers = int(travelers)
         except Exception:
             travelers = 1
 
-        if travelers < 1:
-            travelers = 1
+        travelers = max(1, travelers)
+
+        # ----------------------------------------------------
+        # PROMPT
+        # ----------------------------------------------------
 
         prompt = self._build_prompt(
             destination=destination,
@@ -410,6 +663,10 @@ TOURISM KNOWLEDGE BASE
             interests=interests,
             evidence=evidence,
         )
+
+        # ----------------------------------------------------
+        # GROQ
+        # ----------------------------------------------------
 
         return self._call_groq(prompt)
 
