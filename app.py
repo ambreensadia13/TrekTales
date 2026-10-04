@@ -455,11 +455,12 @@ div[data-baseweb="select"] * {{
     color: {BLACK} !important;
 }}
 
-/* =========================================================
-   LANGUAGE SELECTOR - BLACK TEXT
-   ========================================================= */
+ /* =========================================================
+    LANGUAGE SELECTOR - FORCE SELECTED TEXT BLACK
+    ========================================================= */
 
 div[data-baseweb="select"] {{
+    background: #FFFFFF !important;
     color: #111111 !important;
 }}
 
@@ -468,12 +469,27 @@ div[data-baseweb="select"] > div {{
     color: #111111 !important;
 }}
 
-div[data-baseweb="select"] > div * {{
+/* Selected language text */
+div[data-baseweb="select"] [role="button"] {{
     color: #111111 !important;
+    background: #FFFFFF !important;
 }}
 
+div[data-baseweb="select"] [role="button"] * {{
+    color: #111111 !important;
+    -webkit-text-fill-color: #111111 !important;
+}}
+
+/* BaseWeb selected value */
+div[data-baseweb="select"] [class*="singleValue"] {{
+    color: #111111 !important;
+    -webkit-text-fill-color: #111111 !important;
+}}
+
+/* All text inside selector */
 div[data-baseweb="select"] span {{
     color: #111111 !important;
+    -webkit-text-fill-color: #111111 !important;
 }}
 
 div[data-baseweb="select"] input {{
@@ -481,18 +497,21 @@ div[data-baseweb="select"] input {{
     -webkit-text-fill-color: #111111 !important;
 }}
 
-div[data-baseweb="select"] svg {{
-    color: #111111 !important;
-    fill: #111111 !important;
-}}
-
+/* Dropdown options */
 div[data-baseweb="popover"] {{
     background: #FFFFFF !important;
 }}
 
 div[data-baseweb="popover"] * {{
     color: #111111 !important;
-}}/*
+    -webkit-text-fill-color: #111111 !important;
+}}
+
+/* Dropdown arrow */
+div[data-baseweb="select"] svg {{
+    color: #111111 !important;
+    fill: #111111 !important;
+}}
 
 =========================================================
    FILE UPLOADER - LIGHT GREEN TEXT
