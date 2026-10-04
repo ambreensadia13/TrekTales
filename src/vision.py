@@ -1,122 +1,261 @@
-from __future__ import annotations
-
 import base64
 import json
 import re
-from typing import Any
 
-from groq import Groq
+from openai import OpenAI
 
-from .config import (
-    EXPECTED_PAYMENT_RECIPIENT,
+from src.config import (
     GROQ_API_KEY,
+    GROQ_BASE_URL,
     GROQ_VISION_MODEL,
-    UNLOCK_PRICE,
 )
 
-MAX_IMAGE_BYTES = 20 * 1024 * 1024
 
+def _extract_json(text):
+    """
+    Extract a JSON object from model output.
+    """
 
-def _extract_json(text: str) -> dict[str, Any]:
-    cleaned = str(text or "").strip()
-    cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"\s*```$", "", cleaned)
+    if not text:
+        return {}
+
+    cleaned = str(text).strip()
+
+    cleaned = re.sub(
+        r"^```(?:json)?",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+
+    cleaned = re.sub(
+        r"```$",
+        "",
+        cleaned,
+    )
+
+    cleaned = cleaned.strip()
+
 
     try:
-        value = json.loads(cleaned)
-        if isinstance(value, dict):
+
+        value = json.loads(
+            cleaned
+        )
+
+        if isinstance(
+            value,
+            dict,
+        ):
             return value
-    except json.JSONDecodeError:
+
+    except Exception:
         pass
 
-    start = cleaned.find("{")
-    end = cleaned.rfind("}")
-    if start >= 0 and end > start:
-        try:
-            value = json.loads(cleaned[start : end + 1])
-            if isinstance(value, dict):
-                return value
-        except json.JSONDecodeError:
-            pass
+
+    match = re.search(
+        r"\{.*\}",
+        cleaned,
+        flags=re.DOTALL,
+    )
+
+    if not match:
+        return {}
+
+    try:
+
+        value = json.loads(
+            match.group(0)
+        )
+
+        if isinstance(
+            value,
+            dict,
+        ):
+            return value
+
+    except Exception:
+        pass
+
 
     return {}
 
 
-def analyze_payment_screenshot(uploaded_file) -> dict[str, Any]:
-    """Extract visible payment fields from a screenshot using a Groq vision model.
+def _normalize_amount(value):
 
-    This function only extracts what the screenshot appears to show. It does not
-    decide that a payment is genuine. The application performs deterministic
-    recipient/amount/status checks afterward.
+    if value is None:
+        return 0
+
+    if isinstance(
+        value,
+        (int, float),
+    ):
+
+        return value
+
+    text = str(value)
+
+    match = re.search(
+        r"\d+(?:[,.]\d+)*",
+        text,
+    )
+
+    if not match:
+        return 0
+
+    number = (
+        match.group(0)
+        .replace(
+            ",",
+            "",
+        )
+    )
+
+    try:
+
+        return float(
+            number
+        )
+
+    except ValueError:
+
+        return 0
+
+
+def analyze_payment_screenshot(
+    image_bytes,
+):
+    """
+    Use Groq vision to extract visible payment information.
+
+    This function only extracts information.
+
+    It does NOT approve payment.
     """
 
     if not GROQ_API_KEY:
-        raise ValueError("GROQ_API_KEY is missing from Streamlit Secrets.")
+        raise RuntimeError(
+            "GROQ_API_KEY is missing."
+        )
 
-    if uploaded_file is None:
-        raise ValueError("No payment screenshot was provided.")
-
-    image_bytes = uploaded_file.getvalue()
     if not image_bytes:
-        raise ValueError("The uploaded payment screenshot is empty.")
-    if len(image_bytes) > MAX_IMAGE_BYTES:
-        raise ValueError("The payment screenshot exceeds the 20 MB limit.")
+        raise ValueError(
+            "Payment screenshot is empty."
+        )
 
-    mime_type = getattr(uploaded_file, "type", None) or "image/jpeg"
-    encoded = base64.b64encode(image_bytes).decode("utf-8")
 
-    prompt = f"""
-Read this payment screenshot carefully and extract only visibly supported fields.
-
-Expected demo recipient: {EXPECTED_PAYMENT_RECIPIENT}
-Expected demo amount: Rs. {UNLOCK_PRICE}
-
-Return ONLY valid JSON with these keys:
-{{
-  "recipient": "string or empty",
-  "amount": number or 0,
-  "status": "string or empty",
-  "confidence": number from 0 to 1
-}}
-
-Rules:
-- Do not guess text that is not visible.
-- If the amount is unclear, return 0.
-- If the recipient is unclear, return an empty string.
-- If payment status is unclear, return an empty string.
-- Do not claim that the transaction is genuine or verified.
-"""
-
-    client = Groq(api_key=GROQ_API_KEY)
-    response = client.chat.completions.create(
-        model=GROQ_VISION_MODEL,
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:{mime_type};base64,{encoded}"
-                        },
-                    },
-                ],
-            }
-        ],
-        temperature=0,
-        max_tokens=500,
+    client = OpenAI(
+        api_key=GROQ_API_KEY,
+        base_url=GROQ_BASE_URL,
     )
 
-    content = response.choices[0].message.content or ""
-    result = _extract_json(content)
+
+    encoded_image = base64.b64encode(
+        image_bytes
+    ).decode(
+        "utf-8"
+    )
+
+
+    prompt = """
+Analyze this payment screenshot.
+
+Extract ONLY information visibly present in the image.
+
+Return ONLY valid JSON using this exact structure:
+
+{
+  "recipient": "",
+  "amount": 0,
+  "status": "",
+  "confidence": ""
+}
+
+Rules:
+
+1. Do not guess missing information.
+2. If recipient is not visible, return an empty string.
+3. If amount is not visible, return 0.
+4. If payment status is not visible, return an empty string.
+5. Do not decide whether the payment is valid.
+6. Do not claim that the payment is genuine.
+7. Do not invent transaction information.
+"""
+
+
+    response = (
+        client.chat.completions.create(
+            model=GROQ_VISION_MODEL,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": prompt,
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": (
+                                    "data:image/jpeg;base64,"
+                                    + encoded_image
+                                )
+                            },
+                        },
+                    ],
+                }
+            ],
+            temperature=0,
+            max_tokens=500,
+        )
+    )
+
+
+    if not response.choices:
+        raise RuntimeError(
+            "Vision model returned no response."
+        )
+
+
+    content = (
+        response.choices[0]
+        .message
+        .content
+    )
+
+
+    data = _extract_json(
+        content
+    )
+
 
     return {
-        "recipient": str(result.get("recipient") or "").strip(),
-        "amount": result.get("amount", 0),
-        "status": str(result.get("status") or "").strip(),
-        "confidence": result.get("confidence", 0),
-        "verification_type": "AI Screenshot Extraction — Demo",
-        "model": GROQ_VISION_MODEL,
-        "verified_by_vision": False,
+        "recipient": str(
+            data.get(
+                "recipient",
+                "",
+            )
+        ).strip(),
+
+        "amount": _normalize_amount(
+            data.get(
+                "amount",
+                0,
+            )
+        ),
+
+        "status": str(
+            data.get(
+                "status",
+                "",
+            )
+        ).strip(),
+
+        "confidence": str(
+            data.get(
+                "confidence",
+                "",
+            )
+        ).strip(),
     }
