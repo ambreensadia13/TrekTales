@@ -1,50 +1,50 @@
 import re
 import time
+from typing import Any, Dict, List
 
 from openai import OpenAI, RateLimitError
 
-from src.agents import get_agent_descriptions
 from src.config import (
     GROQ_API_KEY,
     GROQ_BASE_URL,
     GROQ_MODEL,
 )
+
+from src.agents import get_agent_descriptions
+
 from src.rag import (
     build_context,
     has_grounded_evidence,
 )
+
 from src.tasks import build_planning_instructions
 
 
 class TrekTalesCrew:
     """
-    TrekTales AI orchestration layer.
+    TrekTales AI itinerary orchestrator.
 
-    The application uses a structured six-agent architecture.
-    Groq performs the final language reasoning.
-
-    Important rules:
-
-    1. Rawalpindi is the supported destination.
-    2. Tourism facts must come from the supplied RAG evidence.
-    3. Missing information must never be invented.
-    4. The requested number of days is enforced.
-    5. Sources are preserved.
-    6. Groq requests are kept reasonably small.
-    7. Groq 429 errors are retried automatically.
-    8. The AI does not generate duplicate UI headings.
+    Responsibilities:
+    - Ground itinerary generation in the tourism knowledge base.
+    - Produce detailed tourist-friendly itineraries.
+    - Support 1, 2, or 3 days.
+    - Keep Rawalpindi as the supported destination.
+    - Preserve source information.
+    - Avoid fabricated tourism facts.
+    - Use Groq for final itinerary generation.
+    - Handle temporary Groq rate limits.
     """
 
-    # ========================================================
+    # ============================================================
     # INITIALIZATION
-    # ========================================================
+    # ============================================================
 
     def __init__(self):
 
         if not GROQ_API_KEY:
             raise RuntimeError(
                 "GROQ_API_KEY is missing. "
-                "Add it to Streamlit Secrets."
+                "Add GROQ_API_KEY to Streamlit Secrets."
             )
 
         self.client = OpenAI(
@@ -52,22 +52,18 @@ class TrekTalesCrew:
             base_url=GROQ_BASE_URL,
         )
 
-    # ========================================================
-    # GROQ RETRY DELAY
-    # ========================================================
+    # ============================================================
+    # RATE LIMIT HANDLING
+    # ============================================================
 
     @staticmethod
     def _get_retry_delay(
-        error,
-        default_delay=8,
-    ):
+        error: Exception,
+        default_delay: int = 8,
+    ) -> float:
         """
-        Determine how long to wait after a Groq 429 error.
+        Extract retry delay from a Groq 429 response when possible.
         """
-
-        # ----------------------------------------------------
-        # Try Retry-After response header
-        # ----------------------------------------------------
 
         try:
 
@@ -95,15 +91,13 @@ class TrekTalesCrew:
                     try:
 
                         value = float(
-                            str(
-                                retry_after
-                            ).strip()
+                            str(retry_after).strip()
                         )
 
                         if value > 0:
                             return min(
-                                max(value, 1),
-                                30,
+                                max(value, 1.0),
+                                30.0,
                             )
 
                     except (
@@ -114,10 +108,6 @@ class TrekTalesCrew:
 
         except Exception:
             pass
-
-        # ----------------------------------------------------
-        # Parse Groq error message
-        # ----------------------------------------------------
 
         message = str(error)
 
@@ -145,8 +135,8 @@ class TrekTalesCrew:
 
                     if value > 0:
                         return min(
-                            max(value, 1),
-                            30,
+                            max(value, 1.0),
+                            30.0,
                         )
 
                 except (
@@ -155,25 +145,23 @@ class TrekTalesCrew:
                 ):
                     pass
 
-        return default_delay
+        return float(default_delay)
 
-    # ========================================================
-    # GROQ CALL
-    # ========================================================
+    # ============================================================
+    # GROQ REQUEST
+    # ============================================================
 
     def _call_groq(
         self,
-        system_prompt,
-        user_prompt,
-        max_tokens=1600,
-    ):
+        system_prompt: str,
+        user_prompt: str,
+        max_tokens: int = 3000,
+    ) -> str:
         """
-        Controlled Groq request.
+        Send the final itinerary request to Groq.
 
-        The request is intentionally limited to reduce
-        token-per-minute pressure.
-
-        Temporary 429 errors are retried automatically.
+        Uses a controlled number of retries for temporary
+        rate-limit responses.
         """
 
         try:
@@ -187,21 +175,17 @@ class TrekTalesCrew:
             ValueError,
         ):
 
-            max_tokens = 1600
+            max_tokens = 3000
 
         max_tokens = max(
-            700,
+            1200,
             min(
                 max_tokens,
-                2200,
+                4000,
             ),
         )
 
         last_error = None
-
-        # ----------------------------------------------------
-        # Retry up to three times
-        # ----------------------------------------------------
 
         for attempt in range(3):
 
@@ -223,15 +207,14 @@ class TrekTalesCrew:
                                 "content": user_prompt,
                             },
                         ],
-                        temperature=0.1,
+                        temperature=0.25,
                         max_tokens=max_tokens,
                     )
                 )
 
                 if not response.choices:
-
                     raise RuntimeError(
-                        "Groq returned no choices."
+                        "Groq returned no response choices."
                     )
 
                 content = (
@@ -242,9 +225,8 @@ class TrekTalesCrew:
                 )
 
                 if not content:
-
                     raise RuntimeError(
-                        "Groq returned an empty response."
+                        "Groq returned an empty itinerary."
                     )
 
                 return str(
@@ -255,16 +237,12 @@ class TrekTalesCrew:
 
                 last_error = error
 
-                # ------------------------------------------------
-                # Final attempt failed
-                # ------------------------------------------------
-
                 if attempt >= 2:
 
                     raise RuntimeError(
-                        "Groq rate limit is still active. "
-                        "Please wait a few seconds and try "
-                        "generating the trip again."
+                        "Groq rate limit is currently active. "
+                        "Please wait a few seconds and generate "
+                        "the itinerary again."
                     ) from error
 
                 delay = self._get_retry_delay(
@@ -272,7 +250,6 @@ class TrekTalesCrew:
                     default_delay=8,
                 )
 
-                # Add a small safety margin.
                 delay = min(
                     max(
                         delay + 1,
@@ -286,123 +263,57 @@ class TrekTalesCrew:
             except Exception:
                 raise
 
-        if last_error is not None:
+        if last_error:
 
             raise RuntimeError(
-                "Groq request could not be completed."
+                "Unable to complete the Groq request."
             ) from last_error
 
         raise RuntimeError(
-            "Groq request could not be completed."
+            "Unable to complete the Groq request."
         )
 
-    # ========================================================
-    # CLEAN RESPONSE
-    # ========================================================
+    # ============================================================
+    # TEXT HELPERS
+    # ============================================================
 
     @staticmethod
-    def _clean_response(text):
+    def _safe_string(
+        value: Any,
+        default: str = "",
+    ) -> str:
 
-        if not text:
-            return ""
+        if value is None:
+            return default
 
-        text = str(
-            text
-        ).strip()
+        try:
+            return str(
+                value
+            ).strip()
 
-        # ----------------------------------------------------
-        # Remove Markdown code fences
-        # ----------------------------------------------------
+        except Exception:
+            return default
 
-        text = re.sub(
-            r"^```(?:markdown|md|text)?\s*",
-            "",
-            text,
-            flags=re.IGNORECASE,
-        )
-
-        text = re.sub(
-            r"\s*```$",
-            "",
-            text,
-        )
-
-        # ----------------------------------------------------
-        # Remove HTML tags
-        # ----------------------------------------------------
-
-        text = re.sub(
-            r"<[^>]+>",
-            "",
-            text,
-        )
-
-        # ----------------------------------------------------
-        # Remove duplicate top-level itinerary headings
-        # ----------------------------------------------------
-
-        text = re.sub(
-            r"(?im)"
-            r"^\s*"
-            r"(?:#+\s*)?"
-            r"🌿\s*RAWALPINDI\s+ITINERARY\s*$",
-            "",
-            text,
-        )
-
-        text = re.sub(
-            r"(?im)"
-            r"^\s*"
-            r"(?:#+\s*)?"
-            r"PERSONALIZED\s+ITINERARY\s*$",
-            "",
-            text,
-        )
-
-        # ----------------------------------------------------
-        # Remove accidental generic title
-        # ----------------------------------------------------
-
-        text = re.sub(
-            r"(?im)"
-            r"^\s*"
-            r"(?:#+\s*)?"
-            r"YOUR\s+RAWALPINDI\s+ITINERARY\s*$",
-            "",
-            text,
-        )
-
-        # ----------------------------------------------------
-        # Remove excessive blank lines
-        # ----------------------------------------------------
-
-        text = re.sub(
-            r"\n{3,}",
-            "\n\n",
-            text,
-        )
-
-        return text.strip()
-
-    # ========================================================
-    # COMPACT CONTEXT
-    # ========================================================
+    # ============================================================
+    # COMPACT RAG CONTEXT
+    # ============================================================
 
     @staticmethod
     def _compact_context(
-        context,
-        max_chars=14000,
-    ):
+        context: Any,
+        max_chars: int = 18000,
+    ) -> str:
         """
-        Keep the retrieved RAG context reasonably small.
+        Keep enough knowledge-base information for detailed
+        itineraries without creating an unnecessarily huge prompt.
         """
+
+        context = TrekTalesCrew._safe_string(
+            context
+        )
 
         if not context:
             return ""
-
-        context = str(
-            context
-        ).strip()
 
         if len(context) <= max_chars:
             return context
@@ -410,159 +321,64 @@ class TrekTalesCrew:
         return (
             context[:max_chars]
             + "\n\n"
-            "[Additional retrieved content omitted to "
-            "control prompt size.]"
+            "[Additional retrieved knowledge was omitted "
+            "to control prompt size.]"
         )
 
-    # ========================================================
-    # COMPACT AGENT DESCRIPTIONS
-    # ========================================================
+    # ============================================================
+    # AGENT DESCRIPTION
+    # ============================================================
 
     @staticmethod
-    def _compact_agent_descriptions(
-        descriptions,
-        max_chars=5000,
-    ):
-        """
-        Keep the six-agent architecture visible without
-        wasting unnecessary prompt tokens.
-        """
-
-        if descriptions is None:
-            return ""
+    def _get_agents_text() -> str:
 
         try:
 
-            text = str(
-                descriptions
-            ).strip()
+            descriptions = get_agent_descriptions()
 
         except Exception:
 
-            return ""
+            descriptions = ""
 
-        if len(text) <= max_chars:
-            return text
+        descriptions = TrekTalesCrew._safe_string(
+            descriptions
+        )
 
-        return text[:max_chars]
-
-    # ========================================================
-    # REMOVE EXTRA DAYS
-    # ========================================================
-
-    @staticmethod
-    def _remove_extra_days(
-        answer,
-        requested_days,
-    ):
-        """
-        Remove days beyond the requested number locally.
-
-        This avoids a second Groq request.
-        """
-
-        if not answer:
-            return ""
-
-        try:
-
-            requested_days = int(
-                requested_days
+        if not descriptions:
+            return (
+                "The TrekTales agents collaboratively "
+                "analyze the retrieved tourism information "
+                "and prepare the final itinerary."
             )
 
-        except (
-            TypeError,
-            ValueError,
-        ):
+        if len(descriptions) > 6000:
 
-            requested_days = 1
+            descriptions = descriptions[:6000]
 
-        requested_days = max(
-            1,
-            min(
-                requested_days,
-                3,
-            ),
-        )
+        return descriptions
 
-        pattern = re.compile(
-            r"(?im)"
-            r"^\s*"
-            r"(?:#+\s*)?"
-            r"(?:🌿\s*)?"
-            r"Day\s+(\d+)\b.*$"
-        )
-
-        matches = list(
-            pattern.finditer(
-                answer
-            )
-        )
-
-        if not matches:
-            return answer.strip()
-
-        valid_parts = []
-
-        for index, match in enumerate(
-            matches
-        ):
-
-            try:
-
-                day_number = int(
-                    match.group(1)
-                )
-
-            except ValueError:
-
-                continue
-
-            if day_number > requested_days:
-                continue
-
-            start = match.start()
-
-            if (
-                index + 1
-                < len(matches)
-            ):
-
-                end = matches[
-                    index + 1
-                ].start()
-
-            else:
-
-                end = len(answer)
-
-            section = answer[
-                start:end
-            ].strip()
-
-            if section:
-                valid_parts.append(
-                    section
-                )
-
-        if valid_parts:
-
-            return "\n\n".join(
-                valid_parts
-            ).strip()
-
-        return answer.strip()
-
-    # ========================================================
-    # EXTRACT SOURCES
-    # ========================================================
+    # ============================================================
+    # SOURCE EXTRACTION
+    # ============================================================
 
     @staticmethod
     def _extract_sources(
-        evidence
-    ):
+        evidence: Any,
+    ) -> List[Dict[str, str]]:
+        """
+        Extract unique source/page combinations.
+
+        The same PDF appearing on multiple pages remains visible
+        as separate references when the pages differ.
+        Exact duplicate source/page pairs are removed.
+        """
 
         sources = []
+
+        if not evidence:
+            return sources
+
+        seen = set()
 
         for item in evidence:
 
@@ -586,50 +402,255 @@ class TrekTalesCrew:
             source = (
                 item.get("source")
                 or metadata.get(
-                    "source",
-                    "Unknown source",
+                    "source"
                 )
+                or metadata.get(
+                    "filename"
+                )
+                or "Unknown source"
             )
 
             page = (
                 item.get("page")
                 or metadata.get(
-                    "page",
-                    "N/A",
+                    "page"
                 )
+                or metadata.get(
+                    "page_number"
+                )
+                or "N/A"
             )
 
             record_id = (
                 item.get("record_id")
                 or metadata.get(
-                    "record_id",
-                    "",
+                    "record_id"
                 )
+                or ""
             )
 
-            source_record = {
-                "source": str(
-                    source
-                ),
-                "page": str(
-                    page
-                ),
-                "record_id": str(
-                    record_id
-                ),
-            }
+            source = TrekTalesCrew._safe_string(
+                source,
+                "Unknown source",
+            )
 
-            if source_record not in sources:
+            page = TrekTalesCrew._safe_string(
+                page,
+                "N/A",
+            )
 
-                sources.append(
-                    source_record
-                )
+            record_id = TrekTalesCrew._safe_string(
+                record_id
+            )
+
+            key = (
+                source.lower(),
+                page.lower(),
+            )
+
+            if key in seen:
+                continue
+
+            seen.add(key)
+
+            sources.append(
+                {
+                    "source": source,
+                    "page": page,
+                    "record_id": record_id,
+                }
+            )
 
         return sources
 
-    # ========================================================
-    # RUN
-    # ========================================================
+    # ============================================================
+    # RESPONSE CLEANING
+    # ============================================================
+
+    @staticmethod
+    def _clean_response(
+        text: str,
+    ) -> str:
+
+        text = TrekTalesCrew._safe_string(
+            text
+        )
+
+        if not text:
+            return ""
+
+        # Remove code fences.
+        text = re.sub(
+            r"^\s*```(?:markdown|md|text)?\s*",
+            "",
+            text,
+            flags=re.IGNORECASE,
+        )
+
+        text = re.sub(
+            r"\s*```\s*$",
+            "",
+            text,
+        )
+
+        # Remove HTML.
+        text = re.sub(
+            r"<[^>]+>",
+            "",
+            text,
+        )
+
+        # Remove duplicate application-level titles.
+        title_patterns = [
+            r"^\s*#+\s*🌿\s*RAWALPINDI\s+ITINERARY\s*$",
+            r"^\s*🌿\s*RAWALPINDI\s+ITINERARY\s*$",
+            r"^\s*#+\s*PERSONALIZED\s+ITINERARY\s*$",
+            r"^\s*PERSONALIZED\s+ITINERARY\s*$",
+            r"^\s*#+\s*YOUR\s+RAWALPINDI\s+ITINERARY\s*$",
+            r"^\s*YOUR\s+RAWALPINDI\s+ITINERARY\s*$",
+        ]
+
+        for pattern in title_patterns:
+
+            text = re.sub(
+                pattern,
+                "",
+                text,
+                flags=re.IGNORECASE | re.MULTILINE,
+            )
+
+        # Normalize excessive whitespace.
+        text = re.sub(
+            r"\n{4,}",
+            "\n\n",
+            text,
+        )
+
+        return text.strip()
+
+    # ============================================================
+    # DAY VALIDATION
+    # ============================================================
+
+    @staticmethod
+    def _find_day_numbers(
+        answer: str,
+    ) -> List[int]:
+
+        if not answer:
+            return []
+
+        matches = re.findall(
+            r"(?im)"
+            r"^\s*"
+            r"(?:#+\s*)?"
+            r"(?:🌿\s*)?"
+            r"Day\s+(\d+)\b",
+            answer,
+        )
+
+        numbers = []
+
+        for value in matches:
+
+            try:
+
+                number = int(
+                    value
+                )
+
+            except ValueError:
+
+                continue
+
+            if number not in numbers:
+                numbers.append(
+                    number
+                )
+
+        return numbers
+
+    # ============================================================
+    # REMOVE UNREQUESTED DAYS
+    # ============================================================
+
+    @staticmethod
+    def _remove_extra_days(
+        answer: str,
+        requested_days: int,
+    ) -> str:
+        """
+        Safety cleanup if the model accidentally creates
+        Day 4+.
+        """
+
+        if not answer:
+            return ""
+
+        matches = list(
+            re.finditer(
+                r"(?im)"
+                r"^\s*"
+                r"(?:#+\s*)?"
+                r"(?:🌿\s*)?"
+                r"Day\s+(\d+)\b.*$",
+                answer,
+            )
+        )
+
+        if not matches:
+            return answer.strip()
+
+        parts = []
+
+        for index, match in enumerate(
+            matches
+        ):
+
+            try:
+
+                day_number = int(
+                    match.group(1)
+                )
+
+            except ValueError:
+
+                continue
+
+            start = match.start()
+
+            if index + 1 < len(matches):
+
+                end = matches[
+                    index + 1
+                ].start()
+
+            else:
+
+                end = len(answer)
+
+            if day_number <= requested_days:
+
+                section = answer[
+                    start:end
+                ].strip()
+
+                if section:
+                    parts.append(
+                        section
+                    )
+
+        if parts:
+
+            return "\n\n".join(
+                parts
+            ).strip()
+
+        return answer.strip()
+
+    # ============================================================
+    # MAIN RUN METHOD
+    # ============================================================
 
     def run(
         self,
@@ -642,25 +663,30 @@ class TrekTalesCrew:
         language,
         interests,
         evidence,
-    ):
+    ) -> Dict[str, Any]:
+        """
+        Generate the final tourist-facing itinerary.
+        """
 
-        # ====================================================
+        # ========================================================
         # DESTINATION
-        # ====================================================
+        # ========================================================
 
-        # TrekTales currently supports Rawalpindi only.
+        destination = self._safe_string(
+            destination,
+            "Rawalpindi",
+        )
 
-        destination = str(
-            destination
-        ).strip()
+        # The current TrekTales RAG knowledge base is
+        # Rawalpindi-focused.
 
         if destination.lower() != "rawalpindi":
 
             destination = "Rawalpindi"
 
-        # ====================================================
-        # DAY COUNT
-        # ====================================================
+        # ========================================================
+        # DAYS
+        # ========================================================
 
         try:
 
@@ -683,9 +709,9 @@ class TrekTalesCrew:
             ),
         )
 
-        # ====================================================
-        # TRAVELER COUNT
-        # ====================================================
+        # ========================================================
+        # TRAVELERS
+        # ========================================================
 
         try:
 
@@ -705,13 +731,66 @@ class TrekTalesCrew:
             travelers,
         )
 
-        # ====================================================
-        # HARD RAG CHECK
-        # ====================================================
+        # ========================================================
+        # OTHER INPUTS
+        # ========================================================
 
-        if not has_grounded_evidence(
-            evidence
+        starting_location = self._safe_string(
+            starting_location,
+            "Not specified",
+        )
+
+        budget = self._safe_string(
+            budget,
+            "Not specified",
+        )
+
+        travel_style = self._safe_string(
+            travel_style,
+            "Mixed",
+        )
+
+        language = self._safe_string(
+            language,
+            "English",
+        )
+
+        if interests is None:
+
+            interests_list = []
+
+        elif isinstance(
+            interests,
+            (list, tuple, set),
         ):
+
+            interests_list = [
+                self._safe_string(item)
+                for item in interests
+                if self._safe_string(item)
+            ]
+
+        else:
+
+            interests_list = [
+                self._safe_string(
+                    interests
+                )
+            ]
+
+        interests_text = (
+            ", ".join(
+                interests_list
+            )
+            if interests_list
+            else "Not specified"
+        )
+
+        # ========================================================
+        # KNOWLEDGE CHECK
+        # ========================================================
+
+        if not evidence:
 
             return {
                 "answer": (
@@ -723,322 +802,563 @@ class TrekTalesCrew:
                 "sources": [],
             }
 
-        # ====================================================
-        # RAG CONTEXT
-        # ====================================================
+        try:
 
-        context = build_context(
-            evidence,
-            max_items=6,
-        )
+            grounded = has_grounded_evidence(
+                evidence
+            )
+
+        except Exception:
+
+            grounded = bool(
+                evidence
+            )
+
+        if not grounded:
+
+            return {
+                "answer": (
+                    "I could not find enough grounded "
+                    "information in the TrekTales "
+                    "Rawalpindi knowledge base."
+                ),
+                "days": days,
+                "sources": [],
+            }
+
+        # ========================================================
+        # BUILD RAG CONTEXT
+        # ========================================================
+
+        try:
+
+            context = build_context(
+                evidence,
+                max_items=6,
+            )
+
+        except TypeError:
+
+            context = build_context(
+                evidence
+            )
 
         context = self._compact_context(
             context,
-            max_chars=14000,
+            max_chars=18000,
         )
 
-        # ====================================================
-        # SIX AGENT DESCRIPTIONS
-        # ====================================================
+        # ========================================================
+        # AGENT INFORMATION
+        # ========================================================
 
         agent_descriptions = (
-            get_agent_descriptions()
+            self._get_agents_text()
         )
 
-        agent_descriptions = (
-            self._compact_agent_descriptions(
-                agent_descriptions,
-                max_chars=5000,
+        # ========================================================
+        # EXISTING PLANNING INSTRUCTIONS
+        # ========================================================
+
+        try:
+
+            planning_instructions = (
+                build_planning_instructions(
+                    destination=destination,
+                    starting_location=starting_location,
+                    days=days,
+                    budget=budget,
+                    travelers=travelers,
+                    travel_style=travel_style,
+                    language=language,
+                    interests=interests_list,
+                )
+            )
+
+        except Exception:
+
+            planning_instructions = ""
+
+        planning_instructions = (
+            self._safe_string(
+                planning_instructions
             )
         )
 
-        # ====================================================
-        # PLANNING INSTRUCTIONS
-        # ====================================================
-
-        trip_instructions = (
-            build_planning_instructions(
-                destination=destination,
-                starting_location=starting_location,
-                days=days,
-                budget=budget,
-                travelers=travelers,
-                travel_style=travel_style,
-                language=language,
-                interests=interests,
-            )
-        )
-
-        trip_instructions = str(
-            trip_instructions
-        ).strip()
-
-        # ====================================================
+        # ========================================================
         # SYSTEM PROMPT
-        # ====================================================
+        # ========================================================
 
         system_prompt = f"""
-You are the TrekTales Master Orchestrator.
+You are the senior travel-planning orchestrator for
+TrekTales.
 
-TrekTales uses a structured six-agent architecture.
+Your job is to transform verified tourism knowledge
+into a polished, detailed, attractive itinerary that
+a real tourist can easily follow.
 
-The six agents collaborate internally to produce one
-final travel itinerary.
+The internal TrekTales system contains multiple
+specialized agents.
 
-Do NOT expose internal agent reasoning.
+Their work happens internally.
 
-Do NOT describe the internal agent process in the final
-answer.
+Do NOT expose internal reasoning, agent deliberations,
+chain-of-thought, or technical implementation details.
 
-SIX-AGENT ARCHITECTURE
-======================
+============================================================
+SUPPORTED DESTINATION
+============================================================
 
-{agent_descriptions}
+Rawalpindi.
 
+The current TrekTales tourism knowledge base is
+specifically intended for Rawalpindi.
 
-DESTINATION
-===========
+Do not change the destination.
 
-The supported destination is:
+============================================================
+KNOWLEDGE-GROUNDED TRAVEL PLANNING
+============================================================
 
-Rawalpindi
+The supplied knowledge-base evidence is the source of
+truth for tourism facts.
 
-Use Rawalpindi only.
+You may organize, combine, summarize, and sequence
+information from the evidence.
 
+You may make reasonable itinerary-ordering decisions
+using the supplied activities.
 
-GROUNDING POLICY
-================
+However, NEVER invent tourism facts.
 
-The supplied tourism knowledge records are the ONLY
-source of tourism facts.
+Never fabricate:
 
-Use ONLY information contained in the supplied
-knowledge.
-
-Do NOT use outside tourism knowledge.
-
-Do NOT invent:
-
-- attractions
+- attraction names
 - restaurants
 - hotels
-- prices
+- entrance fees
+- food prices
+- transport fares
 - opening hours
+- closing hours
 - distances
-- transportation schedules
-- travel times
+- exact travel durations
 - availability
-- bookings
-- safety claims
+- reservations
+- booking status
+- contact details
+- addresses
+- events
+- discounts
+- weather
+- safety guarantees
 
-If information is missing, explicitly state:
+If a useful piece of information is missing, say:
 
 "Not listed in the knowledge base."
 
+============================================================
+IMPORTANT: DETAILED DOES NOT MEAN FABRICATED
+============================================================
 
-DAY COUNT
-=========
+The itinerary should feel rich and complete because of:
 
-Generate EXACTLY {days} day(s).
+- useful descriptions
+- chronological organization
+- morning planning
+- afternoon planning
+- evening planning
+- breaks
+- activity duration when supported
+- known costs
+- practical sequencing
+- source references
+- daily summaries
+- trip-level summary
 
-For 1 day:
-Day 1 only.
+Do NOT make it detailed by inventing facts.
 
-For 2 days:
-Day 1 and Day 2 only.
+============================================================
+EXACT NUMBER OF DAYS
+============================================================
 
-For 3 days:
-Day 1, Day 2, and Day 3 only.
+The requested trip length is:
 
-Never generate another day.
+{days} day(s)
 
+Generate exactly:
 
-TRIP PRESENTATION
-=================
+{days} day(s)
 
-Do NOT create a main title such as:
+If the trip is 1 day:
+Only Day 1.
 
-"RAWALPINDI ITINERARY"
+If the trip is 2 days:
+Day 1 and Day 2.
 
-Do NOT create:
+If the trip is 3 days:
+Day 1, Day 2 and Day 3.
+
+Never create Day 4 or any additional day.
+
+============================================================
+TOURIST-FRIENDLY OUTPUT
+============================================================
+
+The output should look like a professional travel
+planner rather than a technical AI response.
+
+Do NOT begin with:
+
+"🌿 RAWALPINDI ITINERARY"
+
+Do NOT begin with:
 
 "Personalized Itinerary"
 
-Do NOT create:
+Do NOT begin with:
 
 "Your Rawalpindi Itinerary"
 
-The Streamlit application provides the main UI heading.
+The Streamlit application already provides the main
+page heading.
 
-Start directly with the trip summary.
+Begin directly with a compact trip overview.
 
+============================================================
+TRIP OVERVIEW
+============================================================
 
-TRIP SUMMARY
-============
+Start with:
 
-Begin with a short summary containing:
-
-- Travel style
-- Number of travelers
-- Budget
-- Starting location
-
-
-DAY FORMAT
-==========
-
-For each day use a clear heading such as:
-
-🌿 Day 1 — Romantic Rawalpindi Getaway
-
-Then organize activities chronologically.
-
-
-ACTIVITY FORMAT
-===============
-
-For each activity include:
-
-TIME
-
-📍 Activity or Location
-
-A short useful description.
-
-🎟️ Cost:
-Use the exact supported price when available.
-
-📚 Source:
-Use the source identifier supplied with the evidence.
-
-
-TIME POLICY
-===========
-
-Times are itinerary planning times.
-
-Do not claim they are official opening hours unless
-the knowledge base explicitly says so.
-
-Do not invent official opening hours.
-
-
-COST POLICY
-===========
-
-Only use prices found in the knowledge base.
-
-If a price is available, preserve it.
-
-If a price is missing, write:
-
-"Cost: Not listed in the knowledge base."
-
-Never estimate a missing price.
-
-Never turn an unknown price into Rs. 0.
-
-
-DAILY COST SUMMARY
-==================
-
-At the end of every day provide:
-
-💰 Known costs for the day
-
-Only include costs that are actually supported
-by the knowledge base.
-
-Do not include unknown food, transport, hotel,
-or activity costs.
-
-
-FOOD POLICY
-===========
-
-If no restaurant or food price exists in the supplied
-knowledge:
-
-🍽️ Meal Break
-
-Food information is not listed in the knowledge base.
-
-Do not invent restaurant names.
-
-
-SOURCE POLICY
-=============
-
-Every recommendation must be traceable to the supplied
-knowledge records.
-
-Do not fabricate source IDs.
-
-Use the supplied source information.
-
-
-DEMO DATA POLICY
-================
-
-Some knowledge records may be fictional demonstration
-data.
-
-If the supplied record identifies itself as demo or
-fictional, do not present it as a verified real-world
-fact.
-
-
-FINAL SUMMARY
-=============
-
-After the final day provide:
-
-🌿 Trip Summary
+📋 Trip Overview
 
 Include:
 
-- Destination
-- Duration
-- Travelers
-- Travel style
-- Budget
-- Total known costs, if calculable
-- Costs unavailable from the knowledge base
+• Destination
+• Duration
+• Travelers
+• Travel style
+• Budget
+• Starting location
+• Main interests
 
+Keep this overview concise.
 
-FORMAT
-======
+============================================================
+DAY STRUCTURE
+============================================================
+
+Each day must feel like a complete day.
+
+Use:
+
+🌿 Day 1 — [attractive descriptive subtitle]
+
+Then divide the day naturally into:
+
+🌅 Morning
+
+☀️ Afternoon
+
+🌇 Evening
+
+Use these sections when the retrieved activities
+support them.
+
+Do not invent activities merely to fill a section.
+
+============================================================
+ACTIVITY DETAIL
+============================================================
+
+For each recommended activity provide:
+
+🕐 Time
+
+📍 Activity / Location
+
+A useful 2–4 sentence description explaining why
+the activity fits the selected travel style and
+interests.
+
+🎟️ Known cost
+
+📚 Source
+
+Example structure:
+
+🕐 09:00 – 11:00
+
+📍 Activity Name
+
+A concise tourist-friendly description based only
+on the knowledge base.
+
+🎟️ Cost: Rs. XXX
+
+📚 Source: filename.pdf — Page X
+
+If the source does not contain a price:
+
+🎟️ Cost: Not listed in the knowledge base.
+
+============================================================
+TIME HANDLING
+============================================================
+
+Create practical itinerary time slots.
+
+If the knowledge base explicitly provides a duration,
+respect it.
+
+If it does not provide an exact duration, use a
+reasonable planning block without claiming that the
+location officially requires that amount of time.
+
+Do not present planning times as official opening hours.
+
+For example:
+
+"09:00 – 10:30"
+
+is an itinerary planning suggestion.
+
+It must NOT be described as official opening hours
+unless the evidence explicitly says so.
+
+============================================================
+SEQUENCING
+============================================================
+
+Arrange the supplied activities in a sensible order.
+
+Try to avoid unnecessary repetition.
+
+Do not add an attraction simply because a normal
+tourist itinerary might include it.
+
+Only use activities supported by the supplied evidence.
+
+============================================================
+MEALS AND BREAKS
+============================================================
+
+Include reasonable meal or rest breaks when they help
+the itinerary flow.
+
+However:
+
+Do NOT invent restaurant names.
+
+Do NOT invent food prices.
+
+If restaurant or food information is unavailable:
+
+🍽️ Meal Break
+
+Food details are not listed in the knowledge base.
+
+============================================================
+COSTS
+============================================================
+
+Use only costs explicitly supported by the evidence.
+
+Never estimate.
+
+Never convert an unknown cost into zero.
+
+At the end of each day include:
+
+💰 Known Cost Summary
+
+List the known costs that can actually be calculated.
+
+Then state:
+
+"Additional costs are not listed in the knowledge base."
+
+when applicable.
+
+============================================================
+BUDGET
+============================================================
+
+The user's budget is a planning preference.
+
+Do not claim that the knowledge base guarantees
+that the entire trip will fit within the budget.
+
+Use the budget to prioritize appropriate activities
+when the evidence supports doing so.
+
+============================================================
+TRAVEL STYLE
+============================================================
+
+Adapt the presentation to:
+
+{travel_style}
+
+For example:
+
+Romantic:
+- relaxed pacing
+- scenic moments
+- couple-friendly sequencing
+
+Family:
+- balanced pacing
+- family-oriented activities
+
+Adventure:
+- active experiences
+- energetic sequencing
+
+Cultural:
+- history and heritage emphasis
+
+Photography:
+- visually interesting locations
+
+Relaxed:
+- fewer rushed transitions
+
+But do not invent characteristics of an attraction
+that are not supported by the knowledge base.
+
+============================================================
+INTERESTS
+============================================================
+
+User interests:
+
+{interests_text}
+
+Prioritize retrieved activities that match these
+interests when possible.
+
+============================================================
+SOURCE POLICY
+============================================================
+
+Every tourism recommendation must be supported by
+the supplied evidence.
+
+Preserve source identifiers.
+
+If a source contains:
+
+source = something.pdf
+page = 4
+
+show:
+
+📚 Source: something.pdf — Page 4
+
+Do not invent filenames or page numbers.
+
+============================================================
+DEMO DATA
+============================================================
+
+Some records may explicitly identify themselves as
+demo, sample, or fictional information.
+
+If the evidence says that a record is demo data,
+do not present it as independently verified real-world
+tourism information.
+
+============================================================
+FINAL DAY SUMMARY
+============================================================
+
+After each day include:
+
+✨ Day Highlights
+
+A short list of the main experiences.
+
+💰 Known Cost Summary
+
+Only supported costs.
+
+============================================================
+FINAL TRIP SUMMARY
+============================================================
+
+After the final day include:
+
+🌿 Trip Wrap-Up
+
+Include:
+
+• Destination
+• Number of days
+• Travelers
+• Travel style
+• Budget
+• Main interests
+• Main experiences included
+• Total known costs, only when they can actually
+  be calculated from the evidence
+
+Then clearly state that unlisted expenses are not
+included in the known-cost calculation.
+
+============================================================
+FORMATTING
+============================================================
 
 Use clean Markdown.
 
-Use headings and bullet points.
+Use:
 
-Keep the itinerary easy to read.
+- headings
+- bullet points
+- short paragraphs
+- emojis where helpful
+- bold labels
 
-Do NOT output HTML.
+Do NOT use HTML.
 
-Do NOT output JSON.
+Do NOT use JSON.
 
-Do NOT output a large table.
+Do NOT use code blocks.
 
-Do NOT output code.
+Do NOT output internal agent information.
 
-Do NOT output internal reasoning.
+Do NOT output chain-of-thought.
 
-Do NOT mention these instructions.
+Do NOT repeat the main itinerary title.
 
-Return only the traveler-facing itinerary.
+The result must be visually comfortable to read on
+a Streamlit travel-planning application.
+
+============================================================
+AGENT ARCHITECTURE
+============================================================
+
+The following describes the internal TrekTales agents:
+
+{agent_descriptions}
+
+Use their responsibilities internally.
+
+Do not describe their internal reasoning to the tourist.
 """.strip()
 
-        # ====================================================
+        # ========================================================
         # USER PROMPT
-        # ====================================================
+        # ========================================================
 
         user_prompt = f"""
-{trip_instructions}
+Create the final TrekTales tourist itinerary.
 
-TRIP DETAILS
-============
+============================================================
+TRIP REQUEST
+============================================================
 
 Destination:
 Rawalpindi
@@ -1046,10 +1366,10 @@ Rawalpindi
 Starting location:
 {starting_location}
 
-Travelers:
+Number of travelers:
 {travelers}
 
-Requested duration:
+Duration:
 EXACTLY {days} DAY(S)
 
 Budget:
@@ -1058,72 +1378,108 @@ Budget:
 Travel style:
 {travel_style}
 
-Language:
+Interests:
+{interests_text}
+
+Preferred response language:
 {language}
 
-Interests:
-{", ".join(interests) if interests else "Not specified"}
+
+============================================================
+EXISTING PLANNING INSTRUCTIONS
+============================================================
+
+{planning_instructions}
 
 
-SUPPLIED RAWALPINDI KNOWLEDGE
-=============================
+============================================================
+RAWALPINDI TOURISM KNOWLEDGE
+============================================================
 
 {context}
 
 
-FINAL TASK
-==========
+============================================================
+FINAL REQUIREMENTS
+============================================================
 
-Create the final TrekTales travel itinerary.
+Create a COMPLETE, DETAILED and ATTRACTIVE tourist
+itinerary.
 
-Generate EXACTLY {days} DAY(S).
+The user should be able to understand what they can
+do during each part of each day.
 
-Do not generate Day {days + 1}.
+For every day:
 
-Use only the supplied Rawalpindi knowledge.
+1. Give the day an attractive subtitle.
+2. Divide the day into morning, afternoon and evening
+   where the evidence supports it.
+3. Include multiple activities when supported by the
+   knowledge base.
+4. Give useful descriptions.
+5. Include planning times.
+6. Include known costs.
+7. Include source references.
+8. Include meal/rest breaks when useful.
+9. Include a known-cost summary.
+10. Include day highlights.
 
-Organize activities chronologically.
+After the final day provide a trip wrap-up.
 
-For each activity:
+VERY IMPORTANT:
 
-- show an appropriate itinerary time
-- show the activity/location
-- provide a concise description
-- show the supported price when available
-- show the supplied source identifier
+Generate EXACTLY {days} day(s).
 
-If information is unavailable, clearly say:
+Do not generate extra days.
+
+Use ONLY the supplied tourism knowledge.
+
+Do not invent attractions.
+
+Do not invent restaurants.
+
+Do not invent prices.
+
+Do not invent opening hours.
+
+Do not invent distances.
+
+Do not invent transport schedules.
+
+Do not invent booking availability.
+
+If something is not provided, write:
 
 "Not listed in the knowledge base."
 
-Do not invent tourism information.
+Do not create a duplicate main itinerary title.
 
-Do not create a duplicate main title.
-
-Start directly with the trip summary.
-
-Return only the final itinerary.
+Return ONLY the final traveler-facing itinerary.
 """.strip()
 
-        # ====================================================
-        # TOKEN CONTROL
-        # ====================================================
+        # ========================================================
+        # OUTPUT TOKEN BUDGET
+        # ========================================================
+
+        # More generous than the previous version so the model
+        # can actually complete morning + afternoon + evening
+        # sections without being cut off.
 
         if days == 1:
 
-            output_limit = 1200
+            output_limit = 2600
 
         elif days == 2:
 
-            output_limit = 1600
+            output_limit = 3200
 
         else:
 
-            output_limit = 2000
+            output_limit = 3800
 
-        # ====================================================
-        # GROQ
-        # ====================================================
+        # ========================================================
+        # GENERATE
+        # ========================================================
 
         answer = self._call_groq(
             system_prompt=system_prompt,
@@ -1131,78 +1487,71 @@ Return only the final itinerary.
             max_tokens=output_limit,
         )
 
-        # ====================================================
-        # CLEAN RESPONSE
-        # ====================================================
+        # ========================================================
+        # CLEAN
+        # ========================================================
 
         answer = self._clean_response(
             answer
         )
 
-        # ====================================================
-        # DAY VALIDATION
-        # ====================================================
+        # ========================================================
+        # SAFETY CHECK FOR EXTRA DAYS
+        # ========================================================
 
-        day_numbers = []
-
-        matches = re.findall(
-            r"(?im)"
-            r"^\s*"
-            r"(?:#+\s*)?"
-            r"(?:🌿\s*)?"
-            r"Day\s+(\d+)\b",
-            answer,
+        detected_days = self._find_day_numbers(
+            answer
         )
 
-        for value in matches:
-
-            try:
-
-                number = int(
-                    value
-                )
-
-                if number not in day_numbers:
-
-                    day_numbers.append(
-                        number
-                    )
-
-            except ValueError:
-
-                continue
-
-        # ====================================================
-        # REMOVE EXTRA DAYS LOCALLY
-        # ====================================================
-
-        invalid_days = [
-            number
-            for number in day_numbers
-            if number > days
-        ]
-
-        if invalid_days:
+        if any(
+            day > days
+            for day in detected_days
+        ):
 
             answer = self._remove_extra_days(
                 answer,
                 days,
             )
 
-        # ====================================================
+        # ========================================================
+        # FALLBACK
+        # ========================================================
+
+        if not answer:
+
+            answer = (
+                "TrekTales could not produce a complete "
+                "itinerary from the available Rawalpindi "
+                "knowledge base. Please try generating "
+                "the trip again."
+            )
+
+        # ========================================================
         # SOURCES
-        # ====================================================
+        # ========================================================
 
         sources = self._extract_sources(
             evidence
         )
 
-        # ====================================================
-        # FINAL RESULT
-        # ====================================================
+        # ========================================================
+        # RETURN
+        # ========================================================
 
         return {
             "answer": answer,
             "days": days,
             "sources": sources,
         }
+
+
+# ================================================================
+# OPTIONAL FACTORY FUNCTION
+# ================================================================
+
+def create_crew() -> TrekTalesCrew:
+    """
+    Convenience factory used by application code if needed.
+    """
+
+    return TrekTalesCrew()
