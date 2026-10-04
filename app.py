@@ -1285,30 +1285,36 @@ st.divider()
 
 st.markdown("## 🧭 Create Your Trip")
 
+st.caption(
+    "Tell TrekTales a little about your trip so the AI can "
+    "create a more personalized itinerary."
+)
+
 input_col1, input_col2 = st.columns(2)
 
 with input_col1:
 
     destination = st.text_input(
-        "📍 Destination",
+        "📍 Where are you going?",
         placeholder="e.g. Rawalpindi",
     )
 
     starting_location = st.text_input(
-        "🚗 Starting Location",
+        "🚗 Where will you start your journey?",
         placeholder="e.g. Islamabad",
     )
 
     requested_duration = st.slider(
-        "📅 Trip Duration",
+        "📅 How many days do you want to travel?",
         min_value=1,
         max_value=PAID_DAYS,
         value=1,
         step=1,
+        format="%d day(s)",
     )
 
     travelers = st.number_input(
-        "👥 Number of Travelers",
+        "👥 How many people are traveling?",
         min_value=1,
         max_value=20,
         value=2,
@@ -1319,7 +1325,7 @@ with input_col1:
 with input_col2:
 
     budget = st.selectbox(
-        "💰 Budget Level",
+        "💰 What is your budget level?",
         [
             "Budget",
             "Moderate",
@@ -1329,7 +1335,7 @@ with input_col2:
     )
 
     travel_style = st.selectbox(
-        "🎒 Travel Style",
+        "🎒 What type of trip do you prefer?",
         [
             "Adventure",
             "Relaxed",
@@ -1343,7 +1349,7 @@ with input_col2:
     )
 
     interests = st.multiselect(
-        "⭐ Interests",
+        "⭐ What are you interested in?",
         [
             "Mountains",
             "Nature",
@@ -1361,8 +1367,7 @@ with input_col2:
             "Photography",
         ],
     )
-
-
+    
 # ============================================================
 # ACCESS CALCULATION
 # ============================================================
