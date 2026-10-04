@@ -105,12 +105,52 @@ def _normalize_amount(value):
 
 
 # ============================================================
+# CONVERT UPLOADED FILE TO BYTES
+# ============================================================
+
+def _get_image_bytes(uploaded_file):
+    """
+    Convert a Streamlit UploadedFile or bytes-like object
+    into raw bytes.
+    """
+
+    if uploaded_file is None:
+        return b""
+
+    # Already raw bytes
+    if isinstance(uploaded_file, bytes):
+        return uploaded_file
+
+    # bytearray
+    if isinstance(uploaded_file, bytearray):
+        return bytes(uploaded_file)
+
+    # Streamlit UploadedFile
+    if hasattr(uploaded_file, "getvalue"):
+        data = uploaded_file.getvalue()
+
+        if isinstance(data, bytes):
+            return data
+
+    # File-like object
+    if hasattr(uploaded_file, "read"):
+        data = uploaded_file.read()
+
+        if isinstance(data, bytes):
+            return data
+
+    raise ValueError(
+        "The uploaded payment file could not be read."
+    )
+
+
+# ============================================================
 # IMAGE MIME TYPE
 # ============================================================
 
 def _detect_image_mime(image_bytes):
     """
-    Detect image type from file bytes.
+    Detect image type from raw bytes.
 
     Supported:
     - JPEG
@@ -146,7 +186,7 @@ def _detect_image_mime(image_bytes):
 
 def analyze_payment_screenshot(image_bytes):
     """
-    Analyze an uploaded payment image using Groq Vision.
+    Analyze an uploaded payment screenshot using Groq Vision.
 
     This function only extracts information visible in the image.
 
@@ -167,6 +207,14 @@ def analyze_payment_screenshot(image_bytes):
         raise RuntimeError(
             "GROQ_API_KEY is missing."
         )
+
+    # --------------------------------------------------------
+    # CONVERT STREAMLIT UPLOADED FILE TO BYTES
+    # --------------------------------------------------------
+
+    image_bytes = _get_image_bytes(
+        image_bytes
+    )
 
     # --------------------------------------------------------
     # EMPTY FILE
