@@ -345,6 +345,38 @@ div[class*="st-key-answer_card"] * {{
     color: {BLACK} !important;
 }}
 
+div[class*="st-key-answer_card"] h1 {{
+    color: {DARK_GREEN} !important;
+    font-size: 2.05rem !important;
+    font-weight: 900 !important;
+}}
+
+div[class*="st-key-answer_card"] h2 {{
+    color: {GREEN} !important;
+    font-size: 1.45rem !important;
+    font-weight: 850 !important;
+    margin-top: 1.35rem !important;
+    padding-bottom: 0.35rem !important;
+    border-bottom: 1px solid rgba(34,111,84,0.16) !important;
+}}
+
+div[class*="st-key-answer_card"] h3 {{
+    color: {BROWN} !important;
+    font-size: 1.15rem !important;
+    font-weight: 800 !important;
+    margin-top: 1rem !important;
+}}
+
+div[class*="st-key-answer_card"] strong {{ color: {DARK_GREEN} !important; }}
+
+div[class*="st-key-answer_card"] li {{ margin-bottom: 0.3rem !important; }}
+
+div[class*="st-key-answer_card"] hr {{
+    border: 0 !important;
+    border-top: 1px solid rgba(34,111,84,0.16) !important;
+    margin: 1rem 0 !important;
+}}
+
 
 /* =========================================================
    LOCKED CARD
@@ -1845,10 +1877,6 @@ if st.session_state.trip_result:
             key="answer_card",
         ):
 
-            st.markdown(
-                "### 🌿 Personalized Itinerary"
-            )
-
             # AI output is intentionally rendered as Markdown
             # without allowing raw HTML.
             st.markdown(
@@ -1890,14 +1918,6 @@ if sources:
                 f"**📄 {source['source']}**"
             )
 
-            if (
-                source["page"]
-                and source["page"].lower() != "n/a"
-            ):
-
-                st.caption(
-                    f"Page: {source['page']}"
-                )
 
 
 # ============================================================
@@ -2291,4 +2311,3 @@ with footer_col3:
     st.markdown(
         "Built with Streamlit + Groq"
     )
-
