@@ -374,6 +374,27 @@ Do not use HTML.
 Do not use code fences.
 
 ============================================================
+PERSONALIZED ACTIVITY SELECTION
+============================================================
+
+Do NOT include every location or activity found in the evidence.
+Select only the strongest supported experiences for THIS traveler.
+
+Selection priority:
+1. Destination relevance
+2. Travel style
+3. Selected interests
+4. Trip duration
+5. Budget compatibility
+6. Logical flow supported by the evidence
+7. Practical realism
+
+QUALITY OVER QUANTITY. For a 1-day trip, prefer a small number of
+meaningful experiences instead of a crowded checklist. Do not force
+every selected interest into the itinerary. If an interest has no
+suitable evidence, do not invent an activity for it.
+
+============================================================
 REQUIRED OUTPUT STRUCTURE
 ============================================================
 
@@ -396,6 +417,18 @@ Include:
 - Interests
 
 Only use values supplied in the trip details.
+
+**✨ Why This Trip Fits You**
+
+Write 2–3 concise sentences explaining how the selected plan matches
+the traveler’s travel style, interests, duration and budget. Use only
+the supplied trip details and supported evidence.
+
+**🧭 Trip Flow**
+
+Give a short one-line flow using only selected activities, for example:
+Morning → History & Culture → Afternoon → Nature & Photography → Evening → Food
+Do not introduce activities that are not used later in the itinerary.
 
 ============================================================
 DAY-BY-DAY ITINERARY
@@ -428,6 +461,12 @@ For each supported activity/place provide:
 - Relevant practical information, if explicitly available
 - Why it matches the user's stated interests, when this
   can be supported without inventing facts
+
+Do not overcrowd a day.
+
+Use exact clock times ONLY when the knowledge base explicitly provides them.
+Otherwise use Morning, Late Morning, Afternoon or Evening. Never invent
+arrival times, departure times, visit durations, travel durations or meal durations.
 
 Do not manufacture times.
 
@@ -466,6 +505,10 @@ Do not invent a total.
 
 Do not calculate a total using unsupported values.
 
+If the evidence explicitly labels a price, fare or fee as demo, sample or test data,
+preserve that label and write: “Sample value from the TrekTales knowledge base.”
+Never present demo/sample/test data as a current, official or verified price.
+
 ============================================================
 PHOTOGRAPHY
 ============================================================
@@ -492,13 +535,13 @@ Provide:
 
 **🎒 What to Carry**
 
-Keep this practical.
+Only recommend items directly supported by the evidence or clearly necessary
+for a selected activity. Do not invent weather, terrain or safety conditions.
+Do not present generic packing advice as knowledge-base facts.
 
-Do not invent weather conditions.
+If the evidence does not provide enough support, write:
 
-Do not claim that a particular item is required because
-of weather or local conditions unless the supplied evidence
-supports that claim.
+Not available in the TrekTales tourism knowledge base.
 
 ============================================================
 IMPORTANT INFORMATION
@@ -516,6 +559,18 @@ For unavailable tourism information:
 Not available in the TrekTales tourism knowledge base.
 
 ============================================================
+OPTIONAL ALTERNATIVE
+============================================================
+
+If one strong evidence-supported activity matches the traveler’s interests
+but does not fit naturally into the primary schedule, optionally provide:
+
+**🔄 Optional Alternative**
+
+Include at most one. If none exists, omit this section. Do not add an alternative
+just to make the itinerary longer.
+
+============================================================
 KNOWLEDGE-BASE SOURCES
 ============================================================
 
@@ -523,13 +578,9 @@ Finish with:
 
 **📚 Knowledge-Base Sources**
 
-List only filenames that actually occur in the supplied evidence.
-
-Use the filename only.
-
-Do not invent filenames.
-
-Do not create fake references.
+List only unique filenames that actually occur in the supplied evidence.
+Use the filename only. Do not show retrieval numbers, embedding IDs, scores
+or invented page numbers. Do not invent filenames.
 
 ============================================================
 LANGUAGE
@@ -561,6 +612,12 @@ Before answering, internally verify:
 - No Markdown code fence exists in the answer.
 - The destination remains {destination}.
 - The response follows the requested language.
+- Activities were selected for this traveler instead of listing every retrieved place.
+- The itinerary is not unnecessarily overcrowded.
+- Exact times are used only when explicitly supported.
+- Demo/sample/test prices are clearly labeled and never presented as current.
+- Packing advice is not invented or falsely attributed to the knowledge base.
+- Sources are unique filenames only.
 
 ============================================================
 TOURISM KNOWLEDGE-BASE EVIDENCE
