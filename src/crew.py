@@ -742,8 +742,9 @@ Now generate the final TrekTales itinerary.
                 },
             ],
             "temperature": 0.2,
-            "max_tokens": 1800,
+            "max_completion_tokens": 6000,
             "reasoning_effort": "medium",
+            "include_reasoning": False,
         }
 
         last_response = None
@@ -781,7 +782,81 @@ Now generate the final TrekTales itinerary.
             # =================================================
 
             if response.status_code == 200:
-                break
+                try:
+                    data = response.json()
+                except Exception as exc:
+                    if attempt < self.max_retries:
+                        time.sleep(1.5)
+                        continue
+
+                    raise RuntimeError(
+                        "Groq returned an invalid JSON response."
+                    ) from exc
+
+                choices = data.get("choices", [])
+
+                if not choices:
+                    if attempt < self.max_retries:
+                        time.sleep(1.5)
+                        continue
+
+                    raise RuntimeError(
+                        "Groq returned no completion choices."
+                    )
+
+                first_choice = choices[0]
+
+                if not isinstance(first_choice, dict):
+                    if attempt < self.max_retries:
+                        time.sleep(1.5)
+                        continue
+
+                    raise RuntimeError(
+                        "Groq returned an invalid completion choice."
+                    )
+
+                message = first_choice.get("message", {})
+
+                if not isinstance(message, dict):
+                    if attempt < self.max_retries:
+                        time.sleep(1.5)
+                        continue
+
+                    raise RuntimeError(
+                        "Groq returned an invalid message object."
+                    )
+
+                content = message.get("content")
+
+                if content is not None and str(content).strip():
+                    return str(content).strip()
+
+                if attempt < self.max_retries:
+                    time.sleep(1.5)
+                    continue
+
+                finish_reason = str(
+                    first_choice.get(
+                        "finish_reason",
+                        "unknown",
+                    )
+                )
+
+                reasoning = message.get("reasoning")
+
+                reasoning_note = ""
+
+                if reasoning:
+                    reasoning_note = (
+                        " Groq returned reasoning content but no final "
+                        "itinerary content."
+                    )
+
+                raise RuntimeError(
+                    "Groq returned an empty itinerary. "
+                    f"Finish reason: {finish_reason}."
+                    f"{reasoning_note}"
+                )
 
             # =================================================
             # AUTHENTICATION
@@ -984,7 +1059,7 @@ Now generate the final TrekTales itinerary.
             )
 
         # ========================================================
-        # RESPONSE JSON
+        # RESPONSE JSON FALLBACK
         # ========================================================
 
         try:
@@ -997,35 +1072,66 @@ Now generate the final TrekTales itinerary.
                 "Groq returned an invalid response."
             ) from exc
 
-        # ========================================================
-        # CONTENT
-        # ========================================================
+        choices = data.get("choices", [])
 
-        try:
-
-            content = (
-                data["choices"][0]
-                ["message"]
-                ["content"]
-            )
-
-        except (
-            KeyError,
-            IndexError,
-            TypeError,
-        ) as exc:
+        if not choices:
 
             raise RuntimeError(
-                "Groq returned no itinerary content."
-            ) from exc
-
-        if not content or not str(content).strip():
-
-            raise RuntimeError(
-                "Groq returned an empty itinerary."
+                "Groq returned no completion choices."
             )
 
-        return str(content).strip()
+        first_choice = choices[0]
+
+        if not isinstance(first_choice, dict):
+
+            raise RuntimeError(
+                "Groq returned an invalid completion choice."
+            )
+
+        message = first_choice.get(
+            "message",
+            {},
+        )
+
+        if not isinstance(message, dict):
+
+            raise RuntimeError(
+                "Groq returned an invalid message object."
+            )
+
+        content = message.get("content")
+
+        if content is None:
+
+            finish_reason = str(
+                first_choice.get(
+                    "finish_reason",
+                    "unknown",
+                )
+            )
+
+            raise RuntimeError(
+                "Groq returned no itinerary content. "
+                f"Finish reason: {finish_reason}."
+            )
+
+        content = str(content).strip()
+
+        if not content:
+
+            finish_reason = str(
+                first_choice.get(
+                    "finish_reason",
+                    "unknown",
+                )
+            )
+
+            raise RuntimeError(
+                "Groq returned an empty itinerary. "
+                f"Finish reason: {finish_reason}."
+            )
+
+        return content
 
     # ========================================================
     # MAIN RUN
